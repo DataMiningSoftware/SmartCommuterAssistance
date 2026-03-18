@@ -1,23 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../models/route_info.dart';
+import '../models/transit_graph.dart';
+import '../models/transit_line_style.dart';
+import '../services/backend_config_service.dart';
 import '../services/commuter_ml_service.dart';
-
-class TransitStation {
-  final String name;
-  final String line;
-  final Color color;
-  final LatLng point;
-
-  const TransitStation({
-    required this.name,
-    required this.line,
-    required this.color,
-    required this.point,
-  });
-}
+import '../services/transit_planner_service.dart';
 
 class MapView extends StatefulWidget {
   const MapView({super.key});
@@ -28,141 +19,151 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   final MapController _mapController = MapController();
-  final CommuterMlService _mlService = CommuterMlService();
+  final Distance _distance = const Distance();
+  final BackendConfigService _backendConfig = BackendConfigService();
+  late TransitPlannerService _planner;
 
   bool _loading = true;
+  String? _errorMessage;
   double _rainfallMm = 2.0;
   bool _eventNearby = false;
   String? _selectedStationName;
+  bool _locating = false;
+  LatLng? _userLocation;
+  TransitStationNode? _nearestStation;
+  double? _nearestDistanceMeters;
+  double? _locationAccuracyMeters;
+  DateTime? _locationUpdatedAt;
+  String? _locationError;
 
-  static const LatLng _mapCenter = LatLng(3.1390, 101.6869); // Kuala Lumpur
-
-  static const List<TransitStation> _stations = [
-    TransitStation(
-      name: 'Batu Caves',
-      line: 'KTM Seremban',
-      color: Color(0xFF1F3C98),
-      point: LatLng(3.2379, 101.6840),
-    ),
-    TransitStation(
-      name: 'Titiwangsa',
-      line: 'LRT Ampang/Sri Petaling',
-      color: Color(0xFF8C4A2F),
-      point: LatLng(3.1748, 101.6959),
-    ),
-    TransitStation(
-      name: 'KL Sentral',
-      line: 'LRT Kelana Jaya',
-      color: Color(0xFF0A57D5),
-      point: LatLng(3.1346, 101.6860),
-    ),
-    TransitStation(
-      name: 'Pasar Seni',
-      line: 'MRT Kajang',
-      color: Color(0xFF009A44),
-      point: LatLng(3.1427, 101.6951),
-    ),
-    TransitStation(
-      name: 'Masjid Jamek',
-      line: 'LRT Kelana Jaya',
-      color: Color(0xFFE53E3E),
-      point: LatLng(3.1493, 101.6968),
-    ),
-    TransitStation(
-      name: 'KLCC',
-      line: 'LRT Kelana Jaya',
-      color: Color(0xFFFFD100),
-      point: LatLng(3.1579, 101.7123),
-    ),
-    TransitStation(
-      name: 'Bukit Bintang',
-      line: 'MRT Kajang',
-      color: Color(0xFF1B7B3A),
-      point: LatLng(3.1467, 101.7113),
-    ),
-    TransitStation(
-      name: 'Merdeka',
-      line: 'MRT Kajang',
-      color: Color(0xFF2CA02C),
-      point: LatLng(3.1422, 101.7035),
-    ),
-    TransitStation(
-      name: 'Kajang',
-      line: 'MRT Kajang',
-      color: Color(0xFF0B4ABF),
-      point: LatLng(2.9927, 101.7909),
-    ),
-  ];
-
-  static const List<List<String>> _networkLines = [
-    ['Batu Caves', 'Titiwangsa', 'KL Sentral'],
-    ['KL Sentral', 'Pasar Seni', 'Merdeka', 'Bukit Bintang', 'KLCC'],
-    ['Merdeka', 'Kajang'],
-  ];
-
+  late TransitGraph _graph;
   late String _origin;
-  late String _destination;
-  List<RouteRecommendation> _recommendations = [];
+  String? _destination;
+
+  List<RouteRecommendation> _recommendations = <RouteRecommendation>[];
   DelayCrowdPrediction? _prediction;
+
+  static const LatLng _mapCenter = LatLng(3.1390, 101.6869);
 
   @override
   void initState() {
     super.initState();
+    _planner = _buildPlanner(_backendConfig.baseUrl.value);
+    _backendConfig.baseUrl.addListener(_onBackendChanged);
+    _graph = _planner.graph;
     _origin = 'KL Sentral';
-    _destination = 'Kajang';
+    _destination = null;
+    _initialize();
+  }
+
+  @override
+  void dispose() {
+    _backendConfig.baseUrl.removeListener(_onBackendChanged);
+    super.dispose();
+  }
+
+  TransitPlannerService _buildPlanner(String baseUrl) {
+    final graph = TransitGraph.klangValleyDemo();
+    return TransitPlannerService(
+      gateway: ResilientTransitPlanningGateway(
+        primary: ApiTransitPlanningGateway(
+          graph: graph,
+          baseUrl: baseUrl,
+        ),
+        fallback: LocalTransitPlanningGateway(graph: graph),
+      ),
+      mlService: CommuterMlService(),
+    );
+  }
+
+  void _onBackendChanged() {
+    _planner = _buildPlanner(_backendConfig.baseUrl.value);
+    _graph = _planner.graph;
     _initialize();
   }
 
   Future<void> _initialize() async {
-    await _mlService.initialize();
-    _recompute();
-    if (mounted) {
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _planner.mlService.initialize();
+      await _refreshLocation(centerMap: false);
+      await _recompute();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Unable to load map planning data.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _recompute() async {
+    if (_destination == null || _destination == _origin) {
+      if (!mounted) return;
       setState(() {
-        _loading = false;
+        _recommendations = <RouteRecommendation>[];
+        _prediction = null;
+        _errorMessage = null;
+      });
+      return;
+    }
+
+    try {
+      final result = await _planner.planTrip(
+        TransitPlanRequest(
+          originId: _origin,
+          destinationId: _destination!,
+          departureTime: DateTime.now(),
+          rainfallMm: _rainfallMm,
+          eventNearby: _eventNearby,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _recommendations = result.ranked;
+        _prediction = result.originPrediction;
+        _errorMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Failed to update route predictions.';
       });
     }
   }
 
-  void _recompute() {
-    final candidates = _buildCandidates(_origin, _destination);
-    final recommended = _mlService.optimizeRoutes(
-      departureTime: DateTime.now(),
-      rainfallMm: _rainfallMm,
-      temperatureC: 30,
-      eventNearby: _eventNearby,
-      candidates: candidates,
-    );
-    final best = recommended.first.route;
-    final firstLine = best.steps.isEmpty ? 'MRT Kajang' : best.steps.first.line;
-    final pred = _mlService.predict(
-      OperationalSnapshot(
-        station: _origin,
-        line: firstLine,
-        timestamp: DateTime.now(),
-        rainfallMm: _rainfallMm,
-        temperatureC: 30,
-        eventNearby: _eventNearby,
-      ),
-    );
-
-    setState(() {
-      _recommendations = recommended;
-      _prediction = pred;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final bestRoute = _recommendations.isEmpty ? null : _recommendations.first.route;
-    final highlightedStops = bestRoute == null ? [_origin, _destination] : _routeStops(bestRoute);
+    final bestRoute =
+        _recommendations.isEmpty ? null : _recommendations.first.route;
+    final highlightedStops = bestRoute == null
+        ? <String>[
+            _origin,
+            if (_destination != null) _destination!,
+          ]
+        : _routeStops(bestRoute);
     final highlightedPoints = _pointsForNames(highlightedStops);
-    final evaluation = _mlService.evaluation;
-    final bestRecommendation = _recommendations.isEmpty ? null : _recommendations.first;
+    final evaluation = _planner.mlService.evaluation;
+    final bestRecommendation =
+        _recommendations.isEmpty ? null : _recommendations.first;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Network Map'),
         actions: [
+          IconButton(
+            tooltip: 'Backend URL',
+            onPressed: _openBackendSheet,
+            icon: const Icon(Icons.cloud_outlined),
+          ),
           IconButton(
             tooltip: 'Scenario settings',
             onPressed: _loading ? null : _openScenarioSheet,
@@ -172,95 +173,131 @@ class _MapViewState extends State<MapView> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Positioned.fill(
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: _mapCenter,
-                      initialZoom: 11.2,
-                      minZoom: 8.5,
-                      maxZoom: 17,
-                      onTap: (_, __) => setState(() => _selectedStationName = null),
+          : (_errorMessage != null && _recommendations.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: _initialize,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'smart_commuter_assistant',
-                      ),
-                      PolylineLayer(
-                        polylines: _buildNetworkPolylines(highlightedStops),
-                      ),
-                      MarkerLayer(
-                        markers: _buildStationMarkers(highlightedStops),
-                      ),
-                    ],
                   ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  right: 12,
-                  child: _buildTopRouteCard(),
-                ),
-                Positioned(
-                  right: 14,
-                  bottom: 180,
-                  child: Column(
-                    children: [
-                      FloatingActionButton.small(
-                        heroTag: 'centerRouteBtn',
-                        onPressed: highlightedPoints.isEmpty ? null : () => _zoomToRoute(highlightedPoints),
-                        child: const Icon(Icons.center_focus_strong),
+                )
+              : Stack(
+                  children: [
+                    Positioned.fill(
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _mapCenter,
+                          initialZoom: 11.2,
+                          minZoom: 8.5,
+                          maxZoom: 17,
+                          onTap: (_, __) =>
+                              setState(() => _selectedStationName = null),
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'smart_commuter_assistant',
+                          ),
+                          PolylineLayer(
+                              polylines:
+                                  _buildNetworkPolylines(highlightedStops)),
+                          MarkerLayer(
+                              markers: _buildStationMarkers(highlightedStops)),
+                          if (_userLocation != null)
+                            MarkerLayer(markers: _buildUserMarker()),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton.small(
-                        heroTag: 'centerMapBtn',
-                        onPressed: () => _mapController.move(_mapCenter, 11.2),
-                        child: const Icon(Icons.my_location),
+                    ),
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      right: 12,
+                      child: _buildTopRouteCard(),
+                    ),
+                    Positioned(
+                      right: 14,
+                      bottom: 180,
+                      child: Column(
+                        children: [
+                          FloatingActionButton.small(
+                            heroTag: 'centerRouteBtn',
+                            onPressed: highlightedPoints.isEmpty
+                                ? null
+                                : () => _zoomToRoute(highlightedPoints),
+                            child: const Icon(Icons.center_focus_strong),
+                          ),
+                          const SizedBox(height: 8),
+                          FloatingActionButton.small(
+                            heroTag: 'centerMapBtn',
+                            onPressed: _locating
+                                ? null
+                                : () => _refreshLocation(centerMap: true),
+                            child: _locating
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.my_location),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 12,
-                  child: _buildBottomInsightCard(
-                    evaluation: evaluation,
-                    bestRecommendation: bestRecommendation,
-                  ),
-                ),
-              ],
-            ),
+                    ),
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      child: _buildBottomInsightCard(
+                        evaluation: evaluation,
+                        bestRecommendation: bestRecommendation,
+                      ),
+                    ),
+                  ],
+                )),
     );
   }
 
   List<Polyline> _buildNetworkPolylines(List<String> highlightedStops) {
-    final basePolylines = <Polyline>[];
-    for (final line in _networkLines) {
-      final points = _pointsForNames(line);
+    final polylines = <Polyline>[];
+    for (final corridor in _graph.lineCorridors) {
+      final points = _pointsForNames(corridor);
       if (points.length < 2) continue;
-      basePolylines.add(
+      polylines.add(
         Polyline(
           points: points,
           strokeWidth: 4,
-          color: const Color(0xFF6C7A94).withValues(alpha: 0.38),
+          color: const Color(0xFF6C7A94).withValues(alpha: 0.35),
         ),
       );
     }
 
     final highlighted = _pointsForNames(highlightedStops);
     if (highlighted.length > 1) {
-      basePolylines.add(
+      polylines.add(
         Polyline(
           points: highlighted,
           strokeWidth: 10,
           color: Colors.white.withValues(alpha: 0.9),
         ),
       );
-      basePolylines.add(
+      polylines.add(
         Polyline(
           points: highlighted,
           strokeWidth: 6,
@@ -268,21 +305,24 @@ class _MapViewState extends State<MapView> {
         ),
       );
     }
-    return basePolylines;
+
+    return polylines;
   }
 
   List<Marker> _buildStationMarkers(List<String> highlightedStops) {
-    return _stations.map((station) {
-      final isHighlighted = highlightedStops.contains(station.name);
+    return _graph.stations.map((station) {
+      final isHighlighted = highlightedStops.contains(station.id);
       return Marker(
-        point: station.point,
+        point: LatLng(station.latitude, station.longitude),
         width: isHighlighted ? 54 : 32,
         height: isHighlighted ? 54 : 32,
         child: GestureDetector(
           onTap: () => setState(() => _selectedStationName = station.name),
           child: Container(
             decoration: BoxDecoration(
-              color: isHighlighted ? station.color : Colors.white.withValues(alpha: 0.92),
+              color: isHighlighted
+                  ? _lineColor(station.line)
+                  : Colors.white.withValues(alpha: 0.92),
               shape: BoxShape.circle,
               border: Border.all(
                 color: isHighlighted ? Colors.white : Colors.black26,
@@ -299,14 +339,41 @@ class _MapViewState extends State<MapView> {
             alignment: Alignment.center,
             child: isHighlighted
                 ? const Icon(Icons.train_rounded, color: Colors.white, size: 18)
-                : Icon(Icons.circle, color: station.color, size: 10),
+                : Icon(Icons.circle, color: _lineColor(station.line), size: 10),
           ),
         ),
       );
     }).toList();
   }
 
+  List<Marker> _buildUserMarker() {
+    final point = _userLocation;
+    if (point == null) return const <Marker>[];
+    return <Marker>[
+      Marker(
+        point: point,
+        width: 34,
+        height: 34,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF0A57D5),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
   Widget _buildTopRouteCard() {
+    final stationNames = _graph.stationIds;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -320,13 +387,22 @@ class _MapViewState extends State<MapView> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _origin,
+                  key: ValueKey<String>('from_$_origin'),
+                  initialValue: _origin,
                   isDense: true,
                   decoration: const InputDecoration(labelText: 'From'),
-                  items: _stations.map((s) => DropdownMenuItem(value: s.name, child: Text(s.name))).toList(),
+                  items: stationNames
+                      .map((name) => DropdownMenuItem<String>(
+                          value: name, child: Text(name)))
+                      .toList(),
                   onChanged: (value) {
                     if (value == null || value == _destination) return;
-                    _origin = value;
+                    setState(() {
+                      _origin = value;
+                      if (_destination == _origin) {
+                        _destination = null;
+                      }
+                    });
                     _recompute();
                   },
                 ),
@@ -334,24 +410,40 @@ class _MapViewState extends State<MapView> {
               const SizedBox(width: 6),
               IconButton(
                 tooltip: 'Swap',
-                onPressed: () {
-                  final temp = _origin;
-                  _origin = _destination;
-                  _destination = temp;
-                  _recompute();
-                },
+                onPressed: _destination == null
+                    ? null
+                    : () {
+                        setState(() {
+                          final temp = _origin;
+                          _origin = _destination!;
+                          _destination = temp;
+                        });
+                        _recompute();
+                      },
                 icon: const Icon(Icons.swap_horiz_rounded),
               ),
               const SizedBox(width: 6),
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _destination,
+                child: DropdownButtonFormField<String?>(
+                  key: ValueKey<String>('to_${_destination ?? 'none'}'),
+                  initialValue: _destination,
                   isDense: true,
                   decoration: const InputDecoration(labelText: 'To'),
-                  items: _stations.map((s) => DropdownMenuItem(value: s.name, child: Text(s.name))).toList(),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Select destination'),
+                    ),
+                    ...stationNames.map(
+                      (name) => DropdownMenuItem<String?>(
+                          value: name, child: Text(name)),
+                    ),
+                  ],
                   onChanged: (value) {
-                    if (value == null || value == _origin) return;
-                    _destination = value;
+                    if (value == _origin) return;
+                    setState(() {
+                      _destination = value;
+                    });
                     _recompute();
                   },
                 ),
@@ -361,9 +453,11 @@ class _MapViewState extends State<MapView> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _metricChip(Icons.cloudy_snowing, '${_rainfallMm.toStringAsFixed(1)}mm rain'),
+              _metricChip(Icons.cloudy_snowing,
+                  '${_rainfallMm.toStringAsFixed(1)}mm rain'),
               const SizedBox(width: 8),
-              _metricChip(Icons.event_busy, _eventNearby ? 'Event nearby' : 'No event'),
+              _metricChip(
+                  Icons.event_busy, _eventNearby ? 'Event nearby' : 'No event'),
             ],
           ),
         ],
@@ -399,8 +493,8 @@ class _MapViewState extends State<MapView> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Delay ${_prediction?.predictedDelayMinutes.toStringAsFixed(1) ?? '--'} min • '
-            'Crowd ${_prediction?.crowdLevel ?? '--'} • '
+            'Delay ${_prediction?.predictedDelayMinutes.toStringAsFixed(1) ?? '--'} min | '
+            'Crowd ${_prediction?.crowdLevel ?? '--'} | '
             'Confidence ${((_prediction?.confidence ?? 0) * 100).toStringAsFixed(0)}%',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
@@ -410,6 +504,14 @@ class _MapViewState extends State<MapView> {
               'Best ETA ${bestRecommendation.adjustedMinutes.toStringAsFixed(1)} min',
               style: const TextStyle(color: Color(0xFF667085)),
             ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: bestRecommendation.route.steps
+                  .map((step) => _lineGuideChip(step.line, step.station))
+                  .toList(),
+            ),
           ],
           if (_selectedStationName != null) ...[
             const SizedBox(height: 4),
@@ -418,9 +520,33 @@ class _MapViewState extends State<MapView> {
               style: const TextStyle(color: Color(0xFF667085)),
             ),
           ],
+          if (_nearestStation != null && _nearestDistanceMeters != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Nearest station: ${_nearestStation!.name} (${_nearestDistanceMeters!.toStringAsFixed(0)}m)',
+              style: const TextStyle(
+                  color: Color(0xFF344054), fontWeight: FontWeight.w600),
+            ),
+          ],
+          if (_locationAccuracyMeters != null ||
+              _locationUpdatedAt != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              'GPS accuracy: ${_locationAccuracyMeters?.toStringAsFixed(0) ?? '--'}m'
+              ' | Updated: ${_locationUpdatedAt != null ? _formatTime(_locationUpdatedAt!) : '--'}',
+              style: const TextStyle(fontSize: 11.5, color: Color(0xFF98A2B3)),
+            ),
+          ],
+          if (_locationError != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              _locationError!,
+              style: const TextStyle(fontSize: 11.5, color: Color(0xFFB42318)),
+            ),
+          ],
           const SizedBox(height: 6),
           Text(
-            'MAE ${evaluation.mae.toStringAsFixed(2)} • RMSE ${evaluation.rmse.toStringAsFixed(2)} • '
+            'MAE ${evaluation.mae.toStringAsFixed(2)} | RMSE ${evaluation.rmse.toStringAsFixed(2)} | '
             'ACC ${(evaluation.crowdAccuracy * 100).toStringAsFixed(1)}%',
             style: const TextStyle(fontSize: 11.5, color: Color(0xFF98A2B3)),
           ),
@@ -447,6 +573,36 @@ class _MapViewState extends State<MapView> {
               fontSize: 12,
               color: Color(0xFF475467),
               fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _lineGuideChip(String line, String station) {
+    final color = TransitLineStyle.colorForLine(line);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$line -> $station',
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -510,6 +666,68 @@ class _MapViewState extends State<MapView> {
     );
   }
 
+  Future<void> _openBackendSheet() async {
+    final controller =
+        TextEditingController(text: _backendConfig.baseUrl.value);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+              16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Backend URL',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              ...BackendConfigService.defaults.map((target) {
+                final selected = _backendConfig.baseUrl.value == target.baseUrl;
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(target.label),
+                  subtitle: Text(target.baseUrl),
+                  trailing: selected
+                      ? const Icon(Icons.check_circle, color: Color(0xFF0A3A8B))
+                      : null,
+                  onTap: () {
+                    _backendConfig.setBaseUrl(target.baseUrl);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              const SizedBox(height: 6),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Custom URL',
+                  hintText: 'http://192.168.x.x:8000',
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _backendConfig.setBaseUrl(controller.text);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Use This URL'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   List<String> _routeStops(RouteInfo route) {
     final stops = <String>[route.origin];
     for (final step in route.steps) {
@@ -525,20 +743,13 @@ class _MapViewState extends State<MapView> {
 
   List<LatLng> _pointsForNames(List<String> names) {
     final points = <LatLng>[];
-    for (final name in names) {
-      final station = _findStation(name);
+    for (final stationId in names) {
+      final station = _graph.station(stationId);
       if (station != null) {
-        points.add(station.point);
+        points.add(LatLng(station.latitude, station.longitude));
       }
     }
     return points;
-  }
-
-  TransitStation? _findStation(String name) {
-    for (final station in _stations) {
-      if (station.name == name) return station;
-    }
-    return null;
   }
 
   void _zoomToRoute(List<LatLng> points) {
@@ -568,97 +779,86 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  List<RouteInfo> _buildCandidates(String origin, String destination) {
-    return [
-      RouteInfo(
-        routeId: 'direct_mrt',
-        origin: origin,
-        destination: destination,
-        steps: [
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'MRT Kajang',
-            station: origin,
-            durationMinutes: 26,
-            instruction: 'Board MRT Kajang line to $destination',
-          ),
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'MRT Kajang',
-            station: destination,
-            durationMinutes: 12,
-            instruction: 'Continue to $destination',
-          ),
-        ],
-        totalDurationMinutes: 38,
-        totalDistance: 18.5,
-        crowdLevel: 'Medium',
-        fare: 3.5,
-      ),
-      RouteInfo(
-        routeId: 'via_merdeka',
-        origin: origin,
-        destination: destination,
-        steps: [
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'LRT Kelana Jaya',
-            station: origin,
-            durationMinutes: 10,
-            instruction: 'Take LRT to Masjid Jamek',
-          ),
-          RouteStep(
-            type: RouteStepType.transfer,
-            line: 'MRT Kajang',
-            station: 'Merdeka',
-            durationMinutes: 4,
-            instruction: 'Walk and transfer at Merdeka',
-          ),
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'MRT Kajang',
-            station: destination,
-            durationMinutes: 16,
-            instruction: 'Continue to $destination',
-          ),
-        ],
-        totalDurationMinutes: 35,
-        totalDistance: 16.8,
-        crowdLevel: 'High',
-        fare: 3.8,
-      ),
-      RouteInfo(
-        routeId: 'via_klsentral',
-        origin: origin,
-        destination: destination,
-        steps: [
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'KTM Seremban',
-            station: origin,
-            durationMinutes: 8,
-            instruction: 'Take KTM to KL Sentral',
-          ),
-          RouteStep(
-            type: RouteStepType.transfer,
-            line: 'MRT Kajang',
-            station: 'KL Sentral',
-            durationMinutes: 5,
-            instruction: 'Transfer at KL Sentral',
-          ),
-          RouteStep(
-            type: RouteStepType.train,
-            line: 'MRT Kajang',
-            station: destination,
-            durationMinutes: 17,
-            instruction: 'Continue to $destination',
-          ),
-        ],
-        totalDurationMinutes: 34,
-        totalDistance: 17.1,
-        crowdLevel: 'Medium',
-        fare: 3.6,
-      ),
-    ];
+  Color _lineColor(String line) {
+    return TransitLineStyle.colorForLine(line);
+  }
+
+  Future<void> _refreshLocation({required bool centerMap}) async {
+    setState(() {
+      _locating = true;
+      _locationError = null;
+    });
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location service is disabled on this device.');
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Location permission denied.');
+      }
+
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      final position = lastKnown ??
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 10),
+          );
+      final user = LatLng(position.latitude, position.longitude);
+
+      TransitStationNode? nearest;
+      double? nearestMeters;
+      for (final station in _graph.stations) {
+        final stationPoint = LatLng(station.latitude, station.longitude);
+        final meters = _distance.as(LengthUnit.Meter, user, stationPoint);
+        if (nearestMeters == null || meters < nearestMeters) {
+          nearestMeters = meters;
+          nearest = station;
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _userLocation = user;
+        _nearestStation = nearest;
+        if (nearest != null) {
+          _origin = nearest.id;
+          if (_destination == _origin) {
+            _destination = null;
+          }
+        }
+        _nearestDistanceMeters = nearestMeters;
+        _locationAccuracyMeters = position.accuracy;
+        _locationUpdatedAt = DateTime.now();
+      });
+
+      await _recompute();
+
+      if (centerMap) {
+        _mapController.move(user, 13.8);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _locationError = error.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _locating = false);
+      }
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final h = time.hour.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    final s = time.second.toString().padLeft(2, '0');
+    return '$h:$m:$s';
   }
 }
