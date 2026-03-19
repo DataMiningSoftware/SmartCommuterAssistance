@@ -1,45 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/map_preview.dart';
 import '../widgets/prediction_card.dart';
 import 'route_planner.dart';
-import 'station_details.dart';
+import 'stations_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _isFetchingStations = false;
-
-  Future<void> _showTrainStops() async {
-    setState(() => _isFetchingStations = true);
-    try {
-      final rows = await Supabase.instance.client
-          .from('train_stops_kl')
-          .select();
-      if (!mounted) return;
-
-      await showDialog<void>(
-        context: context,
-        builder: (context) => _TrainStopsDialog(rows: rows),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load train stops: $e'),
-          backgroundColor: const Color(0xFFD7263D),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isFetchingStations = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,95 +59,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: _ActionTile(
                     icon: Icons.train_rounded,
-                    label: 'Nearby Stations',
-                    subtitle: 'Live arrivals',
+                    label: 'All Stations',
+                    subtitle: 'From Supabase',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const StationDetails()),
+                      MaterialPageRoute(builder: (_) => const StationsScreen()),
                     ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isFetchingStations ? null : _showTrainStops,
-                icon: _isFetchingStations
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.storage_rounded),
-                label: Text(
-                  _isFetchingStations
-                      ? 'Loading train stops...'
-                      : 'View Train Stops (Supabase)',
-                ),
-              ),
             ),
             const SizedBox(height: 18),
             const MapPreview(),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _TrainStopsDialog extends StatelessWidget {
-  final List<dynamic> rows;
-
-  const _TrainStopsDialog({required this.rows});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('train_stops_kl (${rows.length})'),
-      content: SizedBox(
-        width: 420,
-        child: rows.isEmpty
-            ? const Text('No rows returned from Supabase.')
-            : ListView.separated(
-                shrinkWrap: true,
-                itemCount: rows.length,
-                separatorBuilder: (_, __) => const Divider(height: 16),
-                itemBuilder: (context, index) {
-                  final row = rows[index];
-                  final map = row is Map ? row : <String, dynamic>{'value': row};
-                  final stationName = (map['station_name'] ??
-                          map['name'] ??
-                          map['station'] ??
-                          map['stop_name'] ??
-                          'Unnamed station')
-                      .toString();
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        stationName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        map.toString(),
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF667085)),
-                      ),
-                    ],
-                  );
-                },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-      ],
     );
   }
 }
