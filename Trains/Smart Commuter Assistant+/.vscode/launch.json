@@ -9,6 +9,14 @@
       "args": [
         "--dart-define-from-file=env/dev.json"
       ]
+    },
+    {
+      "name": "Flutter (Supabase + Any Android Device)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define-from-file=env/dev.json"
+      ]
     }
   ]
 }

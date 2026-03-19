@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StationsScreen extends StatefulWidget {
@@ -13,7 +14,9 @@ class _StationsScreenState extends State<StationsScreen> {
   final List<Map<String, dynamic>> _allStations = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _filteredStations = <Map<String, dynamic>>[];
   bool _isLoading = true;
+  bool _isFindingNearest = false;
   String? _errorMessage;
+  Position? _userPosition;
 
   @override
   void initState() {
@@ -54,6 +57,9 @@ class _StationsScreenState extends State<StationsScreen> {
           ..addAll(stations);
         _filteredStations = List<Map<String, dynamic>>.from(_allStations);
       });
+      if (_userPosition != null) {
+        _sortByDistance(_userPosition!);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -81,6 +87,97 @@ class _StationsScreenState extends State<StationsScreen> {
     }).toList();
 
     setState(() => _filteredStations = filtered);
+    if (_userPosition != null) {
+      _sortByDistance(_userPosition!);
+    }
+  }
+
+  Future<void> _findNearestStations() async {
+    setState(() => _isFindingNearest = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showMessage('Location services are disabled.');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        _showMessage('Location permission denied.');
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _showMessage('Location permission denied forever. Enable it in settings.');
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 12),
+      );
+      if (!mounted) return;
+      setState(() => _userPosition = position);
+      final nearest = _sortByDistance(position);
+      if (nearest == null) {
+        _showMessage('No valid stop_lat/stop_lon found to calculate distance.');
+        return;
+      }
+      final nearestName = _stationName(nearest);
+      final nearestDistance = _distanceMeters(nearest, position)!;
+      _showMessage(
+        'Nearest: $nearestName (${_StationCard._formatDistance(nearestDistance)}) '
+        'at ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
+      );
+    } catch (e) {
+      _showMessage('Failed to get location: $e');
+    } finally {
+      if (mounted) setState(() => _isFindingNearest = false);
+    }
+  }
+
+  Map<String, dynamic>? _sortByDistance(Position position) {
+    final sorted = List<Map<String, dynamic>>.from(_filteredStations);
+    sorted.sort((a, b) {
+      final aDistance = _distanceMeters(a, position) ?? double.infinity;
+      final bDistance = _distanceMeters(b, position) ?? double.infinity;
+      return aDistance.compareTo(bDistance);
+    });
+    Map<String, dynamic>? nearest;
+    for (final station in sorted) {
+      if (_distanceMeters(station, position) != null) {
+        nearest = station;
+        break;
+      }
+    }
+    if (!mounted) return nearest;
+    setState(() => _filteredStations = sorted);
+    return nearest;
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  double? _distanceMeters(Map<String, dynamic> station, Position position) {
+    final lat = _toDouble(station['stop_lat']);
+    final lon = _toDouble(station['stop_lon']);
+    if (lat == null || lon == null) return null;
+    return Geolocator.distanceBetween(
+      position.latitude,
+      position.longitude,
+      lat,
+      lon,
+    );
+  }
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   @override
@@ -89,6 +186,17 @@ class _StationsScreenState extends State<StationsScreen> {
       appBar: AppBar(
         title: const Text('Train Stations'),
         actions: [
+          IconButton(
+            onPressed: _isFindingNearest ? null : _findNearestStations,
+            icon: _isFindingNearest
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.my_location_rounded),
+            tooltip: 'Nearest',
+          ),
           IconButton(
             onPressed: _loadStations,
             icon: const Icon(Icons.refresh_rounded),
@@ -180,6 +288,8 @@ class _StationsScreenState extends State<StationsScreen> {
           name: _stationName(station),
           line: _stationLine(station),
           code: _stationCode(station),
+          distanceMeters:
+              _userPosition == null ? null : _distanceMeters(station, _userPosition!),
         );
       },
     );
@@ -217,11 +327,13 @@ class _StationCard extends StatelessWidget {
   final String name;
   final String line;
   final String code;
+  final double? distanceMeters;
 
   const _StationCard({
     required this.name,
     required this.line,
     required this.code,
+    required this.distanceMeters,
   });
 
   @override
@@ -265,20 +377,37 @@ class _StationCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F7FC),
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: const Color(0xFFDDE6F5)),
-            ),
-            child: Text(
-              code,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F7FC),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: const Color(0xFFDDE6F5)),
+                ),
+                child: Text(
+                  code,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (distanceMeters != null) ...[
+                const SizedBox(height: 5),
+                Text(
+                  _formatDistance(distanceMeters!),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF667085)),
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
+  }
+
+  static String _formatDistance(double meters) {
+    if (meters < 1000) return '${meters.toStringAsFixed(0)} m';
+    return '${(meters / 1000).toStringAsFixed(2)} km';
   }
 }

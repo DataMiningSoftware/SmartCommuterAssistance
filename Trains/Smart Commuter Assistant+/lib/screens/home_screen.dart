@@ -1,12 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/map_preview.dart';
 import '../widgets/prediction_card.dart';
 import 'route_planner.dart';
 import 'stations_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Position? _position;
+  String _locationStatus = 'Getting location...';
+  bool _isLoadingLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocation();
+  }
+
+  Future<void> _loadLocation() async {
+    setState(() => _isLoadingLocation = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() => _locationStatus = 'Location service is disabled');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        setState(() => _locationStatus = 'Location permission denied');
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _locationStatus = 'Location permission denied forever');
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (!mounted) return;
+      setState(() {
+        _position = position;
+        _locationStatus = 'Location updated';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _locationStatus = 'Location error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingLocation = false);
+    }
+  }
+
+  Future<void> _openInGoogleMaps() async {
+    final position = _position;
+    if (position == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location is not available yet.')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}',
+    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Google Maps.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +98,14 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _HeroCard(theme: theme),
+            const SizedBox(height: 12),
+            _LocationCard(
+              position: _position,
+              status: _locationStatus,
+              isLoading: _isLoadingLocation,
+              onRefresh: _loadLocation,
+              onOpenMap: _openInGoogleMaps,
+            ),
             const SizedBox(height: 18),
             const PredictionCard(
               title: 'Next Train',
@@ -73,6 +157,80 @@ class HomeScreen extends StatelessWidget {
             const MapPreview(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LocationCard extends StatelessWidget {
+  final Position? position;
+  final String status;
+  final bool isLoading;
+  final VoidCallback onRefresh;
+  final VoidCallback onOpenMap;
+
+  const _LocationCard({
+    required this.position,
+    required this.status,
+    required this.isLoading,
+    required this.onRefresh,
+    required this.onOpenMap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final latText =
+        position == null ? '-' : position!.latitude.toStringAsFixed(6);
+    final lonText =
+        position == null ? '-' : position!.longitude.toStringAsFixed(6);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3EAF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.my_location_rounded),
+              const SizedBox(width: 8),
+              const Text(
+                'Current Location',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: isLoading ? null : onRefresh,
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded),
+                tooltip: 'Refresh location',
+              ),
+            ],
+          ),
+          Text('Latitude: $latText'),
+          Text('Longitude: $lonText'),
+          const SizedBox(height: 4),
+          Text(
+            status,
+            style: const TextStyle(color: Color(0xFF667085)),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: position == null ? null : onOpenMap,
+            icon: const Icon(Icons.map_rounded),
+            label: const Text('Open in Google Maps'),
+          ),
+        ],
       ),
     );
   }

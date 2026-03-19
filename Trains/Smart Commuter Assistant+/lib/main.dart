@@ -9,8 +9,18 @@ import 'services/database_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  const defaultSupabaseUrl = 'https://imrozxnhigihxcwlribr.supabase.co';
+  const defaultSupabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltcm96eG5oaWdpaHhjd2xyaWJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mjg5MTgsImV4cCI6MjA4OTUwNDkxOH0.JEPPPrSFWZRgtYP4maS1iz-4MHOnY06ua4ZvwHKzZWk';
+
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: defaultSupabaseUrl,
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: defaultSupabaseAnonKey,
+  );
 
   assert(() {
     debugPrint('SUPABASE_URL=$supabaseUrl');
@@ -20,12 +30,6 @@ Future<void> main() async {
     debugPrint('SUPABASE_ANON_KEY prefix=$keyPreview');
     return true;
   }());
-
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw Exception(
-      'Missing Supabase config. Pass SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define or --dart-define-from-file.',
-    );
-  }
 
   await Supabase.initialize(
     url: supabaseUrl,
