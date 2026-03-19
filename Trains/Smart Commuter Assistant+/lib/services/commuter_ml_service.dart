@@ -307,7 +307,7 @@ class CommuterMlService {
   }
 
   double _predictDelay(List<double> x) {
-    final baseline = 2.0;
+    const baseline = 2.0;
     final trees = [
       _treeDelay0(x),
       _treeDelay1(x),

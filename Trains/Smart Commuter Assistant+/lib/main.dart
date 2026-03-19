@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_view.dart';
@@ -8,8 +9,15 @@ import 'services/database_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: const String.fromEnvironment('SUPABASE_URL'),
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+  );
+
   await DatabaseService().initialize();
   await AuthService().initialize();
+
   runApp(const SmartCommuterApp());
 }
 
@@ -49,8 +57,10 @@ class SmartCommuterApp extends StatelessWidget {
           ),
         ),
         textTheme: const TextTheme(
-          headlineSmall: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-          titleLarge: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+          headlineSmall:
+              TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+          titleLarge:
+              TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
           titleMedium: TextStyle(fontWeight: FontWeight.w600),
           bodyLarge: TextStyle(height: 1.3),
         ),
@@ -68,14 +78,16 @@ class SmartCommuterApp extends StatelessWidget {
             elevation: 0,
             backgroundColor: primary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             textStyle: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             side: const BorderSide(color: Color(0xFFCFD9EA)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           ),
@@ -95,7 +107,8 @@ class SmartCommuterApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: primary, width: 1.6),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
       ),
       home: const AuthGate(),
@@ -130,7 +143,7 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  
+
   final List<Widget> _screens = [
     const HomeScreen(),
     const MapView(),
@@ -148,13 +161,24 @@ class _MainNavigationState extends State<MainNavigation> {
         child: NavigationBar(
           height: 70,
           backgroundColor: Colors.white,
-          indicatorColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          indicatorColor:
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           selectedIndex: _currentIndex,
-          onDestinationSelected: (index) => setState(() => _currentIndex = index),
+          onDestinationSelected: (index) =>
+              setState(() => _currentIndex = index),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
-            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home'),
+            NavigationDestination(
+                icon: Icon(Icons.map_outlined),
+                selectedIcon: Icon(Icons.map),
+                label: 'Map'),
+            NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Profile'),
           ],
         ),
       ),

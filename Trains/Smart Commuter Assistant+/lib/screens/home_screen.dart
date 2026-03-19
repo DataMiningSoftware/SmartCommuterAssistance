@@ -1,12 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/map_preview.dart';
 import '../widgets/prediction_card.dart';
 import 'route_planner.dart';
 import 'station_details.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _isFetchingStations = false;
+
+  Future<void> _showTrainStops() async {
+    setState(() => _isFetchingStations = true);
+    try {
+      final rows = await Supabase.instance.client
+          .from('train_stops_kl')
+          .select();
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) => _TrainStopsDialog(rows: rows),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load train stops: $e'),
+          backgroundColor: const Color(0xFFD7263D),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isFetchingStations = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +102,85 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isFetchingStations ? null : _showTrainStops,
+                icon: _isFetchingStations
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.storage_rounded),
+                label: Text(
+                  _isFetchingStations
+                      ? 'Loading train stops...'
+                      : 'View Train Stops (Supabase)',
+                ),
+              ),
+            ),
             const SizedBox(height: 18),
             const MapPreview(),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrainStopsDialog extends StatelessWidget {
+  final List<dynamic> rows;
+
+  const _TrainStopsDialog({required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('train_stops_kl (${rows.length})'),
+      content: SizedBox(
+        width: 420,
+        child: rows.isEmpty
+            ? const Text('No rows returned from Supabase.')
+            : ListView.separated(
+                shrinkWrap: true,
+                itemCount: rows.length,
+                separatorBuilder: (_, __) => const Divider(height: 16),
+                itemBuilder: (context, index) {
+                  final row = rows[index];
+                  final map = row is Map ? row : <String, dynamic>{'value': row};
+                  final stationName = (map['station_name'] ??
+                          map['name'] ??
+                          map['station'] ??
+                          map['stop_name'] ??
+                          'Unnamed station')
+                      .toString();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stationName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        map.toString(),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF667085)),
+                      ),
+                    ],
+                  );
+                },
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+      ],
     );
   }
 }
@@ -96,10 +203,10 @@ class _HeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Good Morning',
             style: TextStyle(
               color: Colors.white,
@@ -108,16 +215,16 @@ class _HeroCard extends StatelessWidget {
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Peak window starts in 34 minutes. Recommended: leave before 8:10 AM.',
             style: TextStyle(color: Colors.white, height: 1.35),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: const [
+            children: [
               _StatusChip(icon: Icons.cloud, label: 'Rain 2.1mm'),
               _StatusChip(icon: Icons.timer, label: 'Avg delay 4m'),
               _StatusChip(icon: Icons.groups, label: 'Crowd medium'),

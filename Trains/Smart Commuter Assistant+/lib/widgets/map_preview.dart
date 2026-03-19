@@ -46,20 +46,20 @@ class MapPreview extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(child: CustomPaint(painter: _NetworkPainter())),
-                _StationTag(
+                const _StationTag(
                   label: 'KL Sentral',
-                  color: const Color(0xFF0A57D5),
-                  alignment: const Alignment(-0.55, -0.55),
+                  color: Color(0xFF0A57D5),
+                  alignment: Alignment(-0.55, -0.55),
                 ),
-                _StationTag(
+                const _StationTag(
                   label: 'KLCC',
-                  color: const Color(0xFF00A86B),
-                  alignment: const Alignment(0.55, -0.1),
+                  color: Color(0xFF00A86B),
+                  alignment: Alignment(0.55, -0.1),
                 ),
-                _StationTag(
+                const _StationTag(
                   label: 'Bukit Bintang',
-                  color: const Color(0xFFFF9800),
-                  alignment: const Alignment(0.2, 0.55),
+                  color: Color(0xFFFF9800),
+                  alignment: Alignment(0.2, 0.55),
                 ),
                 Align(
                   alignment: const Alignment(-0.08, -0.02),
