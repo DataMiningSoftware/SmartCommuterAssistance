@@ -9,10 +9,27 @@ import 'services/database_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  assert(() {
+    debugPrint('SUPABASE_URL=$supabaseUrl');
+    final keyPreview = supabaseAnonKey.length >= 10
+        ? supabaseAnonKey.substring(0, 10)
+        : supabaseAnonKey;
+    debugPrint('SUPABASE_ANON_KEY prefix=$keyPreview');
+    return true;
+  }());
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception(
+      'Missing Supabase config. Pass SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define or --dart-define-from-file.',
+    );
+  }
 
   await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL'),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   await DatabaseService().initialize();
