@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -866,9 +867,8 @@ class _StationsScreenState extends State<StationsScreen> {
         final station = _filteredStations[index];
         return _StationCard(
           name: _stationName(station),
-          line: _stationLineLabel(station),
-          code: _stationCodeLabel(station),
-          routeId: _stationRouteId(station),
+          codes: _stationCodeList(station),
+          routeIds: _stationRouteIdList(station),
           distanceMeters:
               _userPosition == null ? null : _distanceMeters(station, _userPosition!),
           onTap: _isPlanningRoute
@@ -953,21 +953,58 @@ class _StationsScreenState extends State<StationsScreen> {
     }
     return _stationCode(row);
   }
+
+  List<String> _stationCodeList(Map<String, dynamic> row) {
+    final codeLabel = _stationCodeLabel(row);
+    return codeLabel
+        .split('/')
+        .map((part) => part.trim().toUpperCase())
+        .where((part) => part.isNotEmpty)
+        .toList();
+  }
+
+  List<String> _stationRouteIdList(Map<String, dynamic> row) {
+    final nameKey = _stationName(row).toUpperCase();
+    final candidates = <String>[
+      ...?_uniqueStationLines[nameKey],
+      ...?_stationRoutesByName[nameKey],
+    ];
+
+    final fromCodes = _stationCodeList(row)
+        .map((code) {
+          final match = RegExp(r'^[A-Za-z]+').firstMatch(code);
+          return normalizeRouteId((match?.group(0) ?? 'N/A').toUpperCase());
+        })
+        .where((id) => id != 'N/A');
+    candidates.addAll(fromCodes);
+
+    final output = <String>[];
+    final seen = <String>{};
+    for (final id in candidates) {
+      final normalized = normalizeRouteId(id);
+      if (normalized == 'N/A') continue;
+      if (seen.add(normalized)) {
+        output.add(normalized);
+      }
+    }
+    if (output.isEmpty) {
+      output.add(normalizeRouteId(_stationRouteId(row)));
+    }
+    return output;
+  }
 }
 
 class _StationCard extends StatelessWidget {
   final String name;
-  final String line;
-  final String code;
-  final String routeId;
+  final List<String> codes;
+  final List<String> routeIds;
   final double? distanceMeters;
   final VoidCallback onTap;
 
   const _StationCard({
     required this.name,
-    required this.line,
-    required this.code,
-    required this.routeId,
+    required this.codes,
+    required this.routeIds,
     required this.distanceMeters,
     required this.onTap,
   });
@@ -986,18 +1023,7 @@ class _StationCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: getRouteColor(routeId),
-              child: Text(
-                normalizeRouteId(routeId),
-                style: TextStyle(
-                  color: getRouteOnColor(routeId),
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                ),
-              ),
-            ),
+            _RouteBadge(routeIds: routeIds),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1005,12 +1031,10 @@ class _StationCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    line,
-                    style: const TextStyle(color: Color(0xFF667085)),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                    ),
                   ),
                 ],
               ),
@@ -1019,17 +1043,13 @@ class _StationCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4F7FC),
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: const Color(0xFFDDE6F5)),
-                  ),
-                  child: Text(
-                    code,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
+                  children: codes
+                      .map((code) => _StationCodeChip(code: code))
+                      .toList(),
                 ),
                 if (distanceMeters != null) ...[
                   const SizedBox(height: 5),
@@ -1054,6 +1074,122 @@ class _StationCard extends StatelessWidget {
   static String _formatDistance(double meters) {
     if (meters < 1000) return '${meters.toStringAsFixed(0)} m';
     return '${(meters / 1000).toStringAsFixed(2)} km';
+  }
+}
+
+class _RouteBadge extends StatelessWidget {
+  final List<String> routeIds;
+
+  const _RouteBadge({required this.routeIds});
+
+  @override
+  Widget build(BuildContext context) {
+    final ids = routeIds.where((id) => id.isNotEmpty && id != 'N/A').toList();
+    if (ids.length <= 1) {
+      final route = ids.isEmpty ? 'N/A' : ids.first;
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: getRouteColor(route),
+        child: Text(
+          normalizeRouteId(route),
+          style: TextStyle(
+            color: getRouteOnColor(route),
+            fontWeight: FontWeight.w800,
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+
+    final colors = ids.map(getRouteColor).toList();
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: CustomPaint(
+        painter: _RouteSegmentsPainter(colors: colors),
+        child: Center(
+          child: Container(
+            width: 16,
+            height: 16,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RouteSegmentsPainter extends CustomPainter {
+  final List<Color> colors;
+
+  const _RouteSegmentsPainter({
+    required this.colors,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final center = rect.center;
+    final radius = math.min(size.width, size.height) / 2;
+    final arcRect = Rect.fromCircle(center: center, radius: radius);
+    final segmentAngle = (2 * math.pi) / colors.length;
+    var start = -math.pi / 2;
+
+    for (final color in colors) {
+      final paint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = color;
+      canvas.drawArc(arcRect, start, segmentAngle, true, paint);
+      start += segmentAngle;
+    }
+
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = const Color(0xFFDDE6F5);
+    canvas.drawCircle(center, radius - 0.6, border);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RouteSegmentsPainter oldDelegate) {
+    if (oldDelegate.colors.length != colors.length) return true;
+    for (var i = 0; i < colors.length; i++) {
+      if (oldDelegate.colors[i] != colors[i]) return true;
+    }
+    return false;
+  }
+}
+
+class _StationCodeChip extends StatelessWidget {
+  final String code;
+
+  const _StationCodeChip({
+    required this.code,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final routePrefixMatch = RegExp(r'^[A-Za-z]+').firstMatch(code);
+    final routeId = normalizeRouteId((routePrefixMatch?.group(0) ?? 'N/A').toUpperCase());
+    return Container(
+      constraints: const BoxConstraints(minHeight: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: getRouteColor(routeId),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        code,
+        style: TextStyle(
+          color: getRouteOnColor(routeId),
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+        ),
+      ),
+    );
   }
 }
 
