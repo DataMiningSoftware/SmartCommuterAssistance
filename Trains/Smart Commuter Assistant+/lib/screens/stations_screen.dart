@@ -793,9 +793,13 @@ class _StationsScreenState extends State<StationsScreen> {
                           FocusScope.of(context).unfocus();
                         },
                         icon: const Icon(Icons.close_rounded),
-                      ),
+                ),
               ),
             ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: _RouteLegend(),
           ),
           Expanded(
             child: FutureBuilder<void>(
@@ -1160,6 +1164,96 @@ class _RouteSegmentsPainter extends CustomPainter {
       if (oldDelegate.colors[i] != colors[i]) return true;
     }
     return false;
+  }
+}
+
+class _RouteLegend extends StatelessWidget {
+  const _RouteLegend();
+
+  static const List<_LegendEntry> _entries = <_LegendEntry>[
+    _LegendEntry(label: 'KJ', routeId: 'KJ'),
+    _LegendEntry(label: 'MRT / KG', routeId: 'MRT'),
+    _LegendEntry(label: 'PYL / PY', routeId: 'PYL'),
+    _LegendEntry(label: 'AG', routeId: 'AG'),
+    _LegendEntry(label: 'PH / SP', routeId: 'PH'),
+    _LegendEntry(label: 'MR', routeId: 'MR'),
+    _LegendEntry(label: 'BRT', routeId: 'BRT'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE3EAF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Line Colors',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _entries.map((entry) => _LegendChip(entry: entry)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendEntry {
+  final String label;
+  final String routeId;
+
+  const _LegendEntry({
+    required this.label,
+    required this.routeId,
+  });
+}
+
+class _LegendChip extends StatelessWidget {
+  final _LegendEntry entry;
+
+  const _LegendChip({
+    required this.entry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FAFF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFDDE6F5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: getRouteColor(entry.routeId),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            entry.label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }
 
