@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/route_colors.dart';
+import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/station_service.dart';
 
@@ -17,6 +18,7 @@ class StationsScreen extends StatefulWidget {
 }
 
 class _StationsScreenState extends State<StationsScreen> {
+  final CrowdReportsService _crowdReportsService = CrowdReportsService();
   final DatabaseService _databaseService = DatabaseService();
   final StationService _stationService = StationService();
   final TextEditingController _searchController = TextEditingController();
@@ -26,6 +28,7 @@ class _StationsScreenState extends State<StationsScreen> {
   Map<String, List<String>> _uniqueStationLines = <String, List<String>>{};
   Map<String, List<String>> _stationCodesByName = <String, List<String>>{};
   Map<String, List<String>> _stationRoutesByName = <String, List<String>>{};
+  Map<String, CrowdReport> _latestCrowdByStopId = <String, CrowdReport>{};
   late Future<void> _stationsFuture;
   bool _isFindingNearest = false;
   bool _isPlanningRoute = false;
@@ -56,15 +59,40 @@ class _StationsScreenState extends State<StationsScreen> {
       await _syncUniqueStations();
       await _syncRouteConnectionsCache();
       _setStations(stations);
+      await _loadLatestCrowdReports();
       return;
     } catch (_) {
       final cachedStations = await _databaseService.getCachedTrainStops();
       if (cachedStations.isNotEmpty) {
         _setStations(cachedStations);
+        await _loadLatestCrowdReports();
         _showMessage('Using offline cached stations.');
         return;
       }
       rethrow;
+    }
+  }
+
+  Future<void> _loadLatestCrowdReports() async {
+    final stopIds = <String>{
+      for (final stop in _allStopsRaw)
+        if (_stationStopId(stop).isNotEmpty && _stationStopId(stop) != 'N/A')
+          _stationStopId(stop),
+    }.toList();
+
+    if (stopIds.isEmpty) {
+      if (!mounted) return;
+      setState(() => _latestCrowdByStopId = <String, CrowdReport>{});
+      return;
+    }
+
+    try {
+      final latest = await _crowdReportsService.fetchLatestCrowdReportsForStops(stopIds);
+      if (!mounted) return;
+      setState(() => _latestCrowdByStopId = latest);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _latestCrowdByStopId = <String, CrowdReport>{});
     }
   }
 
@@ -869,15 +897,18 @@ class _StationsScreenState extends State<StationsScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final station = _filteredStations[index];
+        final crowdUi = _stationCrowdLevelUi(station);
         return _StationCard(
           name: _stationName(station),
           codes: _stationCodeList(station),
           routeIds: _stationRouteIdList(station),
+          crowdLevelUi: crowdUi,
           distanceMeters:
               _userPosition == null ? null : _distanceMeters(station, _userPosition!),
           onTap: _isPlanningRoute
               ? () {}
               : () => _planRouteToStation(station),
+          onReportTap: () => _reportCrowdLevel(station),
         );
       },
     );
@@ -996,21 +1027,198 @@ class _StationsScreenState extends State<StationsScreen> {
     }
     return output;
   }
+
+  _CrowdLevelUi? _stationCrowdLevelUi(Map<String, dynamic> station) {
+    final codes = _stationCodeList(station);
+    final reports = codes
+        .map((code) => _latestCrowdByStopId[code])
+        .whereType<CrowdReport>()
+        .toList();
+    if (reports.isEmpty) return null;
+
+    reports.sort((a, b) {
+      if (a.occupancyLevel != b.occupancyLevel) {
+        return b.occupancyLevel.compareTo(a.occupancyLevel);
+      }
+      final aTime = a.createdAt?.millisecondsSinceEpoch ?? 0;
+      final bTime = b.createdAt?.millisecondsSinceEpoch ?? 0;
+      return bTime.compareTo(aTime);
+    });
+
+    final level = reports.first.occupancyLevel;
+    switch (level) {
+      case 0:
+        return const _CrowdLevelUi(
+          label: 'Many seats available',
+          color: Color(0xFF16A34A),
+        );
+      case 1:
+        return const _CrowdLevelUi(
+          label: 'Standing room only',
+          color: Color(0xFFF59E0B),
+        );
+      case 2:
+        return const _CrowdLevelUi(
+          label: 'Very crowded',
+          color: Color(0xFFF97316),
+        );
+      case 3:
+        return const _CrowdLevelUi(
+          label: 'Crush capacity',
+          color: Color(0xFFDC2626),
+        );
+      default:
+        return const _CrowdLevelUi(
+          label: 'Unknown crowd level',
+          color: Color(0xFF64748B),
+        );
+    }
+  }
+
+  Future<void> _reportCrowdLevel(Map<String, dynamic> station) async {
+    final codes = _stationCodeList(station);
+    if (codes.isEmpty) {
+      _showMessage('No station code found for reporting.');
+      return;
+    }
+
+    var selectedCode = codes.first;
+    var selectedLevel = 1;
+
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Report Crowd Level',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _stationName(station),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey(selectedCode),
+                      initialValue: selectedCode,
+                      decoration: const InputDecoration(
+                        labelText: 'Station Code',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: codes
+                          .map(
+                            (code) => DropdownMenuItem<String>(
+                              value: code,
+                              child: Text(code),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setModalState(() => selectedCode = value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('How crowded is it now?'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: List<Widget>.generate(4, (index) {
+                        final ui = _crowdUiByLevel(index);
+                        return ChoiceChip(
+                          label: Text('L$index ${ui.label}'),
+                          selected: selectedLevel == index,
+                          selectedColor: ui.color.withValues(alpha: 0.18),
+                          onSelected: (_) => setModalState(() => selectedLevel = index),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Submit Report'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (submitted != true) return;
+
+    try {
+      await _crowdReportsService.insertUserCrowdReport(
+        stopId: selectedCode,
+        occupancyLevel: selectedLevel,
+      );
+      await _loadLatestCrowdReports();
+      _showMessage('Thanks. Crowd report submitted for $selectedCode.');
+    } catch (e) {
+      _showMessage('Failed to submit report: $e');
+    }
+  }
+
+  static _CrowdLevelUi _crowdUiByLevel(int level) {
+    switch (level) {
+      case 0:
+        return const _CrowdLevelUi(label: 'Empty', color: Color(0xFF16A34A));
+      case 1:
+        return const _CrowdLevelUi(label: 'Moderate', color: Color(0xFFF59E0B));
+      case 2:
+        return const _CrowdLevelUi(label: 'Crowded', color: Color(0xFFF97316));
+      case 3:
+        return const _CrowdLevelUi(label: 'Crush', color: Color(0xFFDC2626));
+      default:
+        return const _CrowdLevelUi(label: 'Unknown', color: Color(0xFF64748B));
+    }
+  }
+}
+
+class _CrowdLevelUi {
+  final String label;
+  final Color color;
+
+  const _CrowdLevelUi({
+    required this.label,
+    required this.color,
+  });
 }
 
 class _StationCard extends StatelessWidget {
   final String name;
   final List<String> codes;
   final List<String> routeIds;
+  final _CrowdLevelUi? crowdLevelUi;
   final double? distanceMeters;
   final VoidCallback onTap;
+  final VoidCallback onReportTap;
 
   const _StationCard({
     required this.name,
     required this.codes,
     required this.routeIds,
+    required this.crowdLevelUi,
     required this.distanceMeters,
     required this.onTap,
+    required this.onReportTap,
   });
 
   @override
@@ -1040,6 +1248,33 @@ class _StationCard extends StatelessWidget {
                       fontSize: 17,
                     ),
                   ),
+                  if (crowdLevelUi != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: crowdLevelUi!.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            crowdLevelUi!.label,
+                            style: TextStyle(
+                              color: crowdLevelUi!.color,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1063,9 +1298,18 @@ class _StationCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 2),
-                const Text(
-                  'Tap for route',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF98A2B3)),
+                TextButton.icon(
+                  onPressed: onReportTap,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.campaign_rounded, size: 14),
+                  label: const Text(
+                    'Report',
+                    style: TextStyle(fontSize: 11),
+                  ),
                 ),
               ],
             ),

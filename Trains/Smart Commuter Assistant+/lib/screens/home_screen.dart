@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../services/crowd_reports_service.dart';
 import '../widgets/map_preview.dart';
 import '../widgets/prediction_card.dart';
+import 'crowd_forecast_screen.dart';
 import 'route_planner.dart';
 import 'stations_screen.dart';
 
@@ -15,14 +17,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final CrowdReportsService _crowdReportsService = CrowdReportsService();
   Position? _position;
   String _locationStatus = 'Getting location...';
   bool _isLoadingLocation = false;
+  late Future<List<CrowdReportDisplayItem>> _crowdFeedFuture;
 
   @override
   void initState() {
     super.initState();
     _loadLocation();
+    _crowdFeedFuture = _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
   }
 
   Future<void> _loadLocation() async {
@@ -84,6 +89,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _refreshCrowdFeed() {
+    setState(() {
+      _crowdFeedFuture = _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -105,6 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
               isLoading: _isLoadingLocation,
               onRefresh: _loadLocation,
               onOpenMap: _openInGoogleMaps,
+            ),
+            const SizedBox(height: 12),
+            _HomeCrowdFeedCard(
+              crowdFeedFuture: _crowdFeedFuture,
+              onRefresh: _refreshCrowdFeed,
             ),
             const SizedBox(height: 18),
             const PredictionCard(
@@ -152,6 +168,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            _ActionTile(
+              icon: Icons.groups_rounded,
+              label: 'Crowd Forecast',
+              subtitle: 'AI + traffic light levels',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CrowdForecastScreen()),
+              ),
             ),
             const SizedBox(height: 18),
             const MapPreview(),
@@ -234,6 +260,151 @@ class _LocationCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HomeCrowdFeedCard extends StatelessWidget {
+  final Future<List<CrowdReportDisplayItem>> crowdFeedFuture;
+  final VoidCallback onRefresh;
+
+  const _HomeCrowdFeedCard({
+    required this.crowdFeedFuture,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3EAF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.groups_rounded),
+              const SizedBox(width: 8),
+              const Text(
+                'Latest Crowd Predictions',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Refresh crowd data',
+              ),
+            ],
+          ),
+          FutureBuilder<List<CrowdReportDisplayItem>>(
+            future: crowdFeedFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return Text(
+                  'Failed to load crowd feed: ${snapshot.error}',
+                  style: const TextStyle(color: Color(0xFFB42318)),
+                );
+              }
+
+              final items = snapshot.data ?? const <CrowdReportDisplayItem>[];
+              if (items.isEmpty) {
+                return const Text(
+                  'No crowd prediction data yet.',
+                  style: TextStyle(color: Color(0xFF667085)),
+                );
+              }
+
+              return Column(
+                children: items
+                    .map((item) => _CrowdFeedRow(item: item))
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CrowdFeedRow extends StatelessWidget {
+  final CrowdReportDisplayItem item;
+
+  const _CrowdFeedRow({
+    required this.item,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = _crowdUiByLevel(item.occupancyLevel);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: ui.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${item.stationName} (${item.stopId})',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            ui.label,
+            style: TextStyle(
+              color: ui.color,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static _HomeCrowdUi _crowdUiByLevel(int level) {
+    switch (level) {
+      case 0:
+        return const _HomeCrowdUi(label: 'Empty', color: Color(0xFF16A34A));
+      case 1:
+        return const _HomeCrowdUi(label: 'Moderate', color: Color(0xFFF59E0B));
+      case 2:
+        return const _HomeCrowdUi(label: 'Crowded', color: Color(0xFFF97316));
+      case 3:
+        return const _HomeCrowdUi(label: 'Crush', color: Color(0xFFDC2626));
+      default:
+        return const _HomeCrowdUi(label: 'Unknown', color: Color(0xFF667085));
+    }
+  }
+}
+
+class _HomeCrowdUi {
+  final String label;
+  final Color color;
+
+  const _HomeCrowdUi({
+    required this.label,
+    required this.color,
+  });
 }
 
 class _HeroCard extends StatelessWidget {
