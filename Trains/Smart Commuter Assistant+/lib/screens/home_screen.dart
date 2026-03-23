@@ -22,12 +22,14 @@ class _HomeScreenState extends State<HomeScreen> {
   String _locationStatus = 'Getting location...';
   bool _isLoadingLocation = false;
   late Future<List<CrowdReportDisplayItem>> _crowdFeedFuture;
+  Future<List<NearbyStationCrowdForecast>>? _nearestCrowdFuture;
 
   @override
   void initState() {
     super.initState();
     _loadLocation();
-    _crowdFeedFuture = _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
+    _crowdFeedFuture =
+        _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
   }
 
   Future<void> _loadLocation() async {
@@ -59,6 +61,13 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _position = position;
         _locationStatus = 'Location updated';
+        _nearestCrowdFuture =
+            _crowdReportsService.fetchNearestStationsWithCrowd(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          departureTime: DateTime.now(),
+          limit: 5,
+        );
       });
     } catch (e) {
       if (!mounted) return;
@@ -91,7 +100,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _refreshCrowdFeed() {
     setState(() {
-      _crowdFeedFuture = _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
+      _crowdFeedFuture =
+          _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
+    });
+  }
+
+  void _refreshNearestCrowd() {
+    final position = _position;
+    if (position == null) return;
+    setState(() {
+      _nearestCrowdFuture = _crowdReportsService.fetchNearestStationsWithCrowd(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        departureTime: DateTime.now(),
+        limit: 5,
+      );
     });
   }
 
@@ -116,6 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
               isLoading: _isLoadingLocation,
               onRefresh: _loadLocation,
               onOpenMap: _openInGoogleMaps,
+            ),
+            const SizedBox(height: 12),
+            _NearestCrowdForecastCard(
+              nearestCrowdFuture: _nearestCrowdFuture,
+              hasLocation: _position != null,
+              onRefresh: _refreshNearestCrowd,
             ),
             const SizedBox(height: 12),
             _HomeCrowdFeedCard(
@@ -325,11 +354,152 @@ class _HomeCrowdFeedCard extends StatelessWidget {
               }
 
               return Column(
-                children: items
-                    .map((item) => _CrowdFeedRow(item: item))
-                    .toList(),
+                children:
+                    items.map((item) => _CrowdFeedRow(item: item)).toList(),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NearestCrowdForecastCard extends StatelessWidget {
+  final Future<List<NearbyStationCrowdForecast>>? nearestCrowdFuture;
+  final bool hasLocation;
+  final VoidCallback onRefresh;
+
+  const _NearestCrowdForecastCard({
+    required this.nearestCrowdFuture,
+    required this.hasLocation,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3EAF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.near_me_rounded),
+              const SizedBox(width: 8),
+              const Text(
+                'Nearest Station Crowd',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: hasLocation ? onRefresh : null,
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Refresh nearest crowd',
+              ),
+            ],
+          ),
+          if (!hasLocation || nearestCrowdFuture == null)
+            const Text(
+              'Enable location to see nearest station crowd forecast.',
+              style: TextStyle(color: Color(0xFF667085)),
+            )
+          else
+            FutureBuilder<List<NearbyStationCrowdForecast>>(
+              future: nearestCrowdFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Text(
+                    'Failed to load nearest crowd forecast: ${snapshot.error}',
+                    style: const TextStyle(color: Color(0xFFB42318)),
+                  );
+                }
+
+                final items =
+                    snapshot.data ?? const <NearbyStationCrowdForecast>[];
+                if (items.isEmpty) {
+                  return const Text(
+                    'No nearby stations found with forecast data.',
+                    style: TextStyle(color: Color(0xFF667085)),
+                  );
+                }
+
+                return Column(
+                  children: items
+                      .map((item) => _NearestCrowdRow(item: item))
+                      .toList(),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NearestCrowdRow extends StatelessWidget {
+  final NearbyStationCrowdForecast item;
+
+  const _NearestCrowdRow({
+    required this.item,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final level = item.forecast?.occupancyLevel ?? -1;
+    final ui = _CrowdFeedRow._crowdUiByLevel(level);
+    final distanceText = item.distanceMeters < 1000
+        ? '${item.distanceMeters.toStringAsFixed(0)} m'
+        : '${(item.distanceMeters / 1000).toStringAsFixed(2)} km';
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: ui.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${item.stationName} (${item.stopId})',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            distanceText,
+            style: const TextStyle(
+              color: Color(0xFF667085),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            ui.label,
+            style: TextStyle(
+              color: ui.color,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
