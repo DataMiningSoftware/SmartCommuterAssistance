@@ -9,6 +9,7 @@ import '../constants/route_colors.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/station_service.dart';
+import '../widgets/train_loading_transition.dart';
 
 class StationsScreen extends StatefulWidget {
   const StationsScreen({super.key});
@@ -1094,78 +1095,90 @@ class _StationsScreenState extends State<StationsScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by station, line, or code',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          FocusScope.of(context).unfocus();
-                        },
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-              ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: _RouteLegend(),
-          ),
-          Expanded(
-            child: FutureBuilder<void>(
-              future: _stationsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: FutureBuilder<void>(
+        future: _stationsFuture,
+        builder: (context, snapshot) {
+          final isWaiting = snapshot.connectionState == ConnectionState.waiting;
+          return TrainLoadingTransition(
+            isLoading: isWaiting,
+            loadingLabel: 'Loading train stations...',
+            arrivalLabel: 'Stations ready',
+            child: _buildStationsContent(snapshot),
+          );
+        },
+      ),
+    );
+  }
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.error_outline_rounded,
-                            color: Color(0xFFD7263D),
-                            size: 30,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Failed to load stations from Supabase',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            snapshot.error.toString(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Color(0xFF667085)),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _refreshStations,
-                            child: const Text('Try Again'),
-                          ),
-                        ],
-                      ),
+  Widget _buildStationsContent(AsyncSnapshot<void> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search by station, line, or code',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _searchController.text.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        FocusScope.of(context).unfocus();
+                      },
+                      icon: const Icon(Icons.close_rounded),
                     ),
-                  );
-                }
-
-                return _buildLoadedBody();
-              },
             ),
           ),
-        ],
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: _RouteLegend(),
+        ),
+        Expanded(
+          child: snapshot.hasError
+              ? _buildStationsErrorState(snapshot.error.toString())
+              : _buildLoadedBody(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStationsErrorState(String errorText) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Color(0xFFD7263D),
+              size: 30,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Failed to load stations from Supabase',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              errorText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF667085)),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _refreshStations,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
       ),
     );
   }

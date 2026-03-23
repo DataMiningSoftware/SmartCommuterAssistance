@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'database_service.dart';
+
 class StationOption {
   final String stopId;
   final String stationName;
@@ -82,6 +84,7 @@ class NearbyStationCrowdForecast {
 
 class CrowdReportsService {
   final SupabaseClient _client = Supabase.instance.client;
+  final DatabaseService _databaseService = DatabaseService();
 
   Future<List<StationOption>> fetchStationOptions() async {
     final rows = await _client
@@ -221,18 +224,28 @@ class CrowdReportsService {
       for (final time in times) _isWeekend(time),
     }.toList();
 
-    final rows = await _client
-        .from('crowd_forecast_hourly')
-        .select(
-          'stop_id,forecast_hour,is_weekend,occupancy_level,expected_wait_minutes,eta_multiplier,source_type,updated_at',
-        )
-        .inFilter('stop_id', normalizedStopIds)
-        .inFilter('forecast_hour', hours)
-        .inFilter('is_weekend', weekendFlags);
+    final rows = <Map<String, dynamic>>[];
+    try {
+      final remoteRows = await _client
+          .from('crowd_forecast_hourly')
+          .select(
+            'stop_id,forecast_hour,is_weekend,occupancy_level,expected_wait_minutes,eta_multiplier,source_type,updated_at',
+          )
+          .inFilter('stop_id', normalizedStopIds)
+          .inFilter('forecast_hour', hours)
+          .inFilter('is_weekend', weekendFlags);
+      rows.addAll(
+        remoteRows
+            .whereType<Map>()
+            .map((row) => Map<String, dynamic>.from(row)),
+      );
+    } catch (_) {
+      // Offline or no table access: fallback simulation below.
+    }
 
     final forecasts = <String, StopCrowdForecast>{};
-    for (final row in rows.whereType<Map>()) {
-      final forecast = _toStopCrowdForecast(Map<String, dynamic>.from(row));
+    for (final row in rows) {
+      final forecast = _toStopCrowdForecast(row);
       if (forecast == null) continue;
       forecasts[forecastKey(
         stopId: forecast.stopId,
@@ -241,8 +254,12 @@ class CrowdReportsService {
       )] = forecast;
     }
 
-    final latestByStop =
-        await fetchLatestCrowdReportsForStops(normalizedStopIds);
+    Map<String, CrowdReport> latestByStop = const <String, CrowdReport>{};
+    try {
+      latestByStop = await fetchLatestCrowdReportsForStops(normalizedStopIds);
+    } catch (_) {
+      latestByStop = const <String, CrowdReport>{};
+    }
     for (final stopId in normalizedStopIds) {
       final latest = latestByStop[stopId];
       for (final time in times) {
@@ -258,6 +275,25 @@ class CrowdReportsService {
           sourceType: latest.sourceType,
           updatedAt: latest.createdAt,
         );
+      }
+    }
+
+    for (final stopId in normalizedStopIds) {
+      for (final time in times) {
+        final key = forecastKeyForTime(stopId: stopId, time: time);
+        final existing = forecasts[key];
+        if (existing != null) {
+          forecasts[key] = _applyTenMinuteSimulation(
+            base: existing,
+            time: time,
+          );
+        } else {
+          forecasts[key] = _simulateForecast(
+            stopId: stopId,
+            time: time,
+            sourceType: 'simulated_10m',
+          );
+        }
       }
     }
 
@@ -291,16 +327,36 @@ class CrowdReportsService {
     required DateTime departureTime,
     int limit = 5,
   }) async {
-    final rows = await _client
-        .from('train_stops_kl')
-        .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
+    final rows = <Map<String, dynamic>>[];
+    try {
+      final remoteRows = await _client
+          .from('train_stops_kl')
+          .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
+      final mappedRows = remoteRows
+          .whereType<Map>()
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+      rows.addAll(mappedRows);
+      if (mappedRows.isNotEmpty) {
+        await _databaseService.cacheTrainStops(mappedRows);
+      }
+    } catch (_) {
+      // Offline fallback below.
+    }
+    if (rows.isEmpty) {
+      final cachedRows = await _databaseService.getCachedTrainStops();
+      rows.addAll(
+        cachedRows.map((row) => Map<String, dynamic>.from(row)),
+      );
+    }
 
     final nearestByName = <String, _StationDistanceCandidate>{};
-    for (final row in rows.whereType<Map>()) {
-      final map = Map<String, dynamic>.from(row);
+    for (final map in rows) {
       final stopId = map['stop_id']?.toString().trim().toUpperCase() ?? '';
       final stopName = map['stop_name']?.toString().trim() ?? '';
-      final routeId = map['route_id']?.toString().trim().toUpperCase() ?? '';
+      final routeRaw = map['route_id']?.toString().trim().toUpperCase() ?? '';
+      final routeId =
+          routeRaw.isEmpty ? _inferRouteIdFromStopId(stopId) : routeRaw;
       final lat = _toDouble(map['stop_lat']);
       final lon = _toDouble(map['stop_lon']);
       if (stopId.isEmpty || stopName.isEmpty || lat == null || lon == null) {
@@ -331,10 +387,16 @@ class CrowdReportsService {
     final limited = nearest.take(limit).toList();
     if (limited.isEmpty) return const <NearbyStationCrowdForecast>[];
 
-    final forecasts = await fetchForecastForStopsAtTime(
-      limited.map((item) => item.stopId).toList(),
-      departureTime,
-    );
+    Map<String, StopCrowdForecast> forecasts =
+        const <String, StopCrowdForecast>{};
+    try {
+      forecasts = await fetchForecastForStopsAtTime(
+        limited.map((item) => item.stopId).toList(),
+        departureTime,
+      );
+    } catch (_) {
+      forecasts = const <String, StopCrowdForecast>{};
+    }
 
     return limited
         .map(
@@ -343,7 +405,12 @@ class CrowdReportsService {
             stationName: item.stationName,
             routeId: item.routeId,
             distanceMeters: item.distanceMeters,
-            forecast: forecasts[item.stopId],
+            forecast: forecasts[item.stopId] ??
+                _simulateForecast(
+                  stopId: item.stopId,
+                  time: departureTime,
+                  sourceType: 'simulated_10m',
+                ),
           ),
         )
         .toList();
@@ -476,6 +543,67 @@ class CrowdReportsService {
       default:
         return 1.1;
     }
+  }
+
+  static StopCrowdForecast _applyTenMinuteSimulation({
+    required StopCrowdForecast base,
+    required DateTime time,
+  }) {
+    final fluctuation = _tenMinuteFluctuation(base.stopId, time);
+    final level = (base.occupancyLevel + fluctuation).clamp(0, 3);
+    return StopCrowdForecast(
+      stopId: base.stopId,
+      forecastHour: time.hour,
+      isWeekend: _isWeekend(time),
+      occupancyLevel: level,
+      expectedWaitMinutes: _defaultWaitMinutes(level),
+      etaMultiplier: _defaultEtaMultiplier(level),
+      sourceType: base.sourceType,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  static StopCrowdForecast _simulateForecast({
+    required String stopId,
+    required DateTime time,
+    String sourceType = 'predicted',
+  }) {
+    final baseline = _baselineLevelForTime(time);
+    final fluctuation = _tenMinuteFluctuation(stopId, time);
+    final level = (baseline + fluctuation).clamp(0, 3);
+    return StopCrowdForecast(
+      stopId: stopId.trim().toUpperCase(),
+      forecastHour: time.hour,
+      isWeekend: _isWeekend(time),
+      occupancyLevel: level,
+      expectedWaitMinutes: _defaultWaitMinutes(level),
+      etaMultiplier: _defaultEtaMultiplier(level),
+      sourceType: sourceType,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  static int _baselineLevelForTime(DateTime time) {
+    final hour = time.hour;
+    if (hour <= 5 || hour >= 22) return 0;
+    final peakHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 20);
+    if (!_isWeekend(time) && peakHour) return 2;
+    return 1;
+  }
+
+  static int _tenMinuteFluctuation(String stopId, DateTime time) {
+    final bucket = time.minute ~/ 10; // 0..5
+    final seed = stopId.toUpperCase().codeUnits.fold<int>(
+          0,
+          (sum, code) => sum + code,
+        );
+    final signal = (seed + time.hour + bucket) % 3; // 0,1,2
+    return signal - 1; // -1,0,+1
+  }
+
+  static String _inferRouteIdFromStopId(String stopId) {
+    final match = RegExp(r'^[A-Za-z]+').firstMatch(stopId.trim());
+    return (match?.group(0) ?? 'N/A').toUpperCase();
   }
 
   static double _haversineMeters({

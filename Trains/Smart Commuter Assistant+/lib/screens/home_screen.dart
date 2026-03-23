@@ -1,11 +1,18 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../constants/route_colors.dart';
 import '../services/crowd_reports_service.dart';
+import '../services/station_service.dart';
 import '../widgets/map_preview.dart';
 import '../widgets/prediction_card.dart';
 import 'crowd_forecast_screen.dart';
+import 'map_view.dart';
 import 'route_planner.dart';
 import 'stations_screen.dart';
 
@@ -18,18 +25,28 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final CrowdReportsService _crowdReportsService = CrowdReportsService();
+  final StationService _stationService = StationService();
+  final TextEditingController _routeSearchController = TextEditingController();
   Position? _position;
   String _locationStatus = 'Getting location...';
   bool _isLoadingLocation = false;
-  late Future<List<CrowdReportDisplayItem>> _crowdFeedFuture;
   Future<List<NearbyStationCrowdForecast>>? _nearestCrowdFuture;
+  late Future<List<_HomeStationSearchOption>> _stationSearchFuture;
+  Timer? _nearestAutoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadLocation();
-    _crowdFeedFuture =
-        _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
+    _stationSearchFuture = _loadStationSearchOptions();
+    _startNearestCrowdAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _nearestAutoRefreshTimer?.cancel();
+    _routeSearchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLocation() async {
@@ -98,13 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _refreshCrowdFeed() {
-    setState(() {
-      _crowdFeedFuture =
-          _crowdReportsService.fetchLatestCrowdDisplayFeed(limit: 5);
-    });
-  }
-
   void _refreshNearestCrowd() {
     final position = _position;
     if (position == null) return;
@@ -116,6 +126,134 @@ class _HomeScreenState extends State<HomeScreen> {
         limit: 5,
       );
     });
+  }
+
+  void _startNearestCrowdAutoRefresh() {
+    _nearestAutoRefreshTimer?.cancel();
+    _nearestAutoRefreshTimer = Timer.periodic(
+      const Duration(minutes: 10),
+      (_) {
+        if (!mounted) return;
+        _refreshNearestCrowd();
+      },
+    );
+  }
+
+  Future<List<_HomeStationSearchOption>> _loadStationSearchOptions() async {
+    final groupedRows = <String, List<Map<String, dynamic>>>{};
+
+    void collectRows(List<Map<String, dynamic>> rows) {
+      for (final row in rows) {
+        final stationName =
+            (row['stop_name'] ?? row['station_name'] ?? '').toString().trim();
+        if (stationName.isEmpty) continue;
+        groupedRows
+            .putIfAbsent(stationName, () => <Map<String, dynamic>>[])
+            .add(
+              row,
+            );
+      }
+    }
+
+    try {
+      final stopRows = await Supabase.instance.client
+          .from('train_stops_kl')
+          .select('stop_name,stop_id,route_id');
+      final mappedRows = stopRows
+          .whereType<Map>()
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+      collectRows(mappedRows);
+      if (groupedRows.isNotEmpty) {
+        return _buildSearchOptions(groupedRows);
+      }
+    } catch (_) {
+      // Fallback below.
+    }
+
+    try {
+      final rows = await _stationService.getUniqueStations();
+      collectRows(rows);
+      if (groupedRows.isNotEmpty) {
+        return _buildSearchOptions(groupedRows);
+      }
+    } catch (_) {
+      // Final fallback below.
+    }
+
+    final fallbackOptions = await _crowdReportsService.fetchStationOptions();
+    for (final option in fallbackOptions) {
+      final station = option.stationName.trim();
+      if (station.isEmpty) continue;
+      groupedRows.putIfAbsent(station, () => <Map<String, dynamic>>[]).add(
+        <String, dynamic>{
+          'station_name': station,
+          'stop_id': option.stopId,
+          'route_id': _inferRouteIdFromStopId(option.stopId),
+        },
+      );
+    }
+    return _buildSearchOptions(groupedRows);
+  }
+
+  List<_HomeStationSearchOption> _buildSearchOptions(
+    Map<String, List<Map<String, dynamic>>> groupedRows,
+  ) {
+    final options = <_HomeStationSearchOption>[];
+    for (final entry in groupedRows.entries) {
+      final stationName = entry.key;
+      final rows = entry.value;
+      final stopCodes = <String>{};
+      final routeIds = <String>{};
+
+      for (final row in rows) {
+        final stopCode =
+            (row['stop_id']?.toString() ?? '').trim().toUpperCase();
+        if (stopCode.isNotEmpty) {
+          stopCodes.add(stopCode);
+        }
+
+        final routeRaw = (row['route_id']?.toString() ?? '').trim();
+        if (routeRaw.isNotEmpty) {
+          routeIds.add(normalizeRouteId(routeRaw));
+        } else if (stopCode.isNotEmpty) {
+          routeIds.add(normalizeRouteId(_inferRouteIdFromStopId(stopCode)));
+        }
+
+        final lineArray = row['lines'];
+        if (lineArray is List) {
+          for (final item in lineArray) {
+            final lineText = item?.toString().trim() ?? '';
+            if (lineText.isEmpty) continue;
+            routeIds.add(normalizeRouteId(lineText));
+          }
+        }
+      }
+
+      final sortedCodes = stopCodes.toList()..sort();
+      final sortedRoutes = routeIds.where((id) => id != 'N/A').toList()..sort();
+
+      options.add(
+        _HomeStationSearchOption(
+          stationName: stationName,
+          stopCodes: sortedCodes,
+          routeIds: sortedRoutes,
+        ),
+      );
+    }
+    options.sort((a, b) => a.stationName.compareTo(b.stationName));
+    return options;
+  }
+
+  void _openMapWithDestination(String stationName) {
+    final trimmed = stationName.trim();
+    if (trimmed.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapView(initialDestinationName: trimmed),
+      ),
+    );
   }
 
   @override
@@ -133,6 +271,12 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _HeroCard(theme: theme),
             const SizedBox(height: 12),
+            _HomeRouteSearchCard(
+              stationNamesFuture: _stationSearchFuture,
+              controller: _routeSearchController,
+              onStationSelected: _openMapWithDestination,
+            ),
+            const SizedBox(height: 12),
             _LocationCard(
               position: _position,
               status: _locationStatus,
@@ -145,11 +289,6 @@ class _HomeScreenState extends State<HomeScreen> {
               nearestCrowdFuture: _nearestCrowdFuture,
               hasLocation: _position != null,
               onRefresh: _refreshNearestCrowd,
-            ),
-            const SizedBox(height: 12),
-            _HomeCrowdFeedCard(
-              crowdFeedFuture: _crowdFeedFuture,
-              onRefresh: _refreshCrowdFeed,
             ),
             const SizedBox(height: 18),
             const PredictionCard(
@@ -215,6 +354,311 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+class _HomeRouteSearchCard extends StatelessWidget {
+  final Future<List<_HomeStationSearchOption>> stationNamesFuture;
+  final TextEditingController controller;
+  final ValueChanged<String> onStationSelected;
+
+  const _HomeRouteSearchCard({
+    required this.stationNamesFuture,
+    required this.controller,
+    required this.onStationSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3EAF7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.route_rounded),
+              SizedBox(width: 8),
+              Text(
+                'Find Route Fast',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<_HomeStationSearchOption>>(
+            future: stationNamesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: LinearProgressIndicator(minHeight: 2),
+                );
+              }
+              if (snapshot.hasError) {
+                return Text(
+                  'Failed to load stations: ${snapshot.error}',
+                  style: const TextStyle(color: Color(0xFFB42318)),
+                );
+              }
+
+              final stationOptions =
+                  snapshot.data ?? const <_HomeStationSearchOption>[];
+              if (stationOptions.isEmpty) {
+                return const Text(
+                  'No station names available yet.',
+                  style: TextStyle(color: Color(0xFF667085)),
+                );
+              }
+
+              return Autocomplete<_HomeStationSearchOption>(
+                optionsBuilder: (value) {
+                  final query = value.text.trim().toLowerCase();
+                  if (query.isEmpty) {
+                    return const Iterable<_HomeStationSearchOption>.empty();
+                  }
+                  return stationOptions.where((station) {
+                    final inName =
+                        station.stationName.toLowerCase().contains(query);
+                    final inCode = station.stopCodes.any(
+                      (code) => code.toLowerCase().contains(query),
+                    );
+                    final inRoute = station.routeIds.any(
+                      (routeId) => routeId.toLowerCase().contains(query),
+                    );
+                    return inName || inCode || inRoute;
+                  }).take(12);
+                },
+                displayStringForOption: (option) => option.stationName,
+                onSelected: (option) => onStationSelected(option.stationName),
+                fieldViewBuilder:
+                    (context, textController, focusNode, onFieldSubmitted) {
+                  if (textController.text != controller.text) {
+                    textController.value = controller.value;
+                  }
+                  return TextField(
+                    controller: textController,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Type destination station',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          final value = textController.text.trim();
+                          if (value.isNotEmpty) {
+                            onStationSelected(value);
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                        tooltip: 'Open map route',
+                      ),
+                    ),
+                    onChanged: (_) {
+                      controller.value = textController.value;
+                    },
+                    onSubmitted: (value) {
+                      final text = value.trim();
+                      if (text.isNotEmpty) {
+                        onStationSelected(text);
+                      }
+                    },
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  final optionList = options.toList();
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        width: 420,
+                        margin: const EdgeInsets.only(top: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFDCE6F5)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F101828),
+                              blurRadius: 16,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          shrinkWrap: true,
+                          itemCount: optionList.length,
+                          separatorBuilder: (_, __) =>
+                              const Divider(height: 1, thickness: 0.6),
+                          itemBuilder: (context, index) {
+                            final option = optionList[index];
+                            return ListTile(
+                              dense: true,
+                              visualDensity: const VisualDensity(
+                                horizontal: -1,
+                                vertical: -2,
+                              ),
+                              leading: _HomeSearchRouteBadge(
+                                routeIds: option.routeIds,
+                              ),
+                              title: Text(
+                                option.stationName,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              subtitle: Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: option.stopCodes
+                                    .map(
+                                      (code) => _HomeSearchCodeChip(code: code),
+                                    )
+                                    .toList(),
+                              ),
+                              onTap: () => onSelected(option),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeStationSearchOption {
+  final String stationName;
+  final List<String> stopCodes;
+  final List<String> routeIds;
+
+  const _HomeStationSearchOption({
+    required this.stationName,
+    required this.stopCodes,
+    required this.routeIds,
+  });
+}
+
+class _HomeSearchRouteBadge extends StatelessWidget {
+  final List<String> routeIds;
+
+  const _HomeSearchRouteBadge({
+    required this.routeIds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ids = routeIds.where((id) => id.isNotEmpty && id != 'N/A').toList();
+    if (ids.length <= 1) {
+      final route = ids.isEmpty ? 'N/A' : ids.first;
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: getRouteColor(route),
+        child: Text(
+          normalizeRouteId(route),
+          style: TextStyle(
+            color: getRouteOnColor(route),
+            fontWeight: FontWeight.w800,
+            fontSize: 10,
+          ),
+        ),
+      );
+    }
+
+    final colors = ids.map(getRouteColor).toList();
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: CustomPaint(
+        painter: _HomeSearchRouteSegmentsPainter(colors: colors),
+      ),
+    );
+  }
+}
+
+class _HomeSearchRouteSegmentsPainter extends CustomPainter {
+  final List<Color> colors;
+
+  const _HomeSearchRouteSegmentsPainter({
+    required this.colors,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final center = rect.center;
+    final radius = math.min(size.width, size.height) / 2;
+    final arcRect = Rect.fromCircle(center: center, radius: radius);
+    final segmentAngle = (2 * math.pi) / colors.length;
+    var start = -math.pi / 2;
+
+    for (final color in colors) {
+      final paint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = color;
+      canvas.drawArc(arcRect, start, segmentAngle, true, paint);
+      start += segmentAngle;
+    }
+
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = const Color(0xFFDDE6F5);
+    canvas.drawCircle(center, radius - 0.5, border);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HomeSearchRouteSegmentsPainter oldDelegate) {
+    if (oldDelegate.colors.length != colors.length) return true;
+    for (var i = 0; i < colors.length; i++) {
+      if (oldDelegate.colors[i] != colors[i]) return true;
+    }
+    return false;
+  }
+}
+
+class _HomeSearchCodeChip extends StatelessWidget {
+  final String code;
+
+  const _HomeSearchCodeChip({
+    required this.code,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final routeId = normalizeRouteId(_inferRouteIdFromStopId(code));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: getRouteColor(routeId).withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        code,
+        style: TextStyle(
+          color: getRouteColor(routeId),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+String _inferRouteIdFromStopId(String stopId) {
+  final match = RegExp(r'^[A-Za-z]+').firstMatch(stopId.trim());
+  return (match?.group(0) ?? 'N/A').toUpperCase();
 }
 
 class _LocationCard extends StatelessWidget {
@@ -284,80 +728,6 @@ class _LocationCard extends StatelessWidget {
             onPressed: position == null ? null : onOpenMap,
             icon: const Icon(Icons.map_rounded),
             label: const Text('Open in Google Maps'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HomeCrowdFeedCard extends StatelessWidget {
-  final Future<List<CrowdReportDisplayItem>> crowdFeedFuture;
-  final VoidCallback onRefresh;
-
-  const _HomeCrowdFeedCard({
-    required this.crowdFeedFuture,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE3EAF7)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.groups_rounded),
-              const SizedBox(width: 8),
-              const Text(
-                'Latest Crowd Predictions',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: onRefresh,
-                icon: const Icon(Icons.refresh_rounded),
-                tooltip: 'Refresh crowd data',
-              ),
-            ],
-          ),
-          FutureBuilder<List<CrowdReportDisplayItem>>(
-            future: crowdFeedFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return Text(
-                  'Failed to load crowd feed: ${snapshot.error}',
-                  style: const TextStyle(color: Color(0xFFB42318)),
-                );
-              }
-
-              final items = snapshot.data ?? const <CrowdReportDisplayItem>[];
-              if (items.isEmpty) {
-                return const Text(
-                  'No crowd prediction data yet.',
-                  style: TextStyle(color: Color(0xFF667085)),
-                );
-              }
-
-              return Column(
-                children:
-                    items.map((item) => _CrowdFeedRow(item: item)).toList(),
-              );
-            },
           ),
         ],
       ),
@@ -459,7 +829,7 @@ class _NearestCrowdRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final level = item.forecast?.occupancyLevel ?? -1;
-    final ui = _CrowdFeedRow._crowdUiByLevel(level);
+    final ui = _HomeCrowdUi.fromLevel(level);
     final distanceText = item.distanceMeters < 1000
         ? '${item.distanceMeters.toStringAsFixed(0)} m'
         : '${(item.distanceMeters / 1000).toStringAsFixed(2)} km';
@@ -507,51 +877,16 @@ class _NearestCrowdRow extends StatelessWidget {
   }
 }
 
-class _CrowdFeedRow extends StatelessWidget {
-  final CrowdReportDisplayItem item;
+class _HomeCrowdUi {
+  final String label;
+  final Color color;
 
-  const _CrowdFeedRow({
-    required this.item,
+  const _HomeCrowdUi({
+    required this.label,
+    required this.color,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final ui = _crowdUiByLevel(item.occupancyLevel);
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: ui.color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${item.stationName} (${item.stopId})',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            ui.label,
-            style: TextStyle(
-              color: ui.color,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static _HomeCrowdUi _crowdUiByLevel(int level) {
+  static _HomeCrowdUi fromLevel(int level) {
     switch (level) {
       case 0:
         return const _HomeCrowdUi(label: 'Empty', color: Color(0xFF16A34A));
@@ -565,16 +900,6 @@ class _CrowdFeedRow extends StatelessWidget {
         return const _HomeCrowdUi(label: 'Unknown', color: Color(0xFF667085));
     }
   }
-}
-
-class _HomeCrowdUi {
-  final String label;
-  final Color color;
-
-  const _HomeCrowdUi({
-    required this.label,
-    required this.color,
-  });
 }
 
 class _HeroCard extends StatelessWidget {

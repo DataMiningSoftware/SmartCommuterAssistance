@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
@@ -6,6 +9,7 @@ import 'screens/map_view.dart';
 import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'widgets/train_loading_transition.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -163,18 +167,139 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0;
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<dynamic>? _connectivitySubscription;
+  Timer? _bannerTimer;
+  Timer? _tabSwitchTimer;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const MapView(),
-    const ProfileScreen(),
-  ];
+  int _currentIndex = 0;
+  final List<int> _screenGenerations = <int>[0, 0, 0];
+  bool _isConnected = true;
+  bool _isTabSwitching = false;
+  _NetworkBannerType _bannerType = _NetworkBannerType.hidden;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeConnectivity();
+  }
+
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _tabSwitchTimer?.cancel();
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initializeConnectivity() async {
+    final initial = await _connectivity.checkConnectivity();
+    if (!mounted) return;
+    _applyConnectivity(initial, isInitial: true);
+
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen((event) {
+      _applyConnectivity(event);
+    });
+  }
+
+  void _applyConnectivity(dynamic event, {bool isInitial = false}) {
+    final connected = _eventHasConnection(event);
+    final previouslyConnected = _isConnected;
+    if (!isInitial && connected == previouslyConnected) {
+      return;
+    }
+
+    _isConnected = connected;
+    if (!connected) {
+      _bannerTimer?.cancel();
+      if (!mounted) return;
+      setState(() => _bannerType = _NetworkBannerType.disconnected);
+      return;
+    }
+
+    if (isInitial || previouslyConnected) {
+      if (!mounted) return;
+      setState(() => _bannerType = _NetworkBannerType.hidden);
+      return;
+    }
+
+    _bannerTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _bannerType = _NetworkBannerType.connected);
+    _refreshCurrentScreen();
+    _bannerTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() => _bannerType = _NetworkBannerType.hidden);
+    });
+  }
+
+  bool _eventHasConnection(dynamic event) {
+    if (event is ConnectivityResult) {
+      return event != ConnectivityResult.none;
+    }
+    if (event is List<ConnectivityResult>) {
+      return event.any((result) => result != ConnectivityResult.none);
+    }
+    if (event is Iterable) {
+      for (final item in event) {
+        if (item is ConnectivityResult && item != ConnectivityResult.none) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+
+  void _refreshCurrentScreen() {
+    if (_currentIndex < 0 || _currentIndex >= _screenGenerations.length) {
+      return;
+    }
+    setState(() {
+      _screenGenerations[_currentIndex] = _screenGenerations[_currentIndex] + 1;
+    });
+  }
+
+  Widget _buildCurrentScreen() {
+    switch (_currentIndex) {
+      case 0:
+        return HomeScreen(key: ValueKey('home_${_screenGenerations[0]}'));
+      case 1:
+        return MapView(key: ValueKey('map_${_screenGenerations[1]}'));
+      case 2:
+      default:
+        return ProfileScreen(key: ValueKey('profile_${_screenGenerations[2]}'));
+    }
+  }
+
+  void _handleTabSwitch(int index) {
+    if (index == _currentIndex) return;
+    _tabSwitchTimer?.cancel();
+    setState(() {
+      _currentIndex = index;
+      _isTabSwitching = true;
+    });
+    _tabSwitchTimer = Timer(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+      setState(() => _isTabSwitching = false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: Stack(
+        children: [
+          TrainLoadingTransition(
+            isLoading: _isTabSwitching,
+            loadingLabel: 'Loading page...',
+            arrivalLabel: 'Page ready',
+            child: _buildCurrentScreen(),
+          ),
+          _NetworkStatusBanner(type: _bannerType),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Color(0xFFE3E9F5))),
@@ -185,8 +310,7 @@ class _MainNavigationState extends State<MainNavigation> {
           indicatorColor:
               Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           selectedIndex: _currentIndex,
-          onDestinationSelected: (index) =>
-              setState(() => _currentIndex = index),
+          onDestinationSelected: _handleTabSwitch,
           destinations: const [
             NavigationDestination(
                 icon: Icon(Icons.home_outlined),
@@ -201,6 +325,81 @@ class _MainNavigationState extends State<MainNavigation> {
                 selectedIcon: Icon(Icons.person),
                 label: 'Profile'),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _NetworkBannerType {
+  hidden,
+  disconnected,
+  connected,
+}
+
+class _NetworkStatusBanner extends StatelessWidget {
+  final _NetworkBannerType type;
+
+  const _NetworkStatusBanner({
+    required this.type,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = type != _NetworkBannerType.hidden;
+    final isConnected = type == _NetworkBannerType.connected;
+    final color =
+        isConnected ? const Color(0xFF16A34A) : const Color(0xFF111827);
+    final text = isConnected ? 'You are connected' : 'Disconnected';
+    final icon = isConnected ? Icons.wifi_rounded : Icons.wifi_off_rounded;
+
+    return IgnorePointer(
+      ignoring: true,
+      child: SafeArea(
+        minimum: const EdgeInsets.only(top: 8, left: 12, right: 12),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: AnimatedSlide(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            offset: visible ? Offset.zero : const Offset(0, -1.2),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: visible ? 1 : 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x2F000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 16, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      text,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
