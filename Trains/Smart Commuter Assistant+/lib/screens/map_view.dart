@@ -5,15 +5,18 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/route_colors.dart';
+import '../services/active_trip_service.dart';
 import '../services/database_service.dart';
 import '../widgets/train_loading_transition.dart';
 
 class MapView extends StatefulWidget {
   final String? initialDestinationName;
+  final String? preferredRouteType;
 
   const MapView({
     super.key,
     this.initialDestinationName,
+    this.preferredRouteType,
   });
 
   @override
@@ -76,6 +79,7 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   final TextEditingController _destinationController = TextEditingController();
 
   late final AnimationController _blinkController;
+  late final TransformationController _mapController;
 
   bool _isLoading = true;
   bool _isRouting = false;
@@ -89,22 +93,40 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   List<_StationOption> _stationOptions = <_StationOption>[];
   _StationOption? _selectedDestination;
   _ResolvedRoute? _resolvedRoute;
+  String? _focusedStopId;
+  double _mapScale = 1;
 
   @override
   void initState() {
     super.initState();
+    _mapController = TransformationController()
+      ..addListener(_handleMapTransform);
     _blinkController = AnimationController(
       vsync: this,
       duration: _blinkDuration,
     )..repeat(reverse: true);
     _bootstrap();
+    if (widget.preferredRouteType != null) {
+      // Show user selected preference briefly
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showMessage('Route preference: ${widget.preferredRouteType}');
+      });
+    }
   }
 
   @override
   void dispose() {
+    _mapController.removeListener(_handleMapTransform);
+    _mapController.dispose();
     _blinkController.dispose();
     _destinationController.dispose();
     super.dispose();
+  }
+
+  void _handleMapTransform() {
+    final scale = _mapController.value.getMaxScaleOnAxis();
+    if ((scale - _mapScale).abs() < 0.05 || !mounted) return;
+    setState(() => _mapScale = scale);
   }
 
   Future<void> _bootstrap() async {
@@ -115,7 +137,10 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
     try {
       await _loadNetworkData();
       await _refreshLocation(silentOnError: true);
-      final initialQuery = widget.initialDestinationName?.trim() ?? '';
+      final activeTrip = ActiveTripService.instance.activeTrip.value;
+      final initialQuery = widget.initialDestinationName?.trim() ??
+          activeTrip?.destinationName.trim() ??
+          '';
       if (initialQuery.isNotEmpty) {
         _StationOption? match;
         for (final option in _stationOptions) {
@@ -575,6 +600,7 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
           routeLines: routeLines,
           interchangeMarkers: interchanges,
         );
+        _focusedStopId = resolved.destinationStopId;
       });
     } catch (e) {
       _showMessage('Failed to compute route: $e');
@@ -803,10 +829,155 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
     );
   }
 
+  _StopNode? _stopAtCanvasPoint(Offset localPosition, Size size) {
+    _StopNode? closest;
+    var closestDistance = double.infinity;
+    for (final stop in _stopsById.values) {
+      final point = Offset(stop.mapX * size.width, stop.mapY * size.height);
+      final distance = (point - localPosition).distance;
+      if (distance < 22 && distance < closestDistance) {
+        closest = stop;
+        closestDistance = distance;
+      }
+    }
+    return closest;
+  }
+
+  Future<void> _handleStationTap(_StopNode stop) async {
+    if (mounted) {
+      setState(() => _focusedStopId = stop.stopId);
+    }
+    _StationOption? option;
+    for (final candidate in _stationOptions) {
+      if (candidate.stationName.toUpperCase() == stop.stopName.toUpperCase()) {
+        option = candidate;
+        break;
+      }
+    }
+
+    final selected = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stop.stopName,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${stop.stopId} • ${stop.routeId}',
+                  style: const TextStyle(
+                    color: Color(0xFF667085),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    icon: const Icon(Icons.alt_route_rounded),
+                    label: const Text('Use As Destination'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != true || option == null || !mounted) return;
+    _destinationController.text = option.stationName;
+    _onDestinationSelected(option);
+  }
+
+  List<Widget> _buildStationMarkers(Size size) {
+    return _stopsById.values.map((stop) {
+      final left = (stop.mapX * size.width).clamp(0.0, size.width);
+      final top = (stop.mapY * size.height).clamp(0.0, size.height);
+      final isRouteStop = _resolvedRoute?.originStopId == stop.stopId ||
+          _resolvedRoute?.destinationStopId == stop.stopId ||
+          _resolvedRoute?.edges.any(
+                (edge) =>
+                    edge.fromStopId == stop.stopId ||
+                    edge.toStopId == stop.stopId,
+              ) ==
+              true;
+      final isFocused = _focusedStopId == stop.stopId;
+      final markerSize = isRouteStop || isFocused ? 15.0 : 11.0;
+      final showLabel = isFocused;
+
+      return Positioned(
+        left: left - 22,
+        top: top - 22,
+        child: Tooltip(
+          message: '${stop.stopName} • ${stop.stopId}',
+          child: GestureDetector(
+            onTap: () => _handleStationTap(stop),
+            child: SizedBox(
+              width: showLabel ? 128 : 44,
+              height: showLabel ? 58 : 44,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  Positioned(
+                    top: 14,
+                    child: Container(
+                      width: markerSize,
+                      height: markerSize,
+                      decoration: BoxDecoration(
+                        color: isFocused
+                            ? getRouteColor(stop.routeId)
+                            : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: getRouteColor(stop.routeId),
+                          width: isRouteStop || isFocused ? 3.5 : 2.2,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x220F172A),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (showLabel)
+                    Positioned(
+                      top: 34,
+                      child: _StationMapLabel(
+                        stopName: stop.stopName,
+                        stopId: stop.stopId,
+                        highlighted: isRouteStop || isFocused,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Interactive Network Map')),
+      appBar: AppBar(title: const Text('Rail Pulse Map')),
       body: TrainLoadingTransition(
         isLoading: _isLoading,
         loadingLabel: 'Drawing network map...',
@@ -843,6 +1014,7 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: InteractiveViewer(
+                            transformationController: _mapController,
                             minScale: 1.0,
                             maxScale: 5.0,
                             panEnabled: true,
@@ -852,21 +1024,43 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
                               child: AnimatedBuilder(
                                 animation: _blinkController,
                                 builder: (context, _) {
-                                  return Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Image.asset(
-                                        'assets/images/klang_valley_map.png',
-                                        fit: BoxFit.cover,
-                                      ),
-                                      CustomPaint(
-                                        painter: _RouteHighlightPainter(
-                                          stopsById: _stopsById,
-                                          route: _resolvedRoute,
-                                          blinkValue: _blinkController.value,
+                                  return LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final size = Size(
+                                        constraints.maxWidth,
+                                        constraints.maxHeight,
+                                      );
+                                      return GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTapUp: (details) {
+                                          final stop = _stopAtCanvasPoint(
+                                            details.localPosition,
+                                            size,
+                                          );
+                                          if (stop != null) {
+                                            _handleStationTap(stop);
+                                          }
+                                        },
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Image.asset(
+                                              'assets/images/klang_valley_map.png',
+                                              fit: BoxFit.cover,
+                                            ),
+                                            CustomPaint(
+                                              painter: _RouteHighlightPainter(
+                                                stopsById: _stopsById,
+                                                route: _resolvedRoute,
+                                                blinkValue:
+                                                    _blinkController.value,
+                                              ),
+                                            ),
+                                            ..._buildStationMarkers(size),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    },
                                   );
                                 },
                               ),
@@ -1039,7 +1233,7 @@ class _ControlPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Select a destination and the map will blink route colors, including interchange transitions.',
+            'Tap any marked station or search one to light up the route on the map.',
             style: TextStyle(
               color: Color(0xFF667085),
               fontSize: 12,
@@ -1189,6 +1383,52 @@ class _SearchRouteBadge extends StatelessWidget {
       height: 32,
       child: CustomPaint(
         painter: _SearchRouteSegmentsPainter(colors: colors),
+      ),
+    );
+  }
+}
+
+class _StationMapLabel extends StatelessWidget {
+  final String stopName;
+  final String stopId;
+  final bool highlighted;
+
+  const _StationMapLabel({
+    required this.stopName,
+    required this.stopId,
+    required this.highlighted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: highlighted ? const Color(0xFF0A3A8B) : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color:
+              highlighted ? const Color(0xFF0A3A8B) : const Color(0xFFDCE6F5),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14101828),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Text(
+          '$stopId  $stopName',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: highlighted ? Colors.white : const Color(0xFF344054),
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }

@@ -37,7 +37,8 @@ class StationDetails extends StatelessWidget {
                           children: [
                             Text(
                               'KL Sentral',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                             Text('Central Transportation Hub'),
                           ],
@@ -45,14 +46,14 @@ class StationDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
                     Row(
                       children: [
                         const Text('Current Crowd Level: '),
-                        const CrowdIndicator(level: 'High'),
+                        const CrowdIndicator(level: 'Packed'),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.tertiary,
                             borderRadius: BorderRadius.circular(12),
@@ -69,21 +70,21 @@ class StationDetails extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Upcoming Trains
             const Text(
               'Upcoming Trains',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            
-            _buildTrainCard('Kelana Jaya Line', 'KLCC', '2 min', 'Medium'),
-            _buildTrainCard('Ampang Line', 'Masjid Jamek', '5 min', 'Low'),
-            _buildTrainCard('KTM Komuter', 'Seremban', '8 min', 'High'),
-            _buildTrainCard('Kelana Jaya Line', 'Gombak', '12 min', 'Low'),
-            
+
+            _buildTrainCard('Kelana Jaya Line', 'KLCC', '2 min', 'Steady'),
+            _buildTrainCard('Ampang Line', 'Masjid Jamek', '5 min', 'Light'),
+            _buildTrainCard('KTM Komuter', 'Seremban', '8 min', 'Packed'),
+            _buildTrainCard('Kelana Jaya Line', 'Gombak', '12 min', 'Light'),
+
             const SizedBox(height: 20),
-            
+
             // Weather Info
             Card(
               child: Padding(
@@ -116,7 +117,8 @@ class StationDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildTrainCard(String line, String destination, String eta, String crowdLevel) {
+  Widget _buildTrainCard(
+      String line, String destination, String eta, String crowdLevel) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(

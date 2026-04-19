@@ -7,6 +7,20 @@ create table if not exists public.crowd_reports (
   created_at timestamptz not null default now()
 );
 
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'crowd_reports'
+      and column_name = 'source_type'
+  ) then
+    alter table public.crowd_reports
+      drop constraint if exists crowd_reports_source_type_check;
+  end if;
+end $$;
+
 -- Migrate older schema if it still uses station_id.
 do $$
 begin
@@ -41,6 +55,6 @@ on public.crowd_reports
 for insert
 to anon
 with check (
-  source_type = 'user'
+  source_type in ('user', 'delay')
   and occupancy_level between 0 and 3
 );

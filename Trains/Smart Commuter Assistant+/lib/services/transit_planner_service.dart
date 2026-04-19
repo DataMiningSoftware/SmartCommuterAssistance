@@ -78,7 +78,8 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
 
   RouteInfo _toRouteInfo(TransitPath path, int sequence) {
     if (path.stationIds.isEmpty) {
-      final station = graph.station(path.stationIds.isNotEmpty ? path.stationIds.first : '');
+      final station = graph
+          .station(path.stationIds.isNotEmpty ? path.stationIds.first : '');
       final originName = station?.name ?? '';
       return RouteInfo(
         routeId: 'route_$sequence',
@@ -87,7 +88,7 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
         steps: const <RouteStep>[],
         totalDurationMinutes: 0,
         totalDistance: 0,
-        crowdLevel: 'Low',
+        crowdLevel: 'Light',
         fare: 0,
       );
     }
@@ -98,7 +99,8 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
     for (var i = 0; i < path.edges.length; i++) {
       final edge = path.edges[i];
       final nextStation = graph.station(edge.toId)!;
-      final stepType = edge.isTransfer ? RouteStepType.transfer : RouteStepType.train;
+      final stepType =
+          edge.isTransfer ? RouteStepType.transfer : RouteStepType.train;
       steps.add(
         RouteStep(
           type: stepType,
@@ -113,12 +115,14 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
     }
 
     final crowd = path.transferCount >= 2
-        ? 'High'
+        ? 'Packed'
         : path.totalMinutes > 30
-            ? 'Medium'
-            : 'Low';
+            ? 'Steady'
+            : 'Light';
 
-    final fare = (1.4 + (path.totalDistanceKm * 0.13) + (path.transferCount * 0.35)).clamp(1.4, 8.0);
+    final fare =
+        (1.4 + (path.totalDistanceKm * 0.13) + (path.transferCount * 0.35))
+            .clamp(1.4, 8.0);
 
     return RouteInfo(
       routeId: 'route_$sequence',

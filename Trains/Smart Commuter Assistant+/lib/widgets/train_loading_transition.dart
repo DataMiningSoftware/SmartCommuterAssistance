@@ -9,7 +9,6 @@ class TrainLoadingTransition extends StatefulWidget {
   final String loadingLabel;
   final String arrivalLabel;
   final Duration fadeDuration;
-  final Color backgroundColor;
 
   const TrainLoadingTransition({
     super.key,
@@ -18,7 +17,6 @@ class TrainLoadingTransition extends StatefulWidget {
     this.loadingLabel = 'Loading your journey...',
     this.arrivalLabel = 'Arriving at station...',
     this.fadeDuration = const Duration(milliseconds: 420),
-    this.backgroundColor = const Color(0xFFF3F4F6),
   });
 
   @override
@@ -157,7 +155,7 @@ class _TrainLoadingTransitionState extends State<TrainLoadingTransition>
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOut,
             child: Container(
-              color: widget.backgroundColor,
+              color: Theme.of(context).scaffoldBackgroundColor,
               alignment: Alignment.center,
               child: AnimatedBuilder(
                 animation: Listenable.merge(<Listenable>[
@@ -199,6 +197,7 @@ class _TrainLoadingScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bool isStopping = phase == _LoaderPhase.stopping;
     final String label = isStopping ? arrivalLabel : loadingLabel;
     final double bobOffset = phase == _LoaderPhase.loading
@@ -234,7 +233,7 @@ class _TrainLoadingScene extends StatelessWidget {
                         child: Container(
                           height: 8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                             borderRadius: BorderRadius.circular(99),
                           ),
                         ),
@@ -242,7 +241,7 @@ class _TrainLoadingScene extends StatelessWidget {
                       Positioned(
                         left: width * 0.47,
                         top: height * 0.42,
-                        child: const _StationMarker(),
+                        child: _StationMarker(theme: theme),
                       ),
                       Positioned(
                         left: left,
@@ -251,6 +250,7 @@ class _TrainLoadingScene extends StatelessWidget {
                           width: trainWidth,
                           height: trainHeight,
                           isStopping: isStopping,
+                          theme: theme,
                         ),
                       ),
                     ],
@@ -262,10 +262,10 @@ class _TrainLoadingScene extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF334155),
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],
@@ -275,7 +275,9 @@ class _TrainLoadingScene extends StatelessWidget {
 }
 
 class _StationMarker extends StatelessWidget {
-  const _StationMarker();
+  final ThemeData theme;
+
+  const _StationMarker({required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -285,27 +287,27 @@ class _StationMarker extends StatelessWidget {
           width: 18,
           height: 18,
           decoration: BoxDecoration(
-            color: const Color(0xFF0EA5E9),
+            color: theme.colorScheme.primary,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: const [
+            border: Border.all(color: theme.colorScheme.surface, width: 2),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x300EA5E9),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.train_rounded,
             size: 10,
-            color: Colors.white,
+            color: theme.colorScheme.onPrimary,
           ),
         ),
         Container(
           width: 3,
           height: 22,
-          color: const Color(0xFF94A3B8),
+          color: theme.dividerColor,
         ),
       ],
     );
@@ -316,11 +318,13 @@ class _TrainBody extends StatelessWidget {
   final double width;
   final double height;
   final bool isStopping;
+  final ThemeData theme;
 
   const _TrainBody({
     required this.width,
     required this.height,
     required this.isStopping,
+    required this.theme,
   });
 
   @override
@@ -334,24 +338,23 @@ class _TrainBody extends StatelessWidget {
           height: height,
           padding: EdgeInsets.symmetric(horizontal: width * 0.12),
           decoration: BoxDecoration(
-            color:
-                isStopping ? const Color(0xFF0EA5E9) : const Color(0xFFE34262),
+            color: isStopping ? theme.colorScheme.primary : theme.colorScheme.error,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0xFF9F1239), width: 1),
-            boxShadow: const [
+            border: Border.all(color: theme.colorScheme.error, width: 1),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x280F172A),
+                color: theme.colorScheme.shadow.withValues(alpha: 0.28),
                 blurRadius: 8,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.directions_transit_filled_rounded,
                 size: 15,
-                color: Colors.white,
+                color: theme.colorScheme.onPrimary,
               ),
               SizedBox(width: width * 0.06),
               Expanded(
@@ -362,7 +365,7 @@ class _TrainBody extends StatelessWidget {
                       width: width * 0.13,
                       height: height * 0.40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
                       ),
                     );
@@ -379,18 +382,18 @@ class _TrainBody extends StatelessWidget {
             Container(
               width: wheelSize,
               height: wheelSize,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF475569),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
             SizedBox(width: width - (wheelSize * 2)),
             Container(
               width: wheelSize,
               height: wheelSize,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF475569),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ],

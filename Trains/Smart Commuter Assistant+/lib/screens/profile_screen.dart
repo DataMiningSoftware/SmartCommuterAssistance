@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/theme_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,16 +22,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userName = user?.name ?? 'User';
     final userEmail = user?.email ?? 'no-email@example.com';
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('Commute Hub')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
         children: [
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFE2E9F6)),
+              border: Border.all(
+                  color:
+                      Theme.of(context).dividerColor.withValues(alpha: 0.12)),
             ),
             child: Row(
               children: [
@@ -39,7 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: theme.colorScheme.primary,
                   child: Text(
                     userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                    style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -49,12 +55,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Text(
                         userName,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         userEmail,
-                        style: const TextStyle(color: Color(0xFF667085)),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.7)),
                       ),
                     ],
                   ),
@@ -111,6 +120,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: const Text('Accessibility'),
                 subtitle: const Text('Larger labels and stronger contrast'),
               ),
+              const Divider(height: 1),
+              SwitchListTile(
+                value: ThemeController.instance.mode.value == ThemeMode.dark,
+                onChanged: (v) async {
+                  await ThemeController.instance.toggle();
+                  setState(() {});
+                },
+                title: const Text('Dark Mode'),
+                subtitle: const Text('Enable dark theme for the app'),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -118,11 +137,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 10),
           _Panel(
             children: [
-              _ActionRow(icon: Icons.favorite_outline, title: 'Favorite Routes', onTap: () {}),
+              _ActionRow(
+                  icon: Icons.favorite_outline,
+                  title: 'Favorite Routes',
+                  onTap: () {}),
               const Divider(height: 1),
-              _ActionRow(icon: Icons.history, title: 'Travel History', onTap: () {}),
+              _ActionRow(
+                  icon: Icons.history, title: 'Travel History', onTap: () {}),
               const Divider(height: 1),
-              _ActionRow(icon: Icons.help_outline, title: 'Help & Support', onTap: () {}),
+              _ActionRow(
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  onTap: () {}),
               const Divider(height: 1),
               _ActionRow(
                 icon: Icons.info_outline,
@@ -177,9 +203,10 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E9F6)),
+        border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.12)),
       ),
       child: Column(children: children),
     );

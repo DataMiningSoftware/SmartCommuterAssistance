@@ -3,12 +3,18 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'constants/app_shadows.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_view.dart';
 import 'screens/profile_screen.dart';
+import 'screens/track_route_screen.dart';
+import 'services/active_trip_service.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'services/navigation_state.dart';
+import 'services/notification_service.dart';
+import 'services/theme_controller.dart';
 import 'widgets/train_loading_transition.dart';
 
 Future<void> main() async {
@@ -42,6 +48,9 @@ Future<void> main() async {
 
   await DatabaseService().initialize();
   await AuthService().initialize();
+  await ActiveTripService.instance.initialize();
+  await NotificationService().initialize();
+  await ThemeController.initialize();
 
   runApp(const SmartCommuterApp());
 }
@@ -54,89 +63,187 @@ class SmartCommuterApp extends StatelessWidget {
     const primary = Color(0xFF0A3A8B);
     const secondary = Color(0xFFD7263D);
     const tertiary = Color(0xFFF4B400);
-    const surface = Color(0xFFF4F7FC);
+    const lightSurface = Color(0xFFF4F7FC);
+    const darkSurface = Color(0xFF0B1220);
 
-    return MaterialApp(
-      title: 'Smart Commuter Assistant+',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primary,
-          primary: primary,
-          secondary: secondary,
-          tertiary: tertiary,
-          surface: surface,
-        ),
-        scaffoldBackgroundColor: surface,
-        appBarTheme: const AppBarTheme(
-          centerTitle: false,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: Colors.transparent,
-          foregroundColor: Color(0xFF0E1C3B),
-          titleTextStyle: TextStyle(
-            color: Color(0xFF0E1C3B),
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.2,
-          ),
-        ),
-        textTheme: const TextTheme(
-          headlineSmall:
-              TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-          titleLarge:
-              TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-          titleMedium: TextStyle(fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(height: 1.3),
-        ),
-        cardTheme: const CardThemeData(
-          elevation: 0,
-          color: Colors.white,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-            side: BorderSide(color: Color(0xFFE6EBF5)),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            backgroundColor: primary,
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            side: const BorderSide(color: Color(0xFFCFD9EA)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFDCE4F3)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFDCE4F3)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: primary, width: 1.6),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    final lightScheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      primary: primary,
+      secondary: secondary,
+      tertiary: tertiary,
+      surface: lightSurface,
+      brightness: Brightness.light,
+    );
+
+    final darkScheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      primary: primary,
+      secondary: secondary,
+      tertiary: tertiary,
+      surface: darkSurface,
+      brightness: Brightness.dark,
+    );
+
+    final lightTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: lightScheme,
+      scaffoldBackgroundColor: lightScheme.surface,
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: lightScheme.onSurface,
+        titleTextStyle: TextStyle(
+          color: lightScheme.onSurface,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
         ),
       ),
-      home: const AuthGate(),
+      textTheme: const TextTheme(
+        headlineSmall:
+            TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        titleLarge: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        titleMedium: TextStyle(fontWeight: FontWeight.w600),
+        bodyLarge: TextStyle(height: 1.3),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 6,
+        shadowColor: const Color(0x33101828),
+        surfaceTintColor: Colors.transparent,
+        color: lightScheme.surface,
+        margin: EdgeInsets.zero,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(color: Color(0xFFE6EBF5)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: lightScheme.primary,
+          foregroundColor: lightScheme.onPrimary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: const BorderSide(color: Color(0xFFCFD9EA)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFDCE4F3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFDCE4F3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: lightScheme.primary, width: 1.6),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+
+    final darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: darkScheme,
+      scaffoldBackgroundColor: darkScheme.surface,
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: darkScheme.onSurface,
+        titleTextStyle: TextStyle(
+          color: darkScheme.onSurface,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      textTheme: const TextTheme(
+        headlineSmall:
+            TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        titleLarge: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        titleMedium: TextStyle(fontWeight: FontWeight.w600),
+        bodyLarge: TextStyle(height: 1.3),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.32),
+        surfaceTintColor: Colors.transparent,
+        color: darkScheme.surface,
+        margin: EdgeInsets.zero,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: darkScheme.primary,
+          foregroundColor: darkScheme.onPrimary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkScheme.surface.withValues(alpha: 0.06),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide:
+              BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: darkScheme.primary, width: 1.6),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.instance.mode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Smart Commuter Assistant+',
+          themeMode: mode,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          home: const AuthGate(),
+        );
+      },
     );
   }
 }
@@ -160,81 +267,98 @@ class AuthGate extends StatelessWidget {
 }
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final int initialIndex;
+
+  const MainNavigation({
+    super.key,
+    this.initialIndex = 0,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  final Connectivity _connectivity = Connectivity();
-  StreamSubscription<dynamic>? _connectivitySubscription;
-  Timer? _bannerTimer;
-  Timer? _tabSwitchTimer;
+  final Connectivity connectivity = Connectivity();
+  StreamSubscription<dynamic>? connectivitySubscription;
+  Timer? bannerTimer;
+  Timer? tabSwitchTimer;
 
-  int _currentIndex = 0;
-  final List<int> _screenGenerations = <int>[0, 0, 0];
-  bool _isConnected = true;
-  bool _isTabSwitching = false;
-  _NetworkBannerType _bannerType = _NetworkBannerType.hidden;
+  int currentIndex = 0;
+  final List<int> screenGenerations = <int>[0, 0, 0, 0];
+  bool isConnected = true;
+  bool isTabSwitching = false;
+  _NetworkBannerType bannerType = _NetworkBannerType.hidden;
 
   @override
   void initState() {
     super.initState();
-    _initializeConnectivity();
+    currentIndex = widget.initialIndex;
+    NavigationState.instance.selectedIndex.value = currentIndex;
+    initializeConnectivity();
+    NavigationState.instance.selectedIndex
+        .addListener(_handleExternalNavigation);
   }
 
   @override
   void dispose() {
-    _bannerTimer?.cancel();
-    _tabSwitchTimer?.cancel();
-    _connectivitySubscription?.cancel();
+    bannerTimer?.cancel();
+    tabSwitchTimer?.cancel();
+    connectivitySubscription?.cancel();
+    NavigationState.instance.selectedIndex
+        .removeListener(_handleExternalNavigation);
     super.dispose();
   }
 
-  Future<void> _initializeConnectivity() async {
-    final initial = await _connectivity.checkConnectivity();
-    if (!mounted) return;
-    _applyConnectivity(initial, isInitial: true);
+  void _handleExternalNavigation() {
+    final target = NavigationState.instance.selectedIndex.value;
+    if (target == currentIndex) return;
+    handleTabSwitch(target);
+  }
 
-    _connectivitySubscription =
-        _connectivity.onConnectivityChanged.listen((event) {
-      _applyConnectivity(event);
+  Future<void> initializeConnectivity() async {
+    final initial = await connectivity.checkConnectivity();
+    if (!mounted) return;
+    applyConnectivity(initial, isInitial: true);
+
+    connectivitySubscription =
+        connectivity.onConnectivityChanged.listen((event) {
+      applyConnectivity(event);
     });
   }
 
-  void _applyConnectivity(dynamic event, {bool isInitial = false}) {
-    final connected = _eventHasConnection(event);
-    final previouslyConnected = _isConnected;
+  void applyConnectivity(dynamic event, {bool isInitial = false}) {
+    final connected = eventHasConnection(event);
+    final previouslyConnected = isConnected;
     if (!isInitial && connected == previouslyConnected) {
       return;
     }
 
-    _isConnected = connected;
+    isConnected = connected;
     if (!connected) {
-      _bannerTimer?.cancel();
+      bannerTimer?.cancel();
       if (!mounted) return;
-      setState(() => _bannerType = _NetworkBannerType.disconnected);
+      setState(() => bannerType = _NetworkBannerType.disconnected);
       return;
     }
 
     if (isInitial || previouslyConnected) {
       if (!mounted) return;
-      setState(() => _bannerType = _NetworkBannerType.hidden);
+      setState(() => bannerType = _NetworkBannerType.hidden);
       return;
     }
 
-    _bannerTimer?.cancel();
+    bannerTimer?.cancel();
     if (!mounted) return;
-    setState(() => _bannerType = _NetworkBannerType.connected);
-    _refreshCurrentScreen();
-    _bannerTimer = Timer(const Duration(seconds: 2), () {
+    setState(() => bannerType = _NetworkBannerType.connected);
+    refreshCurrentScreen();
+    bannerTimer = Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
-      setState(() => _bannerType = _NetworkBannerType.hidden);
+      setState(() => bannerType = _NetworkBannerType.hidden);
     });
   }
 
-  bool _eventHasConnection(dynamic event) {
+  bool eventHasConnection(dynamic event) {
     if (event is ConnectivityResult) {
       return event != ConnectivityResult.none;
     }
@@ -252,37 +376,40 @@ class _MainNavigationState extends State<MainNavigation> {
     return true;
   }
 
-  void _refreshCurrentScreen() {
-    if (_currentIndex < 0 || _currentIndex >= _screenGenerations.length) {
+  void refreshCurrentScreen() {
+    if (currentIndex < 0 || currentIndex >= screenGenerations.length) {
       return;
     }
     setState(() {
-      _screenGenerations[_currentIndex] = _screenGenerations[_currentIndex] + 1;
+      screenGenerations[currentIndex] = screenGenerations[currentIndex] + 1;
     });
   }
 
-  Widget _buildCurrentScreen() {
-    switch (_currentIndex) {
+  Widget buildCurrentScreen() {
+    switch (currentIndex) {
       case 0:
-        return HomeScreen(key: ValueKey('home_${_screenGenerations[0]}'));
+        return HomeScreen(key: ValueKey('home_${screenGenerations[0]}'));
       case 1:
-        return MapView(key: ValueKey('map_${_screenGenerations[1]}'));
+        return MapView(key: ValueKey('map_${screenGenerations[1]}'));
       case 2:
+        return TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}'));
+      case 3:
       default:
-        return ProfileScreen(key: ValueKey('profile_${_screenGenerations[2]}'));
+        return ProfileScreen(key: ValueKey('profile_${screenGenerations[3]}'));
     }
   }
 
-  void _handleTabSwitch(int index) {
-    if (index == _currentIndex) return;
-    _tabSwitchTimer?.cancel();
+  void handleTabSwitch(int index) {
+    if (index == currentIndex) return;
+    tabSwitchTimer?.cancel();
     setState(() {
-      _currentIndex = index;
-      _isTabSwitching = true;
+      currentIndex = index;
+      isTabSwitching = true;
     });
-    _tabSwitchTimer = Timer(const Duration(milliseconds: 650), () {
+    NavigationState.instance.selectedIndex.value = index;
+    tabSwitchTimer = Timer(const Duration(milliseconds: 650), () {
       if (!mounted) return;
-      setState(() => _isTabSwitching = false);
+      setState(() => isTabSwitching = false);
     });
   }
 
@@ -292,25 +419,26 @@ class _MainNavigationState extends State<MainNavigation> {
       body: Stack(
         children: [
           TrainLoadingTransition(
-            isLoading: _isTabSwitching,
+            isLoading: isTabSwitching,
             loadingLabel: 'Loading page...',
             arrivalLabel: 'Page ready',
-            child: _buildCurrentScreen(),
+            child: buildCurrentScreen(),
           ),
-          _NetworkStatusBanner(type: _bannerType),
+          _NetworkStatusBanner(type: bannerType),
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFFE3E9F5))),
+        decoration: BoxDecoration(
+          border:
+              Border(top: BorderSide(color: Theme.of(context).dividerColor)),
         ),
         child: NavigationBar(
           height: 70,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           indicatorColor:
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-          selectedIndex: _currentIndex,
-          onDestinationSelected: _handleTabSwitch,
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+          selectedIndex: currentIndex,
+          onDestinationSelected: handleTabSwitch,
           destinations: const [
             NavigationDestination(
                 icon: Icon(Icons.home_outlined),
@@ -320,6 +448,10 @@ class _MainNavigationState extends State<MainNavigation> {
                 icon: Icon(Icons.map_outlined),
                 selectedIcon: Icon(Icons.map),
                 label: 'Map'),
+            NavigationDestination(
+                icon: Icon(Icons.route_outlined),
+                selectedIcon: Icon(Icons.route),
+                label: 'Track'),
             NavigationDestination(
                 icon: Icon(Icons.person_outline),
                 selectedIcon: Icon(Icons.person),
@@ -374,13 +506,7 @@ class _NetworkStatusBanner extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(999),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x2F000000),
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: appCardShadows(context),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

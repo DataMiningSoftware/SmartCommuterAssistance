@@ -7,7 +7,7 @@ class RoutePlanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trip Planner'),
+        title: const Text('Route Lab'),
       ),
       body: Center(
         child: Padding(

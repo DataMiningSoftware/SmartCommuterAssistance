@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_shadows.dart';
 import 'crowd_indicator.dart';
 
-class PredictionCard extends StatelessWidget {
+class ForecastCard extends StatelessWidget {
   final String title;
   final String station;
   final String arrivalTime;
   final String crowdLevel;
 
-  const PredictionCard({
+  const ForecastCard({
     super.key,
     required this.title,
     required this.station,
@@ -26,6 +27,7 @@ class PredictionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E9F6)),
+        boxShadow: appCardShadows(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +60,8 @@ class PredictionCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),

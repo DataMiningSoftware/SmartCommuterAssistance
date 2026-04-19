@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_shadows.dart';
+import '../constants/crowd_levels.dart';
 import '../services/crowd_reports_service.dart';
 import '../widgets/train_loading_transition.dart';
 
@@ -32,7 +34,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Crowd Forecast Demo')),
+      appBar: AppBar(title: const Text('Crowd Outlook')),
       body: FutureBuilder<List<StationOption>>(
         future: _stationsFuture,
         builder: (context, snapshot) {
@@ -118,7 +120,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
                 final report = reportSnap.data;
                 if (report == null) {
                   return const Center(
-                    child: Text('No prediction yet for this station.'),
+                    child: Text('No forecast yet for this station.'),
                   );
                 }
 
@@ -130,6 +132,14 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
                   level: report.occupancyLevel,
                   sourceType: report.sourceType,
                   createdAt: report.createdAt,
+                  confidence: _forecastConfidence(
+                    sourceType: report.sourceType,
+                    level: report.occupancyLevel,
+                  ),
+                  explanation: _forecastExplanation(
+                    sourceType: report.sourceType,
+                    level: report.occupancyLevel,
+                  ),
                 );
               },
             ),
@@ -140,38 +150,75 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
   }
 
   _LevelUi _levelUi(int level) {
+    final crowd = crowdLevelStyleFromIndex(level);
+    return _LevelUi(
+      title: crowd.label,
+      subtitle: switch (level) {
+        0 => 'Plenty of space across the carriage',
+        1 => 'A smooth ride with room to spare',
+        2 => 'Standing is likely during this window',
+        3 => 'Expect shoulder-to-shoulder boarding',
+        _ => 'No valid occupancy level',
+      },
+      color: crowd.color,
+    );
+  }
+
+  double _forecastConfidence({
+    required String sourceType,
+    required int level,
+  }) {
+    final source = sourceType.toLowerCase();
+    double base;
+    if (source.contains('user')) {
+      base = 0.92;
+    } else if (source.contains('trend') || source.contains('forecast')) {
+      base = 0.84;
+    } else if (source.contains('simulated')) {
+      base = 0.66;
+    } else {
+      base = 0.58;
+    }
+    if (level >= 3) {
+      base -= 0.04;
+    } else if (level <= 0) {
+      base += 0.02;
+    }
+    return base.clamp(0.50, 0.97);
+  }
+
+  String _forecastExplanation({
+    required String sourceType,
+    required int level,
+  }) {
+    final source = sourceType.toLowerCase();
+    final reasons = <String>[];
+    if (source.contains('user')) {
+      reasons.add('based on recent rider reports');
+    } else if (source.contains('trend') || source.contains('forecast')) {
+      reasons.add('based on hourly ridership forecasts');
+    } else if (source.contains('simulated')) {
+      reasons.add('using 10-minute simulation fallback');
+    } else {
+      reasons.add('using offline fallback estimate');
+    }
+
     switch (level) {
       case 0:
-        return const _LevelUi(
-          title: 'Many seats available',
-          subtitle: 'Low occupancy expected',
-          color: Color(0xFF16A34A),
-        );
+        reasons.add('low expected occupancy');
+        break;
       case 1:
-        return const _LevelUi(
-          title: 'Standing room only',
-          subtitle: 'Moderate occupancy expected',
-          color: Color(0xFFF59E0B),
-        );
+        reasons.add('comfortable space still available');
+        break;
       case 2:
-        return const _LevelUi(
-          title: 'Very crowded',
-          subtitle: 'High occupancy expected',
-          color: Color(0xFFF97316),
-        );
+        reasons.add('standing demand likely');
+        break;
       case 3:
-        return const _LevelUi(
-          title: 'Crush capacity',
-          subtitle: 'Consider waiting for next train',
-          color: Color(0xFFDC2626),
-        );
-      default:
-        return const _LevelUi(
-          title: 'Unknown',
-          subtitle: 'No valid occupancy level',
-          color: Color(0xFF6B7280),
-        );
+        reasons.add('peak-load conditions likely');
+        break;
     }
+
+    return reasons.join(' • ');
   }
 }
 
@@ -182,6 +229,8 @@ class _CrowdLevelCard extends StatelessWidget {
   final int level;
   final String sourceType;
   final DateTime? createdAt;
+  final double confidence;
+  final String explanation;
 
   const _CrowdLevelCard({
     required this.title,
@@ -190,6 +239,8 @@ class _CrowdLevelCard extends StatelessWidget {
     required this.level,
     required this.sourceType,
     required this.createdAt,
+    required this.confidence,
+    required this.explanation,
   });
 
   @override
@@ -201,6 +252,7 @@ class _CrowdLevelCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: appCardShadows(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,8 +285,23 @@ class _CrowdLevelCard extends StatelessWidget {
             style: const TextStyle(color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 12),
-          Text('Source: $sourceType',
-              style: const TextStyle(color: Color(0xFF64748B))),
+          Text(
+            'Forecast confidence: ${(confidence * 100).round()}%',
+            style: const TextStyle(
+              color: Color(0xFF475467),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            explanation,
+            style: const TextStyle(color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Forecast source: $sourceType',
+            style: const TextStyle(color: Color(0xFF64748B)),
+          ),
           if (createdAt != null)
             Text(
               'Updated: ${createdAt!.toLocal()}',

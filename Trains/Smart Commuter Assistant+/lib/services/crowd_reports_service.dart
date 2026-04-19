@@ -44,6 +44,26 @@ class CrowdReportDisplayItem {
   });
 }
 
+class StationCrowdBoardItem {
+  final String stationName;
+  final List<String> stopIds;
+  final List<String> routeIds;
+  final int occupancyLevel;
+  final String sourceType;
+  final DateTime? updatedAt;
+
+  const StationCrowdBoardItem({
+    required this.stationName,
+    required this.stopIds,
+    required this.routeIds,
+    required this.occupancyLevel,
+    required this.sourceType,
+    required this.updatedAt,
+  });
+
+  String get stopId => stopIds.isEmpty ? '' : stopIds.first;
+}
+
 class StopCrowdForecast {
   final String stopId;
   final int forecastHour;
@@ -117,12 +137,17 @@ class CrowdReportsService {
         .limit(1);
 
     if (rows.isEmpty) return null;
-    return _toCrowdReport(Map<String, dynamic>.from(rows.first as Map));
+    for (final row in rows.whereType<Map>()) {
+      final report = _toCrowdReport(Map<String, dynamic>.from(row));
+      if (report == null || report.sourceType == 'delay') continue;
+      return report;
+    }
+    return null;
   }
 
   Future<Map<String, CrowdReport>> fetchLatestCrowdReportsForStops(
-    List<String> stopIds,
-  ) async {
+      List<String> stopIds,
+      {bool includeDelayReports = false}) async {
     if (stopIds.isEmpty) return const <String, CrowdReport>{};
 
     final rows = await _client
@@ -135,6 +160,7 @@ class CrowdReportsService {
     for (final row in rows.whereType<Map>()) {
       final report = _toCrowdReport(Map<String, dynamic>.from(row));
       if (report == null) continue;
+      if (!includeDelayReports && report.sourceType == 'delay') continue;
       latestByStop.putIfAbsent(report.stopId, () => report);
     }
     return latestByStop;
@@ -151,6 +177,107 @@ class CrowdReportsService {
     });
   }
 
+  Future<void> insertUserDelayReport({
+    required String stopId,
+  }) async {
+    await _client.from('crowd_reports').insert({
+      'stop_id': stopId,
+      'occupancy_level': 0,
+      'source_type': 'delay',
+    });
+  }
+
+  Future<List<StationCrowdBoardItem>> fetchStationCrowdBoard({
+    DateTime? time,
+  }) async {
+    final effectiveTime = time ?? DateTime.now();
+    final rows = <Map<String, dynamic>>[];
+    try {
+      final remoteRows = await _client
+          .from('train_stops_kl')
+          .select('stop_id,stop_name,route_id');
+      final mappedRows = remoteRows
+          .whereType<Map>()
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+      rows.addAll(mappedRows);
+    } catch (_) {
+      // Fallback below.
+    }
+
+    if (rows.isEmpty) {
+      final cachedRows = await _databaseService.getCachedTrainStops();
+      rows.addAll(
+        cachedRows.map((row) => Map<String, dynamic>.from(row)),
+      );
+    }
+
+    final grouped = <String, _StationBoardGroup>{};
+    for (final row in rows) {
+      final stationName = (row['stop_name']?.toString() ?? '').trim();
+      final stopId = (row['stop_id']?.toString() ?? '').trim().toUpperCase();
+      if (stationName.isEmpty || stopId.isEmpty) continue;
+      final routeRaw = (row['route_id']?.toString() ?? '').trim().toUpperCase();
+      final routeId =
+          routeRaw.isEmpty ? _inferRouteIdFromStopId(stopId) : routeRaw;
+      grouped.putIfAbsent(
+        stationName,
+        () => _StationBoardGroup(stationName: stationName),
+      )
+        ..stopIds.add(stopId)
+        ..routeIds.add(routeId);
+    }
+
+    if (grouped.isEmpty) return const <StationCrowdBoardItem>[];
+
+    final stopIds =
+        grouped.values.expand((group) => group.stopIds).toSet().toList();
+    final forecasts = await fetchForecastForStopsAtTime(stopIds, effectiveTime);
+    final latestReports = await fetchLatestCrowdReportsForStops(stopIds);
+
+    final items = <StationCrowdBoardItem>[];
+    for (final group in grouped.values) {
+      var bestLevel = 0;
+      var bestSourceType = 'forecast';
+      DateTime? bestUpdatedAt;
+      var hasValue = false;
+
+      for (final stopId in group.stopIds) {
+        final forecast = forecasts[stopId];
+        final report = latestReports[stopId];
+        final level = forecast?.occupancyLevel ?? report?.occupancyLevel ?? 0;
+        final sourceType =
+            forecast?.sourceType ?? report?.sourceType ?? 'forecast';
+        final updatedAt = forecast?.updatedAt ?? report?.createdAt;
+
+        if (!hasValue ||
+            level > bestLevel ||
+            (level == bestLevel &&
+                (updatedAt?.millisecondsSinceEpoch ?? 0) >
+                    (bestUpdatedAt?.millisecondsSinceEpoch ?? 0))) {
+          bestLevel = level;
+          bestSourceType = sourceType;
+          bestUpdatedAt = updatedAt;
+          hasValue = true;
+        }
+      }
+
+      items.add(
+        StationCrowdBoardItem(
+          stationName: group.stationName,
+          stopIds: group.stopIds.toList()..sort(),
+          routeIds: group.routeIds.toList()..sort(),
+          occupancyLevel: bestLevel,
+          sourceType: bestSourceType,
+          updatedAt: bestUpdatedAt,
+        ),
+      );
+    }
+
+    items.sort((a, b) => a.stationName.compareTo(b.stationName));
+    return items;
+  }
+
   Future<List<CrowdReportDisplayItem>> fetchLatestCrowdDisplayFeed({
     int limit = 5,
   }) async {
@@ -163,7 +290,7 @@ class CrowdReportsService {
     final latestByStop = <String, CrowdReport>{};
     for (final row in rows.whereType<Map>()) {
       final report = _toCrowdReport(Map<String, dynamic>.from(row));
-      if (report == null) continue;
+      if (report == null || report.sourceType == 'delay') continue;
       latestByStop.putIfAbsent(report.stopId, () => report);
       if (latestByStop.length >= limit) break;
     }
@@ -647,5 +774,15 @@ class _StationDistanceCandidate {
     required this.stationName,
     required this.routeId,
     required this.distanceMeters,
+  });
+}
+
+class _StationBoardGroup {
+  final String stationName;
+  final Set<String> stopIds = <String>{};
+  final Set<String> routeIds = <String>{};
+
+  _StationBoardGroup({
+    required this.stationName,
   });
 }

@@ -54,7 +54,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: const Text('Create Your Pass')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -72,7 +72,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller: _nameController,
                       decoration: const InputDecoration(labelText: 'Full name'),
                       validator: (value) {
-                        if ((value ?? '').trim().isEmpty) return 'Name is required';
+                        if ((value ?? '').trim().isEmpty) {
+                          return 'Name is required';
+                        }
                         return null;
                       },
                     ),
@@ -103,7 +105,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Confirm password'),
+                      decoration:
+                          const InputDecoration(labelText: 'Confirm password'),
                       validator: (value) {
                         if (value != _passwordController.text) {
                           return 'Passwords do not match';
@@ -118,7 +121,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Create account'),
                     ),

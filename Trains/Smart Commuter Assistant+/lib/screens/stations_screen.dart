@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/app_shadows.dart';
+import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
@@ -390,40 +391,32 @@ class _StationsScreenState extends State<StationsScreen> {
 
       final departureTime = await _pickDepartureDateTime();
       if (departureTime == null) return;
+      final activeDisruptions = _activeDisruptionsFor(departureTime);
+      final disruptionPenaltyByLine =
+          _disruptionPenaltyByLine(activeDisruptions);
 
       // Keep local cache fresh when online. Failures are ignored.
       await _syncRouteConnectionsCache();
+      final cachedEdges = await _loadRouteConnections();
 
-      final hasInternet = await _hasInternetConnection();
-      final rpcResult = hasInternet
-          ? await _tryBestRpcRoute(
-              originStopId: originStopId,
-              destinationStopIds: destinationStopIds,
-            )
-          : null;
+      final rpcResult = await _tryBestRpcRoute(
+        originStopId: originStopId,
+        destinationStopIds: destinationStopIds,
+      );
 
       final _RoutePathResult? plan;
       final String routeSource;
+      bool usedDisruptionReroute = false;
       String resolvedDestinationStopId;
-      if (rpcResult != null) {
-        plan = rpcResult.plan;
-        resolvedDestinationStopId = rpcResult.destinationStopId;
-        routeSource = 'Supabase RPC';
-      } else {
-        final edges = await _loadRouteConnections();
-        if (edges.isEmpty) {
-          _showMessage(
-            'No offline route cache available. Go online once to sync route_connections.',
-          );
-          return;
-        }
-        _RoutePathResult? bestLocalPlan;
-        String? bestLocalDestination;
+      _RoutePathResult? bestLocalPlan;
+      String? bestLocalDestination;
+      if (cachedEdges.isNotEmpty) {
         for (final destinationStopId in destinationStopIds) {
           final candidate = _findShortestPath(
             originStopId: originStopId,
             destinationStopId: destinationStopId,
-            edges: edges,
+            edges: cachedEdges,
+            routePenaltyMinutesByLine: disruptionPenaltyByLine,
           );
           if (candidate == null) continue;
           if (bestLocalPlan == null ||
@@ -432,12 +425,45 @@ class _StationsScreenState extends State<StationsScreen> {
             bestLocalDestination = destinationStopId;
           }
         }
+      }
+
+      if (rpcResult != null) {
+        final rpcImpact =
+            _planDisruptionImpact(rpcResult.plan.edges, activeDisruptions);
+        final localImpact = _planDisruptionImpact(
+            bestLocalPlan?.edges ?? const <_RouteEdge>[], activeDisruptions);
+        if (activeDisruptions.isNotEmpty &&
+            bestLocalPlan != null &&
+            (localImpact < rpcImpact ||
+                (localImpact == rpcImpact &&
+                    bestLocalPlan.totalMinutes <
+                        rpcResult.plan.totalMinutes))) {
+          plan = bestLocalPlan;
+          resolvedDestinationStopId =
+              bestLocalDestination ?? destinationStopIds.first;
+          routeSource = 'Disruption-aware reroute (local)';
+          usedDisruptionReroute = true;
+        } else {
+          plan = rpcResult.plan;
+          resolvedDestinationStopId = rpcResult.destinationStopId;
+          routeSource = activeDisruptions.isNotEmpty
+              ? 'Supabase RPC (service alerts active)'
+              : 'Supabase RPC';
+        }
+      } else {
+        if (cachedEdges.isEmpty) {
+          _showMessage(
+            'No offline route cache available. Go online once to sync route_connections.',
+          );
+          return;
+        }
         plan = bestLocalPlan;
         resolvedDestinationStopId =
             bestLocalDestination ?? destinationStopIds.first;
-        routeSource = hasInternet
-            ? 'Offline Fallback (RPC unavailable)'
-            : 'Offline Fallback (No internet)';
+        usedDisruptionReroute = activeDisruptions.isNotEmpty;
+        routeSource = activeDisruptions.isNotEmpty
+            ? 'Disruption-aware route graph'
+            : 'Supabase route graph cache (RPC unavailable)';
       }
       final resolvedPlan = plan;
       if (resolvedPlan == null) {
@@ -483,6 +509,8 @@ class _StationsScreenState extends State<StationsScreen> {
             segmentPlans: timeline.segmentPlans,
             namesByStopId: namesByStopId,
             routeSource: routeSource,
+            activeDisruptions: activeDisruptions,
+            usedDisruptionReroute: usedDisruptionReroute,
           );
         },
       );
@@ -490,16 +518,6 @@ class _StationsScreenState extends State<StationsScreen> {
       _showMessage('Failed to plan route: $e');
     } finally {
       if (mounted) setState(() => _isPlanningRoute = false);
-    }
-  }
-
-  Future<bool> _hasInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup('supabase.co')
-          .timeout(const Duration(seconds: 2));
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
-    } catch (_) {
-      return false;
     }
   }
 
@@ -654,6 +672,7 @@ class _StationsScreenState extends State<StationsScreen> {
     required String originStopId,
     required String destinationStopId,
     required List<_RouteEdge> edges,
+    Map<String, int>? routePenaltyMinutesByLine,
   }) {
     final adjacency = <String, List<_RouteEdge>>{};
     final nodes = <String>{};
@@ -691,7 +710,10 @@ class _StationsScreenState extends State<StationsScreen> {
 
       for (final edge in adjacency[current] ?? const <_RouteEdge>[]) {
         if (visited.contains(edge.toStopId)) continue;
-        final alt = currentDistance + edge.travelMinutes;
+        final penalty = routePenaltyMinutesByLine == null
+            ? 0
+            : (routePenaltyMinutesByLine[normalizeRouteId(edge.routeId)] ?? 0);
+        final alt = currentDistance + edge.travelMinutes + penalty;
         if (alt < (distances[edge.toStopId] ?? (1 << 30))) {
           distances[edge.toStopId] = alt;
           previousNode[edge.toStopId] = current;
@@ -716,6 +738,77 @@ class _StationsScreenState extends State<StationsScreen> {
     final total =
         orderedEdges.fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
     return _RoutePathResult(edges: orderedEdges, totalMinutes: total);
+  }
+
+  List<_ServiceDisruption> _activeDisruptionsFor(DateTime departureTime) {
+    final disruptions = <_ServiceDisruption>[];
+    final hour = departureTime.hour;
+    final isWeekend = departureTime.weekday == DateTime.saturday ||
+        departureTime.weekday == DateTime.sunday;
+
+    if (!isWeekend &&
+        ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) {
+      disruptions.add(
+        const _ServiceDisruption(
+          routeId: 'KJ',
+          title: 'Peak crowd control on Kelana Jaya Line',
+          detail: 'Expect longer dwell times during rush-hour boarding.',
+          penaltyMinutes: 8,
+        ),
+      );
+    }
+
+    if (!isWeekend && hour >= 12 && hour <= 14) {
+      disruptions.add(
+        const _ServiceDisruption(
+          routeId: 'AG',
+          title: 'Platform congestion on Ampang Line',
+          detail: 'Midday crowding may slow boarding and transfers.',
+          penaltyMinutes: 5,
+        ),
+      );
+    }
+
+    if (hour >= 21 || hour <= 5) {
+      disruptions.add(
+        const _ServiceDisruption(
+          routeId: 'MR',
+          title: 'Reduced Monorail frequency',
+          detail: 'Late-evening headways are wider than usual.',
+          penaltyMinutes: 6,
+        ),
+      );
+    }
+
+    return disruptions;
+  }
+
+  Map<String, int> _disruptionPenaltyByLine(
+    List<_ServiceDisruption> disruptions,
+  ) {
+    final penalties = <String, int>{};
+    for (final disruption in disruptions) {
+      penalties[normalizeRouteId(disruption.routeId)] =
+          disruption.penaltyMinutes;
+    }
+    return penalties;
+  }
+
+  int _planDisruptionImpact(
+    List<_RouteEdge> edges,
+    List<_ServiceDisruption> disruptions,
+  ) {
+    if (edges.isEmpty || disruptions.isEmpty) return 0;
+    final usedLines = <String>{
+      for (final edge in edges) normalizeRouteId(edge.routeId),
+    };
+    var impact = 0;
+    for (final disruption in disruptions) {
+      if (usedLines.contains(normalizeRouteId(disruption.routeId))) {
+        impact += disruption.penaltyMinutes;
+      }
+    }
+    return impact;
   }
 
   List<_RouteSegment> _buildRouteSegments(List<_RouteEdge> edges) {
@@ -1064,7 +1157,7 @@ class _StationsScreenState extends State<StationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Train Stations'),
+        title: const Text('Station Atlas'),
         actions: [
           IconButton(
             onPressed: _isFindingNearest ? null : _findNearestStations,
@@ -1354,33 +1447,14 @@ class _StationsScreenState extends State<StationsScreen> {
     });
 
     final level = reports.first.occupancyLevel;
-    switch (level) {
-      case 0:
-        return const _CrowdLevelUi(
-          label: 'Many seats available',
-          color: Color(0xFF16A34A),
-        );
-      case 1:
-        return const _CrowdLevelUi(
-          label: 'Standing room only',
-          color: Color(0xFFF59E0B),
-        );
-      case 2:
-        return const _CrowdLevelUi(
-          label: 'Very crowded',
-          color: Color(0xFFF97316),
-        );
-      case 3:
-        return const _CrowdLevelUi(
-          label: 'Crush capacity',
-          color: Color(0xFFDC2626),
-        );
-      default:
-        return const _CrowdLevelUi(
-          label: 'Unknown crowd level',
-          color: Color(0xFF64748B),
-        );
+    final crowd = crowdLevelStyleFromIndex(level);
+    if (crowd.label == 'Unknown') {
+      return const _CrowdLevelUi(
+        label: 'Unknown crowd level',
+        color: Color(0xFF64748B),
+      );
     }
+    return _CrowdLevelUi(label: crowd.label, color: crowd.color);
   }
 
   Future<void> _reportCrowdLevel(Map<String, dynamic> station) async {
@@ -1486,18 +1560,11 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   static _CrowdLevelUi _crowdUiByLevel(int level) {
-    switch (level) {
-      case 0:
-        return const _CrowdLevelUi(label: 'Empty', color: Color(0xFF16A34A));
-      case 1:
-        return const _CrowdLevelUi(label: 'Moderate', color: Color(0xFFF59E0B));
-      case 2:
-        return const _CrowdLevelUi(label: 'Crowded', color: Color(0xFFF97316));
-      case 3:
-        return const _CrowdLevelUi(label: 'Crush', color: Color(0xFFDC2626));
-      default:
-        return const _CrowdLevelUi(label: 'Unknown', color: Color(0xFF64748B));
+    final crowd = crowdLevelStyleFromIndex(level);
+    if (crowd.label == 'Unknown') {
+      return const _CrowdLevelUi(label: 'Unknown', color: Color(0xFF64748B));
     }
+    return _CrowdLevelUi(label: crowd.label, color: crowd.color);
   }
 }
 
@@ -1541,6 +1608,7 @@ class _StationCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE3EAF7)),
+          boxShadow: appCardShadows(context),
         ),
         child: Row(
           children: [
@@ -1945,6 +2013,8 @@ class _RoutePlanSheet extends StatelessWidget {
   final List<_RouteSegmentPlan> segmentPlans;
   final Map<String, String> namesByStopId;
   final String routeSource;
+  final List<_ServiceDisruption> activeDisruptions;
+  final bool usedDisruptionReroute;
 
   const _RoutePlanSheet({
     required this.originName,
@@ -1961,6 +2031,8 @@ class _RoutePlanSheet extends StatelessWidget {
     required this.segmentPlans,
     required this.namesByStopId,
     required this.routeSource,
+    required this.activeDisruptions,
+    required this.usedDisruptionReroute,
   });
 
   @override
@@ -1973,6 +2045,7 @@ class _RoutePlanSheet extends StatelessWidget {
         ? crowdAdjustedMinutes
         : crowdAdjustedMinutes + estimatedWalk;
     final tripCrowdUi = _crowdUiByLevel(highestCrowdLevel);
+    final overallConfidence = _overallForecastConfidence(segmentPlans);
 
     return SafeArea(
       child: Padding(
@@ -2007,11 +2080,21 @@ class _RoutePlanSheet extends StatelessWidget {
                 _InfoChip(label: 'Base ETA ~ ${_formatDuration(baseEta)}'),
                 _InfoChip(label: 'Crowd ETA ~ ${_formatDuration(crowdEta)}'),
                 _InfoChip(
+                  label:
+                      'Forecast confidence ${_formatPercent(overallConfidence)}',
+                ),
+                _InfoChip(
                   label: 'Trip Crowd: ${tripCrowdUi.label}',
                   textColor: tripCrowdUi.color,
                   borderColor: tripCrowdUi.color.withValues(alpha: 0.45),
                 ),
                 _InfoChip(label: '$totalStops stops'),
+                if (usedDisruptionReroute)
+                  const _InfoChip(
+                    label: 'Rerouted around disruption',
+                    textColor: Color(0xFFD92D20),
+                    borderColor: Color(0xFFFDB0AC),
+                  ),
               ],
             ),
             const SizedBox(height: 6),
@@ -2019,6 +2102,14 @@ class _RoutePlanSheet extends StatelessWidget {
               'Source: $routeSource',
               style: const TextStyle(color: Color(0xFF667085)),
             ),
+            if (activeDisruptions.isNotEmpty)
+              Text(
+                'Service alerts: ${_disruptionSummary(activeDisruptions)}',
+                style: const TextStyle(
+                  color: Color(0xFFB42318),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             if (walkMeters != null)
               Text(
                 'Walk to origin: ${_formatWalk(walkMeters!)}',
@@ -2047,6 +2138,9 @@ class _RoutePlanSheet extends StatelessWidget {
                     final toName =
                         namesByStopId[segment.toStopId] ?? segment.toStopId;
                     final crowdUi = _crowdUiByLevel(plan.occupancyLevel);
+                    final confidence = _segmentForecastConfidence(plan);
+                    final disruptionNote =
+                        _disruptionNoteFor(segment, activeDisruptions);
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -2095,6 +2189,39 @@ class _RoutePlanSheet extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Forecast confidence: ${_formatPercent(confidence)}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF475467),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  _forecastReason(plan),
+                                  style: const TextStyle(
+                                    color: Color(0xFF667085),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                Text(
+                                  'Coach/platform tip: ${_boardingTipFor(index, segmentPlans, namesByStopId)}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF344054),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (disruptionNote != null)
+                                  Text(
+                                    'Service alert: $disruptionNote',
+                                    style: const TextStyle(
+                                      color: Color(0xFFD92D20),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 if (plan.waitMinutes > 0)
                                   Text(
                                     'Includes approx. ${plan.waitMinutes} min waiting time',
@@ -2127,18 +2254,11 @@ class _RoutePlanSheet extends StatelessWidget {
   }
 
   static _RouteCrowdUi _crowdUiByLevel(int level) {
-    switch (level) {
-      case 0:
-        return const _RouteCrowdUi(label: 'Empty', color: Color(0xFF16A34A));
-      case 1:
-        return const _RouteCrowdUi(label: 'Moderate', color: Color(0xFFF59E0B));
-      case 2:
-        return const _RouteCrowdUi(label: 'Crowded', color: Color(0xFFF97316));
-      case 3:
-        return const _RouteCrowdUi(label: 'Crush', color: Color(0xFFDC2626));
-      default:
-        return const _RouteCrowdUi(label: 'Unknown', color: Color(0xFF64748B));
+    final crowd = crowdLevelStyleFromIndex(level);
+    if (crowd.label == 'Unknown') {
+      return const _RouteCrowdUi(label: 'Unknown', color: Color(0xFF64748B));
     }
+    return _RouteCrowdUi(label: crowd.label, color: crowd.color);
   }
 
   static String _segmentText({
@@ -2150,9 +2270,104 @@ class _RoutePlanSheet extends StatelessWidget {
     required int adjustedMinutes,
   }) {
     if (connectionType.toLowerCase().contains('transfer')) {
-      return 'Transfer from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} predicted)';
+      return 'Transfer from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} forecast)';
     }
-    return 'Take ${normalizeRouteId(routeId)} from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} predicted)';
+    return 'Take ${normalizeRouteId(routeId)} from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} forecast)';
+  }
+
+  static double _overallForecastConfidence(List<_RouteSegmentPlan> plans) {
+    if (plans.isEmpty) return 0.0;
+    final total = plans.fold<double>(
+      0,
+      (sum, plan) => sum + _segmentForecastConfidence(plan),
+    );
+    return total / plans.length;
+  }
+
+  static double _segmentForecastConfidence(_RouteSegmentPlan plan) {
+    final source = plan.sourceType.toLowerCase();
+    double base;
+    if (source.contains('user')) {
+      base = 0.92;
+    } else if (source.contains('trend') || source.contains('forecast')) {
+      base = 0.84;
+    } else if (source.contains('simulated')) {
+      base = 0.66;
+    } else {
+      base = 0.58;
+    }
+    if (plan.waitMinutes > 0) {
+      base -= 0.03;
+    }
+    if (plan.occupancyLevel >= 3) {
+      base -= 0.04;
+    }
+    return base.clamp(0.50, 0.97);
+  }
+
+  static String _forecastReason(_RouteSegmentPlan plan) {
+    final source = plan.sourceType.toLowerCase();
+    final reasons = <String>[];
+    if (source.contains('user')) {
+      reasons.add('recent rider reports');
+    } else if (source.contains('trend') || source.contains('forecast')) {
+      reasons.add('hourly ridership forecast');
+    } else if (source.contains('simulated')) {
+      reasons.add('10-minute simulation fallback');
+    } else {
+      reasons.add('offline fallback estimate');
+    }
+    if (plan.waitMinutes > 0) {
+      reasons.add('transfer wait included');
+    }
+    if (plan.occupancyLevel >= 3) {
+      reasons.add('peak-load conditions likely');
+    } else if (plan.occupancyLevel == 2) {
+      reasons.add('standing demand likely');
+    }
+    return reasons.join(' • ');
+  }
+
+  static String _boardingTipFor(
+    int index,
+    List<_RouteSegmentPlan> plans,
+    Map<String, String> namesByStopId,
+  ) {
+    final plan = plans[index];
+    final segment = plan.segment;
+    final toName = namesByStopId[segment.toStopId] ?? segment.toStopId;
+    if (segment.connectionType.toLowerCase().contains('transfer')) {
+      return 'Follow interchange signs promptly at $toName.';
+    }
+    final nextPlan = index + 1 < plans.length ? plans[index + 1] : null;
+    if (nextPlan != null &&
+        nextPlan.segment.connectionType.toLowerCase().contains('transfer')) {
+      return 'Board middle-rear coach for a faster transfer at $toName.';
+    }
+    if (index == plans.length - 1) {
+      return 'Board near the doors for a quicker exit at $toName.';
+    }
+    return 'Follow platform signs toward $toName-bound service.';
+  }
+
+  static String? _disruptionNoteFor(
+    _RouteSegment segment,
+    List<_ServiceDisruption> disruptions,
+  ) {
+    final routeId = normalizeRouteId(segment.routeId);
+    for (final disruption in disruptions) {
+      if (normalizeRouteId(disruption.routeId) == routeId) {
+        return disruption.title;
+      }
+    }
+    return null;
+  }
+
+  static String _disruptionSummary(List<_ServiceDisruption> disruptions) {
+    return disruptions
+        .map((disruption) =>
+            '${normalizeRouteId(disruption.routeId)} ${disruption.title}')
+        .join(' • ');
   }
 
   static String _formatDateTime(DateTime dt) {
@@ -2181,6 +2396,10 @@ class _RoutePlanSheet extends StatelessWidget {
     if (hours <= 0) return '${minutes}m';
     if (minutes == 0) return '${hours}h';
     return '${hours}h ${minutes}m';
+  }
+
+  static String _formatPercent(double value) {
+    return '${(value * 100).round()}%';
   }
 }
 
@@ -2223,5 +2442,19 @@ class _RouteCrowdUi {
   const _RouteCrowdUi({
     required this.label,
     required this.color,
+  });
+}
+
+class _ServiceDisruption {
+  final String routeId;
+  final String title;
+  final String detail;
+  final int penaltyMinutes;
+
+  const _ServiceDisruption({
+    required this.routeId,
+    required this.title,
+    required this.detail,
+    required this.penaltyMinutes,
   });
 }
