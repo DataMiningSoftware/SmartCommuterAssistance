@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/theme_controller.dart';
+import '../widgets/app_page_title.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +23,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userName = user?.name ?? 'User';
     final userEmail = user?.email ?? 'no-email@example.com';
     return Scaffold(
-      appBar: AppBar(title: const Text('Commute Hub')),
+      appBar: AppBar(
+        toolbarHeight: 78,
+        title: const AppPageTitle(
+          icon: Icons.person_rounded,
+          leadingText: 'Commute',
+          accentText: 'Hub',
+          badgeText: 'PROFILE',
+          subtitle: 'Preferences',
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
         children: [

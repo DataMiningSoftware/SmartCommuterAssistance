@@ -279,6 +279,14 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
+  // These measurements are kept explicit so the bottom toolbar can be
+  // recreated accurately in external design tools.
+  static const double _bottomToolbarHeight = 88;
+  static const double _bottomToolbarNavigationHeight = 76;
+  static const double _bottomToolbarHorizontalMargin = 14;
+  static const double _bottomToolbarBottomMargin = 14;
+  static const double _bottomToolbarRadius = 30;
+
   final Connectivity connectivity = Connectivity();
   StreamSubscription<dynamic>? connectivitySubscription;
   Timer? bannerTimer;
@@ -415,6 +423,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Scaffold(
       body: Stack(
         children: [
@@ -427,36 +437,101 @@ class _MainNavigationState extends State<MainNavigation> {
           _NetworkStatusBanner(type: bannerType),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border:
-              Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(
+          _bottomToolbarHorizontalMargin,
+          10,
+          _bottomToolbarHorizontalMargin,
+          _bottomToolbarBottomMargin,
         ),
-        child: NavigationBar(
-          height: 70,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          indicatorColor:
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-          selectedIndex: currentIndex,
-          onDestinationSelected: handleTabSwitch,
-          destinations: const [
-            NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Home'),
-            NavigationDestination(
-                icon: Icon(Icons.map_outlined),
-                selectedIcon: Icon(Icons.map),
-                label: 'Map'),
-            NavigationDestination(
-                icon: Icon(Icons.route_outlined),
-                selectedIcon: Icon(Icons.route),
-                label: 'Track'),
-            NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: 'Profile'),
-          ],
+        child: Container(
+          height: _bottomToolbarHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                scheme.surface,
+                Color.lerp(scheme.surface, scheme.primary, 0.03) ??
+                    scheme.surface,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(_bottomToolbarRadius),
+            border: Border.all(
+              color: scheme.primary.withValues(alpha: 0.12),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+              const BoxShadow(
+                color: Color(0x14101828),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: NavigationBarTheme(
+            data: NavigationBarThemeData(
+              height: _bottomToolbarNavigationHeight,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                  color: selected
+                      ? scheme.primary
+                      : scheme.onSurface.withValues(alpha: 0.62),
+                );
+              }),
+              iconTheme: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return IconThemeData(
+                  size: selected ? 25 : 22,
+                  color: selected
+                      ? scheme.primary
+                      : scheme.onSurface.withValues(alpha: 0.62),
+                );
+              }),
+              indicatorColor: scheme.primary.withValues(alpha: 0.12),
+              indicatorShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
+            child: NavigationBar(
+              selectedIndex: currentIndex,
+              onDestinationSelected: handleTabSwitch,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.map_outlined),
+                  selectedIcon: Icon(Icons.map_rounded),
+                  label: 'Map',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.route_outlined),
+                  selectedIcon: Icon(Icons.route_rounded),
+                  label: 'Track',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

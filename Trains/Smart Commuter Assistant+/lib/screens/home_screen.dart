@@ -15,6 +15,7 @@ import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/navigation_state.dart';
 import '../services/station_service.dart';
+import '../widgets/app_page_title.dart';
 import 'station_crowd_board_screen.dart';
 import 'stations_screen.dart';
 
@@ -32,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final StationService _stationService = StationService();
   final TextEditingController _routeSearchController = TextEditingController();
   Position? _position;
-  bool _isLoadingLocation = false;
   bool _isPreparingTrip = false;
   Future<List<NearbyStationCrowdForecast>>? _nearestCrowdFuture;
   late Future<List<_HomeStationSearchOption>> _stationSearchFuture;
@@ -363,7 +363,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadLocation() async {
-    setState(() => _isLoadingLocation = true);
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -397,8 +396,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-    } finally {
-      if (mounted) setState(() => _isLoadingLocation = false);
     }
   }
 
@@ -971,7 +968,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const _HomeAppTitle(),
+        toolbarHeight: 78,
+        title: const AppPageTitle(
+          icon: Icons.train_rounded,
+          leadingText: 'Smart',
+          accentText: 'Commuter',
+          badgeText: 'ASSISTANT+',
+          subtitle: 'Home base',
+        ),
         elevation: 0,
       ),
       body: RefreshIndicator(
@@ -997,43 +1001,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Live crowd-aware routing, trip tracking, and route glow in one place.',
                   ),
                   const SizedBox(height: 16),
-                  _HomeRouteSearchCard(
-                    stationNamesFuture: _stationSearchFuture,
-                    controller: _routeSearchController,
-                    departureTime: _departureTime,
-                    routeMode: _routeMode,
-                    onDepartureTimeSelected: (value) {
-                      setState(() => _departureTime = value);
-                    },
-                    onRouteModeChanged: (value) {
-                      setState(() => _routeMode = value);
-                    },
-                    onStationSelected: _handleStationSelected,
-                    nearestCrowdFuture: _nearestCrowdFuture,
-                    isPreparingTrip: _isPreparingTrip,
-                  ),
-                  const SizedBox(height: 16),
-                  if (_mapError != null)
-                    _InlineHomeError(
-                      message: _mapError!,
-                      onRetry: _loadMapStops,
-                    )
-                  else
-                    const SizedBox.shrink(),
-                  const SizedBox(height: 16),
                   ValueListenableBuilder<ActiveTrip?>(
                     valueListenable: _activeTripService.activeTrip,
                     builder: (context, trip, _) {
-                      if (trip == null) {
-                        return const SizedBox.shrink();
+                      if (trip != null) {
+                        return _LiveTripSummary(
+                          trip: trip,
+                          onOpenMap: _openMapTab,
+                        );
                       }
-                      return _LiveTripSummary(
-                        trip: trip,
-                        onOpenMap: _openMapTab,
+                      return _HomeRouteSearchCard(
+                        stationNamesFuture: _stationSearchFuture,
+                        controller: _routeSearchController,
+                        departureTime: _departureTime,
+                        routeMode: _routeMode,
+                        onDepartureTimeSelected: (value) {
+                          setState(() => _departureTime = value);
+                        },
+                        onRouteModeChanged: (value) {
+                          setState(() => _routeMode = value);
+                        },
+                        onStationSelected: _handleStationSelected,
+                        nearestCrowdFuture: _nearestCrowdFuture,
+                        isPreparingTrip: _isPreparingTrip,
                       );
                     },
                   ),
                   const SizedBox(height: 16),
+                  if (_mapError != null) ...[
+                    _InlineHomeError(
+                      message: _mapError!,
+                      onRetry: _loadMapStops,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _StationCrowdBoard(
                     nearestCrowdFuture: _nearestCrowdFuture,
                     onRefresh: _refreshCrowdBoard,
@@ -2003,55 +2004,6 @@ class _HomeCrowdUi {
   static _HomeCrowdUi fromLevel(int level) {
     final crowd = crowdLevelStyleFromIndex(level);
     return _HomeCrowdUi(label: crowd.label, color: crowd.color);
-  }
-}
-
-class _HomeAppTitle extends StatelessWidget {
-  const _HomeAppTitle();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'Smart ',
-                style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0A3A8B),
-                    ),
-              ),
-              TextSpan(
-                text: 'Commuter',
-                style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0A3A8B),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: const Text(
-            'ASSISTANT+',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 

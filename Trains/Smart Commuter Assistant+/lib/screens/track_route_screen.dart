@@ -14,6 +14,7 @@ import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/navigation_state.dart';
 import '../services/notification_service.dart';
+import '../widgets/app_page_title.dart';
 
 class TrackRouteScreen extends StatefulWidget {
   final String? startStopId;
@@ -1005,6 +1006,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
             startIndex: index,
             endIndex: index + 1,
             previousRouteId: previousRouteId,
+            isFirst: index == 0,
+            isLast: index + 1 == _routeStops.length - 1,
           ),
         );
         index += 2;
@@ -1018,6 +1021,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           startIndex: index,
           endIndex: index,
           previousRouteId: previousRouteId,
+          isFirst: index == 0,
+          isLast: index == _routeStops.length - 1,
         ),
       );
       index += 1;
@@ -1159,7 +1164,14 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     final trip = _trip;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trip in Motion'),
+        toolbarHeight: 78,
+        title: const AppPageTitle(
+          icon: Icons.route_rounded,
+          leadingText: 'Trip',
+          accentText: 'Motion',
+          badgeText: 'LIVE',
+          subtitle: 'Tracking',
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -1929,6 +1941,8 @@ class _TrackStopTile extends StatelessWidget {
         : getRouteColor(secondaryStop.routeId);
     final isCurrent = status == _TrackStopStatus.current;
     final isPassed = status == _TrackStopStatus.passed;
+    final topConnectorVisible = !item.isFirst;
+    final bottomConnectorVisible = !item.isLast;
     final connectorColor = isPassed ? const Color(0xFFBFC6D4) : routeColor;
     final secondaryConnectorColor =
         isPassed ? const Color(0xFFBFC6D4) : secondaryRouteColor;
@@ -1963,11 +1977,15 @@ class _TrackStopTile extends StatelessWidget {
             width: 36,
             child: Column(
               children: [
-                Container(
-                  width: 4,
-                  height: 18,
-                  color: connectorColor.withValues(alpha: isPassed ? 0.45 : 1),
-                ),
+                if (topConnectorVisible)
+                  Container(
+                    width: 4,
+                    height: 18,
+                    color:
+                        connectorColor.withValues(alpha: isPassed ? 0.45 : 1),
+                  )
+                else
+                  const SizedBox(height: 18),
                 _TrackStationMarker(
                   primaryColor:
                       connectorColor.withValues(alpha: isPassed ? 0.75 : 1),
@@ -1978,13 +1996,17 @@ class _TrackStopTile extends StatelessWidget {
                   flashValue: flashValue,
                   highlight: isCurrent,
                 ),
-                Container(
-                  width: 4,
-                  height: 32,
-                  color:
-                      (isInterchange ? secondaryConnectorColor : connectorColor)
-                          .withValues(alpha: isPassed ? 0.45 : 1),
-                ),
+                if (bottomConnectorVisible)
+                  Container(
+                    width: 4,
+                    height: 32,
+                    color: (isInterchange
+                            ? secondaryConnectorColor
+                            : connectorColor)
+                        .withValues(alpha: isPassed ? 0.45 : 1),
+                  )
+                else
+                  const SizedBox(height: 32),
               ],
             ),
           ),
@@ -2011,6 +2033,28 @@ class _TrackStopTile extends StatelessWidget {
                               isPassed ? const Color(0xFF98A2B3) : routeColor,
                           fontWeight: FontWeight.w800,
                         ),
+                      ),
+                    ),
+                  if (item.isFirst || item.isLast)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (item.isFirst)
+                            const _TrackTimelineFlag(
+                              label: 'Start station',
+                              color: Color(0xFF0A3A8B),
+                              backgroundColor: Color(0xFFEEF4FF),
+                            ),
+                          if (item.isLast)
+                            const _TrackTimelineFlag(
+                              label: 'End station',
+                              color: Color(0xFFB42318),
+                              backgroundColor: Color(0xFFFEF3F2),
+                            ),
+                        ],
                       ),
                     ),
                   Row(
@@ -2135,6 +2179,8 @@ class _TrackTimelineItem {
   final int startIndex;
   final int endIndex;
   final String? previousRouteId;
+  final bool isFirst;
+  final bool isLast;
 
   const _TrackTimelineItem({
     required this.primaryStop,
@@ -2142,7 +2188,39 @@ class _TrackTimelineItem {
     required this.startIndex,
     required this.endIndex,
     required this.previousRouteId,
+    required this.isFirst,
+    required this.isLast,
   });
+}
+
+class _TrackTimelineFlag extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color backgroundColor;
+
+  const _TrackTimelineFlag({
+    required this.label,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
 }
 
 class _TrackStationMarker extends StatelessWidget {

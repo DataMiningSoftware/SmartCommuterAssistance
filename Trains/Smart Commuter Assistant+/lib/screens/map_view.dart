@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/route_colors.dart';
 import '../services/active_trip_service.dart';
 import '../services/database_service.dart';
+import '../widgets/app_page_title.dart';
 import '../widgets/train_loading_transition.dart';
 
 class MapView extends StatefulWidget {
@@ -76,7 +77,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
 
   final SupabaseClient _client = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService();
-  final TextEditingController _destinationController = TextEditingController();
 
   late final AnimationController _blinkController;
   late final TransformationController _mapController;
@@ -84,8 +84,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _isRouting = false;
   String? _errorText;
-  String _locationText = 'Resolving your location...';
-  String _networkSourceText = 'Network source: loading...';
 
   Position? _userPosition;
   Map<String, _StopNode> _stopsById = <String, _StopNode>{};
@@ -94,13 +92,11 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   _StationOption? _selectedDestination;
   _ResolvedRoute? _resolvedRoute;
   String? _focusedStopId;
-  double _mapScale = 1;
 
   @override
   void initState() {
     super.initState();
-    _mapController = TransformationController()
-      ..addListener(_handleMapTransform);
+    _mapController = TransformationController();
     _blinkController = AnimationController(
       vsync: this,
       duration: _blinkDuration,
@@ -116,17 +112,9 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    _mapController.removeListener(_handleMapTransform);
     _mapController.dispose();
     _blinkController.dispose();
-    _destinationController.dispose();
     super.dispose();
-  }
-
-  void _handleMapTransform() {
-    final scale = _mapController.value.getMaxScaleOnAxis();
-    if ((scale - _mapScale).abs() < 0.05 || !mounted) return;
-    setState(() => _mapScale = scale);
   }
 
   Future<void> _bootstrap() async {
@@ -152,7 +140,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
           }
         }
         if (match != null) {
-          _destinationController.text = match.stationName;
           _selectedDestination = match;
           await _computeRoute();
         }
@@ -170,7 +157,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
 
   Future<void> _loadNetworkData() async {
     final stopMaps = <Map<String, dynamic>>[];
-    var stopSource = 'train_stops_kl (Supabase)';
     try {
       final stopRows = await _client
           .from('train_stops_kl')
@@ -190,7 +176,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         stopMaps.addAll(
           cachedStops.map((row) => Map<String, dynamic>.from(row)),
         );
-        stopSource = 'cached_train_stops (offline)';
       }
     }
 
@@ -238,7 +223,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
     }
 
     final edgeMaps = <Map<String, dynamic>>[];
-    var edgeSource = 'route_connections (Supabase)';
     try {
       final edgeRows = await _client.from('route_connections').select(
           'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type');
@@ -257,7 +241,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         edgeMaps.addAll(
           cachedEdges.map((row) => Map<String, dynamic>.from(row)),
         );
-        edgeSource = 'cached_route_connections (offline)';
       }
     }
 
@@ -268,7 +251,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
 
     if (edges.isEmpty) {
       edges = _buildFallbackConnections(projectedStops.values.toList());
-      edgeSource = 'inferred fallback graph';
     }
     if (edges.isEmpty) {
       throw StateError(
@@ -303,7 +285,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
       _stopsById = projectedStops;
       _connections = edges;
       _stationOptions = options;
-      _networkSourceText = 'Network source: $stopSource + $edgeSource';
     });
   }
 
@@ -462,7 +443,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         if (!silentOnError) {
           _showMessage('Location services are disabled.');
         }
-        setState(() => _locationText = 'Location services are disabled');
         return;
       }
 
@@ -475,7 +455,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         if (!silentOnError) {
           _showMessage('Location permission was denied.');
         }
-        setState(() => _locationText = 'Location permission denied');
         return;
       }
 
@@ -483,28 +462,10 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 12),
       );
-      final nearest = _nearestStop(position.latitude, position.longitude);
 
       if (!mounted) return;
-      setState(() {
-        _userPosition = position;
-        if (nearest == null) {
-          _locationText =
-              'Current: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
-        } else {
-          final distance = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            nearest.latitude,
-            nearest.longitude,
-          );
-          _locationText =
-              'Nearest start: ${nearest.stopName} (${nearest.stopId}) - ${_formatMeters(distance)}';
-        }
-      });
+      setState(() => _userPosition = position);
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _locationText = 'Could not resolve location');
       if (!silentOnError) {
         _showMessage('Failed to get location: $e');
       }
@@ -512,7 +473,6 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   }
 
   void _onDestinationSelected(_StationOption option) {
-    _destinationController.text = option.stationName;
     FocusScope.of(context).unfocus();
     setState(() => _selectedDestination = option);
     _computeRoute();
@@ -522,6 +482,7 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
     if (_selectedDestination == null || _isRouting) return;
     setState(() => _isRouting = true);
     try {
+      await _refreshLocation(silentOnError: true);
       Position? position = _userPosition;
       if (position == null) {
         await _refreshLocation();
@@ -539,6 +500,16 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
       }
 
       final destination = _selectedDestination!;
+      if (destination.stopIds.contains(originStop.stopId)) {
+        if (!mounted) return;
+        setState(() {
+          _resolvedRoute = null;
+          _focusedStopId = originStop.stopId;
+        });
+        _showMessage('You are already at ${originStop.stopName}.');
+        return;
+      }
+
       _DijkstraResult? bestResult;
       for (final candidateStopId in destination.stopIds) {
         final result = _shortestPath(
@@ -602,6 +573,9 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
         );
         _focusedStopId = resolved.destinationStopId;
       });
+      if (routeLines.isNotEmpty) {
+        _showMessage('Route ready via ${routeLines.join(' -> ')}');
+      }
     } catch (e) {
       _showMessage('Failed to compute route: $e');
     } finally {
@@ -855,7 +829,12 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
       }
     }
 
-    final selected = await showModalBottomSheet<bool>(
+    if (option == null || !mounted) {
+      _showMessage('This station is not ready for routing yet.');
+      return;
+    }
+    _onDestinationSelected(option);
+    /* final selected = await showModalBottomSheet<bool>(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -898,16 +877,23 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
     );
 
     if (selected != true || option == null || !mounted) return;
-    _destinationController.text = option.stationName;
     _onDestinationSelected(option);
+    */
   }
 
   List<Widget> _buildStationMarkers(Size size) {
     return _stopsById.values.map((stop) {
       final left = (stop.mapX * size.width).clamp(0.0, size.width);
       final top = (stop.mapY * size.height).clamp(0.0, size.height);
-      final isRouteStop = _resolvedRoute?.originStopId == stop.stopId ||
-          _resolvedRoute?.destinationStopId == stop.stopId ||
+      final isOrigin = _resolvedRoute?.originStopId == stop.stopId;
+      final isDestination = _resolvedRoute?.destinationStopId == stop.stopId;
+      final isInterchange = _resolvedRoute?.interchangeMarkers.any(
+            (marker) => marker.stopId == stop.stopId,
+          ) ==
+          true;
+      final isRouteStop = isOrigin ||
+          isInterchange ||
+          isDestination ||
           _resolvedRoute?.edges.any(
                 (edge) =>
                     edge.fromStopId == stop.stopId ||
@@ -915,8 +901,14 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
               ) ==
               true;
       final isFocused = _focusedStopId == stop.stopId;
-      final markerSize = isRouteStop || isFocused ? 15.0 : 11.0;
-      final showLabel = isFocused;
+      final markerSize = isOrigin || isDestination
+          ? 17.0
+          : isInterchange
+              ? 16.0
+              : isRouteStop || isFocused
+                  ? 15.0
+                  : 11.0;
+      final showLabel = isFocused || isOrigin || isDestination || isInterchange;
 
       return Positioned(
         left: left - 22,
@@ -932,13 +924,26 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
                 clipBehavior: Clip.none,
                 alignment: Alignment.topCenter,
                 children: [
+                  if (isRouteStop || isFocused)
+                    Positioned(
+                      top: 8,
+                      child: Container(
+                        width: markerSize + 12,
+                        height: markerSize + 12,
+                        decoration: BoxDecoration(
+                          color: getRouteColor(stop.routeId)
+                              .withValues(alpha: 0.14),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: 14,
                     child: Container(
                       width: markerSize,
                       height: markerSize,
                       decoration: BoxDecoration(
-                        color: isFocused
+                        color: isFocused || isOrigin || isDestination
                             ? getRouteColor(stop.routeId)
                             : Colors.white,
                         shape: BoxShape.circle,
@@ -960,7 +965,13 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
                     Positioned(
                       top: 34,
                       child: _StationMapLabel(
-                        stopName: stop.stopName,
+                        stopName: isOrigin
+                            ? 'Start  ${stop.stopName}'
+                            : isDestination
+                                ? 'End  ${stop.stopName}'
+                                : isInterchange
+                                    ? 'Change  ${stop.stopName}'
+                                    : stop.stopName,
                         stopId: stop.stopId,
                         highlighted: isRouteStop || isFocused,
                       ),
@@ -977,412 +988,136 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Rail Pulse Map')),
+      appBar: AppBar(
+        toolbarHeight: 78,
+        title: const AppPageTitle(
+          icon: Icons.map_rounded,
+          leadingText: 'Rail',
+          accentText: 'Pulse',
+          badgeText: 'MAP',
+          subtitle: 'Interactive overlay',
+        ),
+      ),
       body: TrainLoadingTransition(
         isLoading: _isLoading,
         loadingLabel: 'Drawing network map...',
         arrivalLabel: 'Map ready',
         child: _errorText != null
             ? _MapErrorState(errorText: _errorText!, onRetry: _bootstrap)
-            : Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                child: Column(
-                  children: [
-                    _ControlPanel(
-                      locationText: _locationText,
-                      networkSourceText: _networkSourceText,
-                      stationOptions: _stationOptions,
-                      destinationController: _destinationController,
-                      onRefreshLocation: () => _refreshLocation(),
-                      onStationSelected: _onDestinationSelected,
-                      isRouting: _isRouting,
-                    ),
-                    const SizedBox(height: 10),
-                    _RouteSummary(
-                      route: _resolvedRoute,
-                      stopsById: _stopsById,
-                    ),
-                    const SizedBox(height: 10),
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFDCE6F5)),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: InteractiveViewer(
-                            transformationController: _mapController,
-                            minScale: 1.0,
-                            maxScale: 5.0,
-                            panEnabled: true,
-                            boundaryMargin: const EdgeInsets.all(80),
-                            child: AspectRatio(
-                              aspectRatio: _mapAspectRatio,
-                              child: AnimatedBuilder(
-                                animation: _blinkController,
-                                builder: (context, _) {
-                                  return LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final size = Size(
-                                        constraints.maxWidth,
-                                        constraints.maxHeight,
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Colors.white,
+                      child: InteractiveViewer(
+                        transformationController: _mapController,
+                        minScale: 1.0,
+                        maxScale: 5.0,
+                        panEnabled: true,
+                        boundaryMargin: const EdgeInsets.all(80),
+                        child: AspectRatio(
+                          aspectRatio: _mapAspectRatio,
+                          child: AnimatedBuilder(
+                            animation: _blinkController,
+                            builder: (context, _) {
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final size = Size(
+                                    constraints.maxWidth,
+                                    constraints.maxHeight,
+                                  );
+                                  return GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTapUp: (details) {
+                                      final stop = _stopAtCanvasPoint(
+                                        details.localPosition,
+                                        size,
                                       );
-                                      return GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTapUp: (details) {
-                                          final stop = _stopAtCanvasPoint(
-                                            details.localPosition,
-                                            size,
-                                          );
-                                          if (stop != null) {
-                                            _handleStationTap(stop);
-                                          }
-                                        },
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Image.asset(
-                                              'assets/images/klang_valley_map.png',
-                                              fit: BoxFit.cover,
-                                            ),
-                                            CustomPaint(
-                                              painter: _RouteHighlightPainter(
-                                                stopsById: _stopsById,
-                                                route: _resolvedRoute,
-                                                blinkValue:
-                                                    _blinkController.value,
-                                              ),
-                                            ),
-                                            ..._buildStationMarkers(size),
-                                          ],
-                                        ),
-                                      );
+                                      if (stop != null) {
+                                        _handleStationTap(stop);
+                                      } else if (_focusedStopId != null) {
+                                        setState(() => _focusedStopId = null);
+                                      }
                                     },
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/klang_valley_map.png',
+                                          fit: BoxFit.cover,
+                                        ),
+                                        CustomPaint(
+                                          painter: _RouteHighlightPainter(
+                                            stopsById: _stopsById,
+                                            route: _resolvedRoute,
+                                            blinkValue: _blinkController.value,
+                                          ),
+                                        ),
+                                        ..._buildStationMarkers(size),
+                                      ],
+                                    ),
                                   );
                                 },
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  if (_isRouting)
+                    const SafeArea(
+                      minimum: EdgeInsets.only(top: 12),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: _MapRoutingPill(),
+                      ),
+                    ),
+                ],
               ),
       ),
     );
   }
-
-  static String _formatMeters(double meters) {
-    if (meters < 1000) return '${meters.toStringAsFixed(0)} m';
-    return '${(meters / 1000).toStringAsFixed(2)} km';
-  }
 }
 
-class _ControlPanel extends StatelessWidget {
-  final String locationText;
-  final String networkSourceText;
-  final List<_StationOption> stationOptions;
-  final TextEditingController destinationController;
-  final VoidCallback onRefreshLocation;
-  final ValueChanged<_StationOption> onStationSelected;
-  final bool isRouting;
-
-  const _ControlPanel({
-    required this.locationText,
-    required this.networkSourceText,
-    required this.stationOptions,
-    required this.destinationController,
-    required this.onRefreshLocation,
-    required this.onStationSelected,
-    required this.isRouting,
-  });
+class _MapRoutingPill extends StatelessWidget {
+  const _MapRoutingPill();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCE6F5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.my_location_rounded, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  locationText,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF344054),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: isRouting ? null : onRefreshLocation,
-                icon: const Icon(Icons.refresh_rounded),
-                tooltip: 'Refresh location',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Autocomplete<_StationOption>(
-            optionsBuilder: (textEditingValue) {
-              final query = textEditingValue.text.trim().toLowerCase();
-              if (query.isEmpty) {
-                return const Iterable<_StationOption>.empty();
-              }
-              return stationOptions.where(
-                (station) {
-                  final inName =
-                      station.stationName.toLowerCase().contains(query);
-                  final inCode = station.stopCodes.any(
-                    (code) => code.toLowerCase().contains(query),
-                  );
-                  final inLine = station.routeIds.any(
-                    (line) => line.toLowerCase().contains(query),
-                  );
-                  return inName || inCode || inLine;
-                },
-              ).take(16);
-            },
-            displayStringForOption: (option) => option.stationName,
-            onSelected: onStationSelected,
-            fieldViewBuilder:
-                (context, controller, focusNode, onFieldSubmitted) {
-              if (controller.text != destinationController.text) {
-                controller.value = destinationController.value;
-              }
-              return TextField(
-                controller: controller,
-                focusNode: focusNode,
-                decoration: const InputDecoration(
-                  hintText: 'Search destination station',
-                  prefixIcon: Icon(Icons.search_rounded),
-                ),
-                onChanged: (value) {
-                  destinationController.value = controller.value;
-                },
-                onSubmitted: (_) => onFieldSubmitted(),
-              );
-            },
-            optionsViewBuilder: (context, onSelected, options) {
-              final optionList = options.toList();
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    width: 420,
-                    margin: const EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFDCE6F5)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x1F101828),
-                          blurRadius: 16,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      shrinkWrap: true,
-                      itemCount: optionList.length,
-                      separatorBuilder: (_, __) =>
-                          const Divider(height: 1, thickness: 0.6),
-                      itemBuilder: (context, index) {
-                        final option = optionList[index];
-                        return ListTile(
-                          dense: true,
-                          visualDensity: const VisualDensity(
-                            horizontal: -1,
-                            vertical: -2,
-                          ),
-                          leading: _SearchRouteBadge(routeIds: option.routeIds),
-                          title: Text(
-                            option.stationName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          subtitle: Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: option.stopCodes
-                                .map((code) => _SearchStopCodeChip(code: code))
-                                .toList(),
-                          ),
-                          onTap: () => onSelected(option),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Tap any marked station or search one to light up the route on the map.',
-            style: TextStyle(
-              color: Color(0xFF667085),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            networkSourceText,
-            style: const TextStyle(
-              color: Color(0xFF98A2B3),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
+        color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F101828),
+            blurRadius: 14,
+            offset: Offset(0, 8),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RouteSummary extends StatelessWidget {
-  final _ResolvedRoute? route;
-  final Map<String, _StopNode> stopsById;
-
-  const _RouteSummary({
-    required this.route,
-    required this.stopsById,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final data = route;
-    if (data == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFDCE6F5)),
-        ),
-        child: const Text(
-          'No route selected yet.',
-          style: TextStyle(
-            color: Color(0xFF667085),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
-
-    final origin = stopsById[data.originStopId];
-    final destination = stopsById[data.destinationStopId];
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCE6F5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          SizedBox(width: 10),
           Text(
-            '${origin?.stopName ?? data.originStopId} -> ${destination?.stopName ?? data.destinationStopId}',
-            style: const TextStyle(
-              fontSize: 15,
+            'Drawing route...',
+            style: TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Estimated travel: ${_formatDuration(data.totalMinutes)}',
-            style: const TextStyle(
-              color: Color(0xFF475467),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: data.routeLines.map((line) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: getRouteColor(line),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  line,
-                  style: TextStyle(
-                    color: getRouteOnColor(line),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
         ],
-      ),
-    );
-  }
-
-  static String _formatDuration(int minutes) {
-    final safe = minutes < 0 ? 0 : minutes;
-    final hours = safe ~/ 60;
-    final mins = safe % 60;
-    if (hours <= 0) return '${mins}m';
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
-  }
-}
-
-class _SearchRouteBadge extends StatelessWidget {
-  final List<String> routeIds;
-
-  const _SearchRouteBadge({
-    required this.routeIds,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ids = routeIds.where((id) => id.isNotEmpty && id != 'N/A').toList();
-    if (ids.length <= 1) {
-      final route = ids.isEmpty ? 'N/A' : ids.first;
-      return CircleAvatar(
-        radius: 16,
-        backgroundColor: getRouteColor(route),
-        child: Text(
-          normalizeRouteId(route),
-          style: TextStyle(
-            color: getRouteOnColor(route),
-            fontWeight: FontWeight.w800,
-            fontSize: 10,
-          ),
-        ),
-      );
-    }
-
-    final colors = ids.map(getRouteColor).toList();
-    return SizedBox(
-      width: 32,
-      height: 32,
-      child: CustomPaint(
-        painter: _SearchRouteSegmentsPainter(colors: colors),
       ),
     );
   }
@@ -1428,75 +1163,6 @@ class _StationMapLabel extends StatelessWidget {
             fontSize: 10,
             fontWeight: FontWeight.w800,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchRouteSegmentsPainter extends CustomPainter {
-  final List<Color> colors;
-
-  const _SearchRouteSegmentsPainter({
-    required this.colors,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final center = rect.center;
-    final radius = math.min(size.width, size.height) / 2;
-    final arcRect = Rect.fromCircle(center: center, radius: radius);
-    final segmentAngle = (2 * math.pi) / colors.length;
-    var start = -math.pi / 2;
-
-    for (final color in colors) {
-      final paint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = color;
-      canvas.drawArc(arcRect, start, segmentAngle, true, paint);
-      start += segmentAngle;
-    }
-
-    final border = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const Color(0xFFDDE6F5);
-    canvas.drawCircle(center, radius - 0.5, border);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SearchRouteSegmentsPainter oldDelegate) {
-    if (oldDelegate.colors.length != colors.length) return true;
-    for (var i = 0; i < colors.length; i++) {
-      if (oldDelegate.colors[i] != colors[i]) return true;
-    }
-    return false;
-  }
-}
-
-class _SearchStopCodeChip extends StatelessWidget {
-  final String code;
-
-  const _SearchStopCodeChip({
-    required this.code,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final route = normalizeRouteId(_inferRouteIdFromStopId(code));
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: getRouteColor(route).withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        code,
-        style: TextStyle(
-          color: getRouteColor(route),
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
         ),
       ),
     );
