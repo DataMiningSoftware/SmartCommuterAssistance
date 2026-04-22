@@ -5,16 +5,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
-import '../services/database_service.dart';
 import '../services/navigation_state.dart';
-import '../services/station_service.dart';
+import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 import 'station_crowd_board_screen.dart';
 import 'stations_screen.dart';
@@ -29,8 +27,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ActiveTripService _activeTripService = ActiveTripService.instance;
   final CrowdReportsService _crowdReportsService = CrowdReportsService();
-  final DatabaseService _databaseService = DatabaseService();
-  final StationService _stationService = StationService();
+  final TransitNetworkService _transitNetworkService = TransitNetworkService();
   final TextEditingController _routeSearchController = TextEditingController();
   Position? _position;
   bool _isPreparingTrip = false;
@@ -435,81 +432,31 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
     try {
-      final rows = <Map<String, dynamic>>[];
-      try {
-        final remoteRows = await Supabase.instance.client
-            .from('train_stops_kl')
-            .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
-        final maps = remoteRows
-            .whereType<Map>()
-            .map((row) => Map<String, dynamic>.from(row))
-            .toList();
-        rows.addAll(maps);
-        if (maps.isNotEmpty) {
-          await _databaseService.cacheTrainStops(maps);
-        }
-      } catch (_) {}
-
-      if (rows.isEmpty) {
-        final cachedRows = await _databaseService.getCachedTrainStops();
-        rows.addAll(
-          cachedRows.map((row) => Map<String, dynamic>.from(row)),
-        );
-      }
-
+      final network = await _transitNetworkService.loadNetwork();
       _mapStopsById.clear();
-      for (final row in rows) {
-        final stopId = (row['stop_id']?.toString() ?? '').trim().toUpperCase();
-        final stopName = (row['stop_name']?.toString() ?? '').trim();
-        final lat = _toDouble(row['stop_lat']);
-        final lon = _toDouble(row['stop_lon']);
-        if (stopId.isEmpty || stopName.isEmpty || lat == null || lon == null) {
-          continue;
-        }
-        _mapStopsById[stopId] = _MapStop(
-          stopId: stopId,
-          stopName: stopName,
-          routeId: normalizeRouteId(
-            (row['route_id']?.toString() ?? _inferRouteIdFromStopId(stopId))
-                .trim()
-                .toUpperCase(),
-          ),
-          latitude: lat,
-          longitude: lon,
-        );
-      }
-
-      final edgeRows = <Map<String, dynamic>>[];
-      try {
-        final remoteEdges =
-            await Supabase.instance.client.from('route_connections').select(
-                  'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
-                );
-        final maps = remoteEdges
-            .whereType<Map>()
-            .map((row) => Map<String, dynamic>.from(row))
-            .toList();
-        edgeRows.addAll(maps);
-        if (maps.isNotEmpty) {
-          await _databaseService.cacheRouteConnections(maps);
-        }
-      } catch (_) {}
-
-      if (edgeRows.isEmpty) {
-        final cachedEdges = await _databaseService.getCachedRouteConnections();
-        edgeRows.addAll(
-          cachedEdges.map((row) => Map<String, dynamic>.from(row)),
+      for (final stop in network.stopsById.values) {
+        _mapStopsById[stop.stopId] = _MapStop(
+          stopId: stop.stopId,
+          stopName: stop.stopName,
+          routeId: stop.routeId,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
         );
       }
 
       _routeConnections
         ..clear()
-        ..addAll(_mapEdgeRows(edgeRows));
-      if (_routeConnections.isEmpty) {
-        _routeConnections.addAll(
-          _buildFallbackConnections(_mapStopsById.values.toList()),
+        ..addAll(
+          network.connections.map(
+            (edge) => _HomeRouteConnection(
+              fromStopId: edge.fromStopId,
+              toStopId: edge.toStopId,
+              routeId: edge.routeId,
+              connectionType: edge.connectionType,
+              travelMinutes: edge.travelMinutes,
+            ),
+          ),
         );
-      }
 
       if (!mounted) return;
       setState(() => _isLoadingMap = false);
@@ -831,47 +778,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<_HomeStationSearchOption>> _loadStationSearchOptions() async {
-    final groupedRows = <String, List<Map<String, dynamic>>>{};
-
-    void collectRows(List<Map<String, dynamic>> rows) {
-      for (final row in rows) {
-        final stationName =
-            (row['stop_name'] ?? row['station_name'] ?? '').toString().trim();
-        if (stationName.isEmpty) continue;
-        groupedRows
-            .putIfAbsent(stationName, () => <Map<String, dynamic>>[])
-            .add(
-              row,
-            );
-      }
-    }
-
     try {
-      final stopRows = await Supabase.instance.client
-          .from('train_stops_kl')
-          .select('stop_name,stop_id,route_id');
-      final mappedRows = stopRows
-          .whereType<Map>()
-          .map((row) => Map<String, dynamic>.from(row))
+      final network = await _transitNetworkService.loadNetwork();
+      return network.stationOptions
+          .map(
+            (option) => _HomeStationSearchOption(
+              stationName: option.stationName,
+              stopCodes: option.stopIds,
+              routeIds: option.routeIds,
+            ),
+          )
           .toList();
-      collectRows(mappedRows);
-      if (groupedRows.isNotEmpty) {
-        return _buildSearchOptions(groupedRows);
-      }
     } catch (_) {
       // Fallback below.
     }
 
-    try {
-      final rows = await _stationService.getUniqueStations();
-      collectRows(rows);
-      if (groupedRows.isNotEmpty) {
-        return _buildSearchOptions(groupedRows);
-      }
-    } catch (_) {
-      // Final fallback below.
-    }
-
+    final groupedRows = <String, List<Map<String, dynamic>>>{};
     final fallbackOptions = await _crowdReportsService.fetchStationOptions();
     for (final option in fallbackOptions) {
       final station = option.stationName.trim();

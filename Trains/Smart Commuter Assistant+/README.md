@@ -7,7 +7,7 @@ A modern Flutter app designed for Malaysian public transport users to predict tr
 - **Train Arrival Predictions**: Real-time arrival times with crowd level indicators
 - **Route Planning**: Intelligent route optimization with multiple options
 - **Station Details**: Live updates on upcoming trains and crowd levels
-- **Interactive Map**: Visual representation of train networks and live positions
+- **Zoomable Rail Map**: Full-screen Klang Valley rail map with pinch and scroll zoom
 - **User Profiles**: Personalized settings and favorite routes
 - **Malaysian Theme**: Material 3 design inspired by the Malaysian flag colors
 
@@ -20,13 +20,13 @@ lib/
 │   ├── home_screen.dart        # Main dashboard with predictions and quick actions
 │   ├── route_planner.dart      # Route planning with origin/destination input
 │   ├── station_details.dart    # Station info with upcoming trains
-│   ├── map_view.dart          # Interactive map with train markers
+│   ├── map_view.dart          # Zoomable static Klang Valley rail map
 │   └── profile_screen.dart     # User settings and preferences
 ├── widgets/
 │   ├── prediction_card.dart    # Reusable card for train predictions
 │   ├── crowd_indicator.dart    # Visual crowd level indicator
 │   ├── route_input.dart       # Origin/destination input widget
-│   └── map_preview.dart       # Map preview for home screen
+│   └── app_page_title.dart    # Shared branded page title widget
 ├── models/
 │   ├── train_prediction.dart   # Train arrival prediction data model
 │   └── route_info.dart        # Route information data model

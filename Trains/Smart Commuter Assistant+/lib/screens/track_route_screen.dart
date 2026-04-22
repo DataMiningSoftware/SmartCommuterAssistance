@@ -5,15 +5,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
-import '../services/database_service.dart';
 import '../services/navigation_state.dart';
 import '../services/notification_service.dart';
+import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 
 class TrackRouteScreen extends StatefulWidget {
@@ -38,8 +37,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     with TickerProviderStateMixin {
   final ActiveTripService _tripService = ActiveTripService.instance;
   final CrowdReportsService _crowdReportsService = CrowdReportsService();
-  final DatabaseService _databaseService = DatabaseService();
   final NotificationService _notificationService = NotificationService();
+  final TransitNetworkService _transitNetworkService = TransitNetworkService();
   final TextEditingController _emptyTripSearchController =
       TextEditingController();
 
@@ -142,91 +141,48 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Future<void> _loadNetworkData() async {
-    final stopMaps = <Map<String, dynamic>>[];
-    try {
-      final stopRows = await Supabase.instance.client
-          .from('train_stops_kl')
-          .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
-      stopMaps.addAll(
-        stopRows.whereType<Map>().map((row) => Map<String, dynamic>.from(row)),
-      );
-      if (stopMaps.isNotEmpty) {
-        await _databaseService.cacheTrainStops(stopMaps);
-      }
-    } catch (_) {
-      final cachedStops = await _databaseService.getCachedTrainStops();
-      stopMaps.addAll(
-        cachedStops.map((row) => Map<String, dynamic>.from(row)),
-      );
-    }
+    final network = await _transitNetworkService.loadNetwork();
 
-    for (final map in stopMaps) {
-      final stopId = (map['stop_id']?.toString() ?? '').trim().toUpperCase();
-      final stopName = (map['stop_name']?.toString() ?? '').trim();
-      final lat = _toDouble(map['stop_lat']);
-      final lon = _toDouble(map['stop_lon']);
-      if (stopId.isEmpty || stopName.isEmpty || lat == null || lon == null) {
-        continue;
-      }
-      _stopsById[stopId] = _StopNode(
-        stopId: stopId,
-        stopName: stopName,
-        routeId: normalizeRouteId(
-          (map['route_id']?.toString() ?? _inferRouteIdFromStopId(stopId))
-              .trim()
-              .toUpperCase(),
-        ),
-        latitude: lat,
-        longitude: lon,
-      );
-    }
-
-    final edgeMaps = <Map<String, dynamic>>[];
-    try {
-      final edgeRows =
-          await Supabase.instance.client.from('route_connections').select(
-                'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
-              );
-      edgeMaps.addAll(
-        edgeRows.whereType<Map>().map((row) => Map<String, dynamic>.from(row)),
-      );
-      if (edgeMaps.isNotEmpty) {
-        await _databaseService.cacheRouteConnections(edgeMaps);
-      }
-    } catch (_) {
-      final cachedEdges = await _databaseService.getCachedRouteConnections();
-      edgeMaps.addAll(
-        cachedEdges.map((row) => Map<String, dynamic>.from(row)),
-      );
-    }
-
-    for (final map in edgeMaps) {
-      final from = (map['from_stop_id']?.toString() ?? '').trim().toUpperCase();
-      final to = (map['to_stop_id']?.toString() ?? '').trim().toUpperCase();
-      if (!_stopsById.containsKey(from) || !_stopsById.containsKey(to)) {
-        continue;
-      }
-      _connections.add(
-        _RouteConnection(
-          fromStopId: from,
-          toStopId: to,
-          routeId: normalizeRouteId(
-            (map['route_id']?.toString() ?? '').trim().toUpperCase(),
+    _stopsById
+      ..clear()
+      ..addEntries(
+        network.stopsById.entries.map(
+          (entry) => MapEntry(
+            entry.key,
+            _StopNode(
+              stopId: entry.value.stopId,
+              stopName: entry.value.stopName,
+              routeId: entry.value.routeId,
+              latitude: entry.value.latitude,
+              longitude: entry.value.longitude,
+            ),
           ),
-          connectionType:
-              (map['connection_type']?.toString() ?? 'standard_stop').trim(),
-          travelMinutes: (map['travel_time_minutes'] is num)
-              ? (map['travel_time_minutes'] as num).toInt()
-              : int.tryParse(map['travel_time_minutes']?.toString() ?? '') ?? 2,
         ),
       );
-    }
 
-    if (_connections.isEmpty) {
-      _connections
-          .addAll(_buildFallbackConnections(_stopsById.values.toList()));
-    }
-    _rebuildStationOptions();
+    _connections
+      ..clear()
+      ..addAll(
+        network.connections.map(
+          (edge) => _RouteConnection(
+            fromStopId: edge.fromStopId,
+            toStopId: edge.toStopId,
+            routeId: edge.routeId,
+            connectionType: edge.connectionType,
+            travelMinutes: edge.travelMinutes,
+          ),
+        ),
+      );
+
+    _stationOptions = network.stationOptions
+        .map(
+          (option) => _TrackStationOption(
+            stationName: option.stationName,
+            stopIds: option.stopIds,
+            routeIds: option.routeIds,
+          ),
+        )
+        .toList();
   }
 
   List<_RouteConnection> _buildFallbackConnections(List<_StopNode> stops) {

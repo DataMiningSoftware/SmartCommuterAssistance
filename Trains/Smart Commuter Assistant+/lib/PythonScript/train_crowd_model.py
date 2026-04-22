@@ -20,6 +20,8 @@ FEATURE_COLUMNS = [
     "is_weekend",
     "is_raining",
     "is_holiday",
+    "peak_period",
+    "station_pressure",
     "event_intensity",
     "headway_minutes",
 ]
@@ -30,6 +32,8 @@ NUMERIC_FEATURES = [
     "is_weekend",
     "is_raining",
     "is_holiday",
+    "peak_period",
+    "station_pressure",
     "event_intensity",
     "headway_minutes",
 ]
@@ -44,6 +48,8 @@ def _ensure_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
         "is_weekend": 0,
         "is_raining": 0,
         "is_holiday": 0,
+        "peak_period": 0,
+        "station_pressure": 0,
         "event_intensity": 0,
         "headway_minutes": 6,
     }

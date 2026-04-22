@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import argparse
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 from supabase import Client, create_client
+
+from crowd_feature_utils import (
+    build_feature_row,
+    estimate_occupancy_percent,
+    load_stop_metadata,
+    normalize_route_id,
+    parse_extra_holiday_dates,
+)
 
 
 LINE_COLUMN_BY_ROUTE = {
@@ -21,87 +28,6 @@ LINE_COLUMN_BY_ROUTE = {
     "MR": "rail_monorail",
     "BRT": "bus_rpn",
 }
-
-WEEKDAY_HOUR_PROFILE = [
-    0.02,
-    0.01,
-    0.01,
-    0.01,
-    0.02,
-    0.05,
-    0.18,
-    0.35,
-    0.42,
-    0.33,
-    0.22,
-    0.20,
-    0.24,
-    0.28,
-    0.30,
-    0.34,
-    0.45,
-    0.55,
-    0.58,
-    0.46,
-    0.34,
-    0.22,
-    0.12,
-    0.06,
-]
-
-WEEKEND_HOUR_PROFILE = [
-    0.02,
-    0.01,
-    0.01,
-    0.01,
-    0.02,
-    0.03,
-    0.08,
-    0.12,
-    0.16,
-    0.22,
-    0.28,
-    0.34,
-    0.40,
-    0.44,
-    0.46,
-    0.45,
-    0.42,
-    0.40,
-    0.36,
-    0.30,
-    0.24,
-    0.18,
-    0.10,
-    0.05,
-]
-
-
-@dataclass(frozen=True)
-class StopMeta:
-    stop_id: str
-    route_id: str
-
-
-def normalize_route_id(raw_route: str, stop_id: str) -> str:
-    route = (raw_route or "").strip().upper()
-    if not route:
-        route = "".join(ch for ch in stop_id.upper() if ch.isalpha())
-    if route.startswith("KG") or route == "MRT":
-        return "MRT"
-    if route.startswith("PY"):
-        return "PYL"
-    if route.startswith("SP") or route.startswith("PH"):
-        return "AG"
-    if route.startswith("AG"):
-        return "AG"
-    if route.startswith("KJ"):
-        return "KJ"
-    if route.startswith("MR"):
-        return "MR"
-    if route.startswith("BRT"):
-        return "BRT"
-    return route[:3] if route else "KJ"
 
 
 def occupancy_level_from_percent(occupancy_percent: float) -> int:
@@ -125,32 +51,6 @@ def eta_multiplier_from_level(level: int, hour: int) -> float:
     return round(min(max(base, 1.00), 2.50), 2)
 
 
-def stop_bias(stop_id: str) -> float:
-    # Deterministic per-stop variation so all stations are not identical.
-    checksum = sum(ord(ch) for ch in stop_id.upper())
-    return float((checksum % 9) - 4)  # -4 .. +4
-
-
-def load_stops(stops_csv: Path) -> list[StopMeta]:
-    df = pd.read_csv(stops_csv)
-    if "stop_id" not in df.columns:
-        raise ValueError(f"Missing stop_id column in {stops_csv}")
-
-    stops: list[StopMeta] = []
-    for _, row in df.iterrows():
-        stop_id = str(row.get("stop_id", "")).strip().upper()
-        if not stop_id:
-            continue
-        route_id = normalize_route_id(str(row.get("route_id", "")), stop_id)
-        stops.append(StopMeta(stop_id=stop_id, route_id=route_id))
-
-    # Keep one entry per stop ID
-    dedup: dict[str, StopMeta] = {}
-    for stop in stops:
-        dedup.setdefault(stop.stop_id, stop)
-    return list(dedup.values())
-
-
 def load_ridership(ridership_csv: Path) -> pd.DataFrame:
     df = pd.read_csv(ridership_csv, parse_dates=["date"])
     if "date" not in df.columns:
@@ -172,12 +72,18 @@ def compute_line_strength(df: pd.DataFrame) -> dict[tuple[str, bool], float]:
             continue
         for is_weekend in [False, True]:
             scoped = df[df["is_weekend"] == is_weekend][column]
-            mean_value = float(scoped.dropna().mean()) if not scoped.dropna().empty else 0.0
+            mean_value = (
+                float(scoped.dropna().mean()) if not scoped.dropna().empty else 0.0
+            )
             strengths[(route, is_weekend)] = mean_value
             if mean_value > 0:
                 fallback_values.append(mean_value)
 
-    fallback_mean = float(sum(fallback_values) / len(fallback_values)) if fallback_values else 1.0
+    fallback_mean = (
+        float(sum(fallback_values) / len(fallback_values))
+        if fallback_values
+        else 1.0
+    )
     for route in ["KJ", "AG", "MRT", "PYL", "MR", "BRT"]:
         for is_weekend in [False, True]:
             strengths.setdefault((route, is_weekend), fallback_mean)
@@ -186,33 +92,42 @@ def compute_line_strength(df: pd.DataFrame) -> dict[tuple[str, bool], float]:
     if max_value <= 0:
         max_value = 1.0
 
-    normalized = {key: (value / max_value) for key, value in strengths.items()}
-    return normalized
-
-
-def hour_strength(hour: int, is_weekend: bool) -> float:
-    profile = WEEKEND_HOUR_PROFILE if is_weekend else WEEKDAY_HOUR_PROFILE
-    top = max(profile)
-    return profile[hour] / top if top > 0 else 0.0
+    return {key: (value / max_value) for key, value in strengths.items()}
 
 
 def build_forecast_rows(
     ridership_df: pd.DataFrame,
-    stops: list[StopMeta],
+    stops_csv: Path,
+    global_event_level: float = 0.0,
 ) -> list[dict[str, object]]:
     line_strength = compute_line_strength(ridership_df)
+    extra_holidays = parse_extra_holiday_dates()
+    stops = list(load_stop_metadata(stops_csv).values())
     rows: list[dict[str, object]] = []
+
+    weekday_reference = pd.Timestamp("2026-04-21")
+    weekend_reference = pd.Timestamp("2026-04-19")
 
     for stop in stops:
         route = normalize_route_id(stop.route_id, stop.stop_id)
         for is_weekend in [False, True]:
             line_value = line_strength.get((route, is_weekend), 0.55)
+            reference = weekend_reference if is_weekend else weekday_reference
+
             for hour in range(24):
-                h_strength = hour_strength(hour, is_weekend)
-                base = 12.0 + (line_value * 48.0) + (h_strength * 30.0)
-                weekend_adjust = -8.0 if is_weekend else 4.0
-                percent = base + weekend_adjust + stop_bias(stop.stop_id)
-                percent = max(0.0, min(100.0, percent))
+                when = reference.to_pydatetime().replace(hour=hour, minute=30)
+                features = build_feature_row(
+                    stop,
+                    when,
+                    is_raining=0,
+                    global_event_level=global_event_level,
+                    extra_holidays=extra_holidays,
+                )
+                percent = estimate_occupancy_percent(
+                    stop,
+                    features,
+                    trend_strength=line_value,
+                )
 
                 level = occupancy_level_from_percent(percent)
                 wait_minutes = wait_minutes_from_level(level)
@@ -233,7 +148,10 @@ def build_forecast_rows(
     return rows
 
 
-def chunked(items: list[dict[str, object]], chunk_size: int) -> list[list[dict[str, object]]]:
+def chunked(
+    items: list[dict[str, object]],
+    chunk_size: int,
+) -> list[list[dict[str, object]]]:
     return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
@@ -282,6 +200,12 @@ def parse_args() -> argparse.Namespace:
         help="Rows per upsert request",
     )
     parser.add_argument(
+        "--event-level",
+        type=float,
+        default=0.0,
+        help="Global event lift applied on top of hotspot stations",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Generate rows and print sample only (no DB write).",
@@ -300,10 +224,13 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"stops csv not found: {stops_csv}")
 
     ridership_df = load_ridership(ridership_csv)
-    stops = load_stops(stops_csv)
-    rows = build_forecast_rows(ridership_df, stops)
+    rows = build_forecast_rows(
+        ridership_df,
+        stops_csv=stops_csv,
+        global_event_level=args.event_level,
+    )
 
-    print(f"Prepared {len(rows)} forecast rows from {len(stops)} stops.")
+    print(f"Prepared {len(rows)} forecast rows.")
     print("Sample rows:")
     for sample in rows[:8]:
         print(sample)

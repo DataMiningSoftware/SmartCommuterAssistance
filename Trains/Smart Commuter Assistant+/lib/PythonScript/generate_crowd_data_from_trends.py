@@ -7,11 +7,10 @@ import numpy as np
 import pandas as pd
 
 from crowd_feature_utils import (
-    base_route_pressure,
     build_feature_row,
+    estimate_occupancy_percent,
     load_stop_metadata,
     parse_extra_holiday_dates,
-    stop_bias,
 )
 
 ROUTE_BY_COLUMN = {
@@ -24,15 +23,53 @@ ROUTE_BY_COLUMN = {
 
 
 def infer_hour_profile(is_weekend: int) -> np.ndarray:
-    # Hours 6..23. Weekdays peak around 7-9 and 17-19.
+    # Hours 6..23. Weighted toward the weekday crush windows described by the user.
     hours = np.arange(6, 24)
     if is_weekend:
         profile = np.array(
-            [0.05, 0.05, 0.06, 0.06, 0.07, 0.08, 0.08, 0.08, 0.08, 0.08, 0.07, 0.06, 0.06, 0.06, 0.06, 0.06, 0.05, 0.05]
+            [
+                0.03,
+                0.03,
+                0.04,
+                0.05,
+                0.07,
+                0.08,
+                0.08,
+                0.08,
+                0.08,
+                0.08,
+                0.09,
+                0.09,
+                0.08,
+                0.07,
+                0.05,
+                0.04,
+                0.02,
+                0.02,
+            ]
         )
     else:
         profile = np.array(
-            [0.04, 0.10, 0.12, 0.10, 0.06, 0.05, 0.05, 0.05, 0.05, 0.06, 0.09, 0.12, 0.12, 0.09, 0.05, 0.03, 0.01, 0.01]
+            [
+                0.06,
+                0.16,
+                0.18,
+                0.10,
+                0.04,
+                0.03,
+                0.03,
+                0.03,
+                0.04,
+                0.05,
+                0.09,
+                0.12,
+                0.13,
+                0.07,
+                0.03,
+                0.01,
+                0.005,
+                0.005,
+            ]
         )
     return profile / profile.sum()
 
@@ -131,37 +168,10 @@ def simulate_from_trends(
         )
         trend_norm = np.clip(trend_value / global_max, 0.0, 1.0)
 
-        hour_peak = 0.0
-        if 7 <= hour <= 9:
-            hour_peak = 0.30
-        elif 17 <= hour <= 19:
-            hour_peak = 0.34
-        elif 6 <= hour <= 22:
-            hour_peak = 0.12
-
-        holiday_adjust = 0.08 if int(features["is_holiday"]) else 0.0
-        weekend_adjust = -0.08 if is_weekend else 0.08
-        rain_adjust = rng.uniform(0.06, 0.16) if is_raining else 0.0
-        event_adjust = int(features["event_intensity"]) * 0.08
-        headway_adjust = max(int(features["headway_minutes"]) - 4, 0) * 0.018
-        interchange_adjust = 0.05 if stop.is_interchange else 0.0
-        stop_adjust = stop_bias(stop.stop_id) / 120.0
-        route_adjust = base_route_pressure(route_id) / 140.0
-        noise = rng.normal(0.0, 0.05)
-
-        occupancy_percent = 100.0 * (
-            0.10
-            + (0.45 * trend_norm)
-            + route_adjust
-            + hour_peak
-            + weekend_adjust
-            + holiday_adjust
-            + rain_adjust
-            + event_adjust
-            + headway_adjust
-            + interchange_adjust
-            + stop_adjust
-            + noise
+        occupancy_percent = estimate_occupancy_percent(
+            stop,
+            features,
+            trend_strength=trend_norm,
         )
         occupancy_percent = float(np.clip(occupancy_percent, 0.0, 100.0))
         occupancy_level = occupancy_level_from_percent(occupancy_percent)
@@ -175,6 +185,8 @@ def simulate_from_trends(
                 "is_weekend": is_weekend,
                 "is_raining": is_raining,
                 "is_holiday": int(features["is_holiday"]),
+                "peak_period": int(features["peak_period"]),
+                "station_pressure": int(features["station_pressure"]),
                 "event_intensity": int(features["event_intensity"]),
                 "headway_minutes": int(features["headway_minutes"]),
                 "occupancy_percent": round(occupancy_percent, 2),

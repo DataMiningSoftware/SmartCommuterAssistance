@@ -8,11 +8,10 @@ from pathlib import Path
 import pandas as pd
 
 from crowd_feature_utils import (
-    base_route_pressure,
     build_feature_row,
+    estimate_occupancy_percent,
     load_stop_metadata,
     parse_extra_holiday_dates,
-    stop_bias,
 )
 
 
@@ -65,34 +64,11 @@ def generate(
         event_intensity = int(features["event_intensity"])
         headway_minutes = int(features["headway_minutes"])
 
-        peak_bonus = 0.0
-        if is_weekend == 0 and ((7 <= hour <= 9) or (17 <= hour <= 19)):
-            peak_bonus = 24.0
-        elif 10 <= hour <= 21:
-            peak_bonus = 9.0
-
-        weekend_adjust = -6.0 if is_weekend else 4.0
-        holiday_adjust = 8.0 if is_holiday else 0.0
-        rain_adjust = 9.0 if is_raining else 0.0
-        event_adjust = event_intensity * 7.5
-        headway_adjust = max(headway_minutes - 4, 0) * 2.2
-        interchange_adjust = 6.0 if stop.is_interchange else 0.0
-        noise = rng.uniform(-7.0, 7.0)
-
-        occupancy_percent = (
-            15.0
-            + base_route_pressure(stop.route_id)
-            + peak_bonus
-            + weekend_adjust
-            + holiday_adjust
-            + rain_adjust
-            + event_adjust
-            + headway_adjust
-            + interchange_adjust
-            + (stop_bias(stop.stop_id) * 1.6)
-            + noise
+        occupancy_percent = estimate_occupancy_percent(
+            stop,
+            features,
+            rng=rng,
         )
-        occupancy_percent = max(0.0, min(100.0, occupancy_percent))
         occupancy_level = occupancy_level_from_percent(occupancy_percent)
 
         rows_out.append(
@@ -104,6 +80,8 @@ def generate(
                 "is_weekend": is_weekend,
                 "is_raining": is_raining,
                 "is_holiday": is_holiday,
+                "peak_period": int(features["peak_period"]),
+                "station_pressure": int(features["station_pressure"]),
                 "event_intensity": event_intensity,
                 "headway_minutes": headway_minutes,
                 "occupancy_percent": round(occupancy_percent, 2),

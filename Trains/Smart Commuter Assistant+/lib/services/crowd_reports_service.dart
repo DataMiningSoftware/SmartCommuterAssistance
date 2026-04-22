@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'database_service.dart';
+import 'transit_network_service.dart';
 
 class StationOption {
   final String stopId;
@@ -104,23 +104,15 @@ class NearbyStationCrowdForecast {
 
 class CrowdReportsService {
   final SupabaseClient _client = Supabase.instance.client;
-  final DatabaseService _databaseService = DatabaseService();
+  final TransitNetworkService _transitNetworkService = TransitNetworkService();
 
   Future<List<StationOption>> fetchStationOptions() async {
-    final rows = await _client
-        .from('train_stops_kl')
-        .select('stop_id,stop_name')
-        .order('stop_name', ascending: true);
-
+    final network = await _transitNetworkService.loadNetwork();
     final byId = <String, StationOption>{};
-    for (final row in rows.whereType<Map>()) {
-      final map = Map<String, dynamic>.from(row);
-      final stopId = map['stop_id']?.toString() ?? '';
-      final stationName = map['stop_name']?.toString() ?? '';
-      if (stopId.isEmpty || stationName.isEmpty) continue;
+    for (final stop in network.stopsById.values) {
       byId.putIfAbsent(
-        stopId,
-        () => StationOption(stopId: stopId, stationName: stationName),
+        stop.stopId,
+        () => StationOption(stopId: stop.stopId, stationName: stop.stopName),
       );
     }
     final list = byId.values.toList();
@@ -212,41 +204,18 @@ class CrowdReportsService {
     DateTime? time,
   }) async {
     final effectiveTime = time ?? DateTime.now();
-    final rows = <Map<String, dynamic>>[];
-    try {
-      final remoteRows = await _client
-          .from('train_stops_kl')
-          .select('stop_id,stop_name,route_id');
-      final mappedRows = remoteRows
-          .whereType<Map>()
-          .map((row) => Map<String, dynamic>.from(row))
-          .toList();
-      rows.addAll(mappedRows);
-    } catch (_) {
-      // Fallback below.
-    }
-
-    if (rows.isEmpty) {
-      final cachedRows = await _databaseService.getCachedTrainStops();
-      rows.addAll(
-        cachedRows.map((row) => Map<String, dynamic>.from(row)),
-      );
-    }
-
     final grouped = <String, _StationBoardGroup>{};
-    for (final row in rows) {
-      final stationName = (row['stop_name']?.toString() ?? '').trim();
-      final stopId = (row['stop_id']?.toString() ?? '').trim().toUpperCase();
+    final network = await _transitNetworkService.loadNetwork();
+    for (final stop in network.stopsById.values) {
+      final stationName = stop.stopName.trim();
+      final stopId = stop.stopId.trim().toUpperCase();
       if (stationName.isEmpty || stopId.isEmpty) continue;
-      final routeRaw = (row['route_id']?.toString() ?? '').trim().toUpperCase();
-      final routeId =
-          routeRaw.isEmpty ? _inferRouteIdFromStopId(stopId) : routeRaw;
       grouped.putIfAbsent(
         stationName,
         () => _StationBoardGroup(stationName: stationName),
       )
         ..stopIds.add(stopId)
-        ..routeIds.add(routeId);
+        ..routeIds.add(stop.routeId);
     }
 
     if (grouped.isEmpty) return const <StationCrowdBoardItem>[];
@@ -318,18 +287,16 @@ class CrowdReportsService {
     if (latestByStop.isEmpty) return const <CrowdReportDisplayItem>[];
 
     final stopIds = latestByStop.keys.toList();
-    final stationRows = await _client
-        .from('train_stops_kl')
-        .select('stop_id,stop_name')
-        .inFilter('stop_id', stopIds);
-
     final stopNameById = <String, String>{};
-    for (final row in stationRows.whereType<Map>()) {
-      final map = Map<String, dynamic>.from(row);
-      final stopId = map['stop_id']?.toString() ?? '';
-      final stopName = map['stop_name']?.toString() ?? '';
-      if (stopId.isEmpty || stopName.isEmpty) continue;
-      stopNameById.putIfAbsent(stopId, () => stopName);
+    try {
+      final network = await _transitNetworkService.loadNetwork();
+      for (final stopId in stopIds) {
+        final stop = network.stopsById[stopId.trim().toUpperCase()];
+        if (stop == null) continue;
+        stopNameById.putIfAbsent(stopId, () => stop.stopName);
+      }
+    } catch (_) {
+      // Keep fallback ids below.
     }
 
     final items = latestByStop.values.map((report) {
@@ -388,7 +355,7 @@ class CrowdReportsService {
             .map((row) => Map<String, dynamic>.from(row)),
       );
     } catch (_) {
-      // Offline or no table access: fallback simulation below.
+      // Fall back to latest crowd reports below.
     }
 
     final forecasts = <String, StopCrowdForecast>{};
@@ -421,24 +388,17 @@ class CrowdReportsService {
       final userBlendWeight = latestUser == null
           ? 0.0
           : _liveReportBlendWeight(report: latestUser, now: now);
-      final fallbackWeight = latest == null
-          ? 0.0
-          : _liveReportBlendWeight(report: latest, now: now);
       for (final time in times) {
         final key = forecastKeyForTime(stopId: stopId, time: time);
         final existing = forecasts[key];
         if (existing != null) {
-          final simulated = _applyTenMinuteSimulation(
-            base: existing,
-            time: time,
-          );
           forecasts[key] = userBlendWeight > 0
               ? _blendForecastWithLiveReport(
-                  base: simulated,
+                  base: existing,
                   liveReport: latestUser!,
                   weight: userBlendWeight,
                 )
-              : simulated;
+              : existing;
           continue;
         }
 
@@ -451,22 +411,11 @@ class CrowdReportsService {
           continue;
         }
 
-        if (latest != null && fallbackWeight > 0) {
-          final fallback = _forecastFromCrowdReport(
+        if (latest != null &&
+            _liveReportBlendWeight(report: latest, now: now) > 0) {
+          forecasts[key] = _forecastFromCrowdReport(
             report: latest,
             time: time,
-          );
-          forecasts[key] = latest.sourceType == 'user'
-              ? fallback
-              : _applyTenMinuteSimulation(
-                  base: fallback,
-                  time: time,
-                );
-        } else {
-          forecasts[key] = _simulateForecast(
-            stopId: stopId,
-            time: time,
-            sourceType: 'simulated_10m',
           );
         }
       }
@@ -502,47 +451,18 @@ class CrowdReportsService {
     required DateTime departureTime,
     int limit = 5,
   }) async {
-    final rows = <Map<String, dynamic>>[];
-    try {
-      final remoteRows = await _client
-          .from('train_stops_kl')
-          .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
-      final mappedRows = remoteRows
-          .whereType<Map>()
-          .map((row) => Map<String, dynamic>.from(row))
-          .toList();
-      rows.addAll(mappedRows);
-      if (mappedRows.isNotEmpty) {
-        await _databaseService.cacheTrainStops(mappedRows);
-      }
-    } catch (_) {
-      // Offline fallback below.
-    }
-    if (rows.isEmpty) {
-      final cachedRows = await _databaseService.getCachedTrainStops();
-      rows.addAll(
-        cachedRows.map((row) => Map<String, dynamic>.from(row)),
-      );
-    }
-
     final nearestByName = <String, _StationDistanceCandidate>{};
-    for (final map in rows) {
-      final stopId = map['stop_id']?.toString().trim().toUpperCase() ?? '';
-      final stopName = map['stop_name']?.toString().trim() ?? '';
-      final routeRaw = map['route_id']?.toString().trim().toUpperCase() ?? '';
-      final routeId =
-          routeRaw.isEmpty ? _inferRouteIdFromStopId(stopId) : routeRaw;
-      final lat = _toDouble(map['stop_lat']);
-      final lon = _toDouble(map['stop_lon']);
-      if (stopId.isEmpty || stopName.isEmpty || lat == null || lon == null) {
-        continue;
-      }
+    final network = await _transitNetworkService.loadNetwork();
+    for (final stop in network.stopsById.values) {
+      final stopId = stop.stopId;
+      final stopName = stop.stopName;
+      final routeId = stop.routeId;
 
       final distance = _haversineMeters(
         latitude: latitude,
         longitude: longitude,
-        targetLatitude: lat,
-        targetLongitude: lon,
+        targetLatitude: stop.latitude,
+        targetLongitude: stop.longitude,
       );
 
       final key = stopName.toUpperCase();
@@ -580,12 +500,7 @@ class CrowdReportsService {
             stationName: item.stationName,
             routeId: item.routeId,
             distanceMeters: item.distanceMeters,
-            forecast: forecasts[item.stopId] ??
-                _simulateForecast(
-                  stopId: item.stopId,
-                  time: departureTime,
-                  sourceType: 'simulated_10m',
-                ),
+            forecast: forecasts[item.stopId],
           ),
         )
         .toList();
@@ -782,67 +697,6 @@ class CrowdReportsService {
     return 0.15;
   }
 
-  static StopCrowdForecast _applyTenMinuteSimulation({
-    required StopCrowdForecast base,
-    required DateTime time,
-  }) {
-    final fluctuation = _tenMinuteFluctuation(base.stopId, time);
-    final level = (base.occupancyLevel + fluctuation).clamp(0, 3);
-    return StopCrowdForecast(
-      stopId: base.stopId,
-      forecastHour: time.hour,
-      isWeekend: _isWeekend(time),
-      occupancyLevel: level,
-      expectedWaitMinutes: _defaultWaitMinutes(level),
-      etaMultiplier: _defaultEtaMultiplier(level),
-      sourceType: base.sourceType,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  static StopCrowdForecast _simulateForecast({
-    required String stopId,
-    required DateTime time,
-    String sourceType = 'predicted',
-  }) {
-    final baseline = _baselineLevelForTime(time);
-    final fluctuation = _tenMinuteFluctuation(stopId, time);
-    final level = (baseline + fluctuation).clamp(0, 3);
-    return StopCrowdForecast(
-      stopId: stopId.trim().toUpperCase(),
-      forecastHour: time.hour,
-      isWeekend: _isWeekend(time),
-      occupancyLevel: level,
-      expectedWaitMinutes: _defaultWaitMinutes(level),
-      etaMultiplier: _defaultEtaMultiplier(level),
-      sourceType: sourceType,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  static int _baselineLevelForTime(DateTime time) {
-    final hour = time.hour;
-    if (hour <= 5 || hour >= 22) return 0;
-    final peakHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 20);
-    if (!_isWeekend(time) && peakHour) return 2;
-    return 1;
-  }
-
-  static int _tenMinuteFluctuation(String stopId, DateTime time) {
-    final bucket = time.minute ~/ 10; // 0..5
-    final seed = stopId.toUpperCase().codeUnits.fold<int>(
-          0,
-          (sum, code) => sum + code,
-        );
-    final signal = (seed + time.hour + bucket) % 3; // 0,1,2
-    return signal - 1; // -1,0,+1
-  }
-
-  static String _inferRouteIdFromStopId(String stopId) {
-    final match = RegExp(r'^[A-Za-z]+').firstMatch(stopId.trim());
-    return (match?.group(0) ?? 'N/A').toUpperCase();
-  }
-
   static double _haversineMeters({
     required double latitude,
     required double longitude,
@@ -865,12 +719,6 @@ class CrowdReportsService {
   }
 
   static double _toRadians(double degree) => degree * (math.pi / 180.0);
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
 }
 
 class _StationDistanceCandidate {
