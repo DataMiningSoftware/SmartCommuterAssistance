@@ -154,10 +154,11 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     return _LevelUi(
       title: crowd.label,
       subtitle: switch (level) {
-        0 => 'Plenty of space across the carriage',
-        1 => 'A smooth ride with room to spare',
-        2 => 'Standing is likely during this window',
-        3 => 'Expect shoulder-to-shoulder boarding',
+        1 => 'Almost empty with seats widely available',
+        2 => 'Comfortable ride with space to spare',
+        3 => 'Moderate traffic with routine standing demand',
+        4 => 'Heavy crowding with slower boarding likely',
+        5 => 'Crowded conditions across the platform and carriage',
         _ => 'No valid occupancy level',
       },
       color: crowd.color,
@@ -179,9 +180,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     } else {
       base = 0.58;
     }
-    if (level >= 3) {
+    if (level >= 4) {
       base -= 0.04;
-    } else if (level <= 0) {
+    } else if (level <= 2) {
       base += 0.02;
     }
     return base.clamp(0.50, 0.97);
@@ -204,16 +205,19 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     }
 
     switch (level) {
-      case 0:
-        reasons.add('low expected occupancy');
-        break;
       case 1:
-        reasons.add('comfortable space still available');
+        reasons.add('very low expected occupancy');
         break;
       case 2:
-        reasons.add('standing demand likely');
+        reasons.add('comfortable space still available');
         break;
       case 3:
+        reasons.add('moderate standing demand likely');
+        break;
+      case 4:
+        reasons.add('standing demand likely');
+        break;
+      case 5:
         reasons.add('peak-load conditions likely');
         break;
     }

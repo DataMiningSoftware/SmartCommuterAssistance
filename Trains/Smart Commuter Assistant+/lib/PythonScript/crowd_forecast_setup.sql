@@ -4,7 +4,7 @@ create table if not exists public.crowd_forecast_hourly (
   stop_id text not null,
   forecast_hour smallint not null check (forecast_hour between 0 and 23),
   is_weekend boolean not null,
-  occupancy_level smallint not null check (occupancy_level between 0 and 3),
+  occupancy_level smallint not null check (occupancy_level between 0 and 5),
   occupancy_percent numeric(5,2) not null check (occupancy_percent between 0 and 100),
   expected_wait_minutes smallint not null default 4 check (expected_wait_minutes between 0 and 60),
   eta_multiplier numeric(4,2) not null default 1.00 check (eta_multiplier between 1.00 and 3.00),

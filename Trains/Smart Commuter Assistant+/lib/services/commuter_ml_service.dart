@@ -179,7 +179,7 @@ class CommuterMlService {
       final pred = predict(snap);
       final crowdPenalty = switch (pred.crowdLevel) {
         'Light' => 1.0,
-        'Steady' => 3.0,
+        'Moderate' => 3.0,
         _ => 6.0,
       };
       final transferPenalty =
@@ -377,9 +377,9 @@ class CommuterMlService {
       1.4;
 
   String _classToLabel(int c) {
-    if (c == 0) return 'Light';
-    if (c == 1) return 'Steady';
-    return 'Packed';
+    if (c <= 0) return 'Light';
+    if (c == 1) return 'Moderate';
+    return 'Crowded';
   }
 
   double _weatherPattern(DateTime dt) {

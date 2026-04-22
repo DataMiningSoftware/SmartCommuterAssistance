@@ -16,13 +16,15 @@ from crowd_feature_utils import (
 
 
 def occupancy_level_from_percent(occupancy_percent: float) -> int:
-    if occupancy_percent < 30:
-        return 0
-    if occupancy_percent < 60:
+    if occupancy_percent < 12:
         return 1
-    if occupancy_percent < 85:
+    if occupancy_percent < 32:
         return 2
-    return 3
+    if occupancy_percent < 58:
+        return 3
+    if occupancy_percent < 82:
+        return 4
+    return 5
 
 
 def generate(

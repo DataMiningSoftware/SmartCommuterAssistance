@@ -115,9 +115,9 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
     }
 
     final crowd = path.transferCount >= 2
-        ? 'Packed'
+        ? 'Crowded'
         : path.totalMinutes > 30
-            ? 'Steady'
+            ? 'Moderate'
             : 'Light';
 
     final fare =

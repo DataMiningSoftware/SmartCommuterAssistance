@@ -33,7 +33,7 @@ class RouteInfo {
           [],
       totalDurationMinutes: json['totalDurationMinutes'] ?? 0,
       totalDistance: (json['totalDistance'] ?? 0.0).toDouble(),
-      crowdLevel: json['crowdLevel'] ?? 'Steady',
+      crowdLevel: json['crowdLevel'] ?? 'Moderate',
       fare: (json['fare'] ?? 0.0).toDouble(),
       isFavorite: json['isFavorite'] ?? false,
     );

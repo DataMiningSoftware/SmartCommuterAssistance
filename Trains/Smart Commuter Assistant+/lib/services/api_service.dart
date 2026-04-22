@@ -34,10 +34,11 @@ class ApiService {
   ];
 
   static const List<String> _crowdLevels = <String>[
+    'Empty',
     'Light',
-    'Steady',
-    'Busy',
-    'Packed',
+    'Moderate',
+    'Heavy',
+    'Crowded',
   ];
 
   // Get train forecasts for a station

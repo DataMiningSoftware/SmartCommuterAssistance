@@ -31,21 +31,23 @@ LINE_COLUMN_BY_ROUTE = {
 
 
 def occupancy_level_from_percent(occupancy_percent: float) -> int:
-    if occupancy_percent < 30:
-        return 0
-    if occupancy_percent < 60:
+    if occupancy_percent < 12:
         return 1
-    if occupancy_percent < 85:
+    if occupancy_percent < 32:
         return 2
-    return 3
+    if occupancy_percent < 58:
+        return 3
+    if occupancy_percent < 82:
+        return 4
+    return 5
 
 
 def wait_minutes_from_level(level: int) -> int:
-    return {0: 2, 1: 4, 2: 7, 3: 10}.get(level, 4)
+    return {1: 2, 2: 4, 3: 6, 4: 8, 5: 10}.get(level, 4)
 
 
 def eta_multiplier_from_level(level: int, hour: int) -> float:
-    base = {0: 1.00, 1: 1.08, 2: 1.18, 3: 1.30}.get(level, 1.10)
+    base = {1: 1.00, 2: 1.05, 3: 1.12, 4: 1.22, 5: 1.35}.get(level, 1.10)
     if (7 <= hour <= 9) or (17 <= hour <= 19):
         base += 0.04
     return round(min(max(base, 1.00), 2.50), 2)

@@ -492,11 +492,13 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
   int _crowdPenaltyForStop(String stopId) {
     switch (_crowdByStopId[stopId] ?? 0) {
-      case 1:
-        return 4;
       case 2:
-        return 12;
+        return 4;
       case 3:
+        return 10;
+      case 4:
+        return 18;
+      case 5:
         return 24;
       default:
         return 0;
@@ -530,7 +532,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Looks like your route is packed.',
+                        'Looks like your route is crowded.',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -613,7 +615,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       }
 
       var routePreference = 'efficiency';
-      if (highestCrowdLevel > 1) {
+      if (highestCrowdLevel >= 4) {
         final useComfort = await _showPackedRoutePrompt(option.stationName);
         if (useComfort == null) return;
         routePreference = useComfort ? 'comfort' : 'efficiency';
@@ -1031,7 +1033,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       if (type == _RouteReportType.crowd) {
         await _crowdReportsService.insertUserCrowdReport(
           stopId: stopId,
-          occupancyLevel: 3,
+          occupancyLevel: 5,
         );
       } else {
         await _crowdReportsService.insertUserDelayReport(stopId: stopId);
@@ -1042,7 +1044,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         SnackBar(
           content: Text(
             type == _RouteReportType.crowd
-                ? 'Packed crowd reported for $stopId.'
+                ? 'Crowded train reported for $stopId.'
                 : 'Delay reported for $stopId.',
           ),
         ),
@@ -2309,7 +2311,7 @@ class _RouteReportMenu extends StatelessWidget {
               curve: const Interval(0.0, 1.0, curve: Curves.easeOutBack),
             ),
             icon: Icons.groups_rounded,
-            tooltip: 'Packed crowd',
+            tooltip: 'Crowded train',
             onPressed: onCrowdReport,
           ),
           const SizedBox(height: 10),

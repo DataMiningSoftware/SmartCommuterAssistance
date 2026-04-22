@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Looks like your route is packed.',
+                        'Looks like your route is crowded.',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_sameRouteResult(efficientPreview.result, relaxedPreview.result)) {
       return false;
     }
-    if (efficientPreview.highestCrowdLevel <= 1) return false;
+    if (efficientPreview.highestCrowdLevel <= 2) return false;
 
     final crowdImprovement =
         efficientPreview.highestCrowdLevel - relaxedPreview.highestCrowdLevel;
@@ -689,11 +689,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _crowdPenaltyForStop(Map<String, int> crowdByStopId, String stopId) {
     switch (crowdByStopId[stopId] ?? 0) {
-      case 1:
-        return 3;
       case 2:
-        return 9;
+        return 3;
       case 3:
+        return 8;
+      case 4:
+        return 14;
+      case 5:
         return 18;
       default:
         return 0;
@@ -2466,7 +2468,7 @@ class _LegacyStationCrowdRow extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: onReportPacked,
-            child: const Text('Report packed'),
+            child: const Text('Report crowded'),
           ),
         ],
       ),

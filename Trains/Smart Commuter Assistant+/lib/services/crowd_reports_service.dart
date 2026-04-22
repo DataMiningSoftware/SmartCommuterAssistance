@@ -188,7 +188,7 @@ class CrowdReportsService {
       params: {
         'p_stop_id': stopId.trim().toUpperCase(),
         'p_source_type': 'user',
-        'p_occupancy_level': occupancyLevel.clamp(0, 3),
+        'p_occupancy_level': occupancyLevel.clamp(1, 5),
       },
     );
   }
@@ -528,7 +528,7 @@ class CrowdReportsService {
 
     return CrowdReport(
       stopId: stopId,
-      occupancyLevel: level.clamp(0, 3),
+      occupancyLevel: level.clamp(0, 5),
       sourceType: map['source_type']?.toString() ?? 'unknown',
       createdAt: createdAt,
     );
@@ -580,7 +580,7 @@ class CrowdReportsService {
       stopId: stopId,
       forecastHour: forecastHour,
       isWeekend: isWeekend,
-      occupancyLevel: occupancyLevel.clamp(0, 3),
+      occupancyLevel: occupancyLevel.clamp(0, 5),
       expectedWaitMinutes: expectedWait.clamp(0, 30),
       etaMultiplier: etaMultiplier.clamp(1.0, 2.5),
       sourceType: map['source_type']?.toString() ?? 'forecast',
@@ -613,13 +613,15 @@ class CrowdReportsService {
 
   static int _defaultWaitMinutes(int level) {
     switch (level) {
-      case 0:
-        return 2;
       case 1:
-        return 4;
+        return 2;
       case 2:
-        return 7;
+        return 4;
       case 3:
+        return 6;
+      case 4:
+        return 8;
+      case 5:
         return 10;
       default:
         return 4;
@@ -628,14 +630,16 @@ class CrowdReportsService {
 
   static double _defaultEtaMultiplier(int level) {
     switch (level) {
-      case 0:
-        return 1.0;
       case 1:
-        return 1.08;
+        return 1.0;
       case 2:
-        return 1.18;
+        return 1.05;
       case 3:
-        return 1.3;
+        return 1.12;
+      case 4:
+        return 1.22;
+      case 5:
+        return 1.35;
       default:
         return 1.1;
     }
@@ -646,7 +650,7 @@ class CrowdReportsService {
     required DateTime time,
     String? sourceType,
   }) {
-    final level = report.occupancyLevel.clamp(0, 3);
+    final level = report.occupancyLevel.clamp(1, 5);
     return StopCrowdForecast(
       stopId: report.stopId.trim().toUpperCase(),
       forecastHour: time.hour,
@@ -667,7 +671,7 @@ class CrowdReportsService {
     final level = ((base.occupancyLevel * (1 - weight)) +
             (liveReport.occupancyLevel * weight))
         .round()
-        .clamp(0, 3);
+        .clamp(1, 5);
     return StopCrowdForecast(
       stopId: base.stopId,
       forecastHour: base.forecastHour,

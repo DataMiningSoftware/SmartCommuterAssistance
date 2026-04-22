@@ -1,0 +1,20 @@
+station_id,station_name,line,latitude,longitude,is_interchange
+KJ15,KL Sentral,Kelana Jaya Line,3.1343,101.6861,True
+KJ14,Pasar Seni,Kelana Jaya Line,3.1427,101.6955,True
+KJ13,Masjid Jamek,Kelana Jaya Line,3.1495,101.6964,True
+KJ10,KLCC,Kelana Jaya Line,3.1592,101.7135,False
+KJ3,Wangsa Maju,Kelana Jaya Line,3.2036,101.7346,False
+KJ29,SS15,Kelana Jaya Line,3.0784,101.5862,False
+KG16,Pasar Seni,Kajang MRT Line,3.1427,101.6955,True
+KG18,Bukit Bintang,Kajang MRT Line,3.1465,101.7113,True
+KG20,Tun Razak Exchange (TRX),Kajang MRT Line,3.1425,101.7196,True
+KG09,Bandar Utama,Kajang MRT Line,3.1464,101.6186,False
+KG34,Stadium Kajang,Kajang MRT Line,2.9935,101.7876,False
+PY23,Tun Razak Exchange (TRX),Putrajaya MRT Line,3.1425,101.7196,True
+PY17,Titiwangsa,Putrajaya MRT Line,3.1733,101.6956,True
+AG7,Masjid Jamek,Ampang Line,3.1495,101.6964,True
+SP17,Bukit Jalil,Sri Petaling Line,3.0583,101.6917,False
+SP15,Bandar Tasik Selatan,Sri Petaling Line,3.0762,101.7121,True
+SP3,Titiwangsa,Sri Petaling Line,3.1733,101.6956,True
+MR6,Bukit Bintang,KL Monorail,3.1465,101.7113,True
+MR11,Titiwangsa,KL Monorail,3.1733,101.6956,True

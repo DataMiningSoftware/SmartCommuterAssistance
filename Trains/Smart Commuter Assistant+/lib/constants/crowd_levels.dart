@@ -14,32 +14,39 @@ class CrowdLevelStyle {
   });
 }
 
+const CrowdLevelStyle _emptyCrowdLevel = CrowdLevelStyle(
+  label: 'Empty',
+  color: Color(0xFF15803D),
+  icon: Icons.airline_seat_recline_normal_rounded,
+  meterValue: 0.10,
+);
+
 const CrowdLevelStyle _lightCrowdLevel = CrowdLevelStyle(
   label: 'Light',
   color: Color(0xFF16A34A),
   icon: Icons.person_outline_rounded,
-  meterValue: 0.22,
+  meterValue: 0.28,
 );
 
-const CrowdLevelStyle _steadyCrowdLevel = CrowdLevelStyle(
-  label: 'Steady',
+const CrowdLevelStyle _moderateCrowdLevel = CrowdLevelStyle(
+  label: 'Moderate',
   color: Color(0xFFF59E0B),
   icon: Icons.people_outline_rounded,
-  meterValue: 0.48,
+  meterValue: 0.52,
 );
 
-const CrowdLevelStyle _busyCrowdLevel = CrowdLevelStyle(
-  label: 'Busy',
+const CrowdLevelStyle _heavyCrowdLevel = CrowdLevelStyle(
+  label: 'Heavy',
   color: Color(0xFFF97316),
   icon: Icons.groups_2_outlined,
-  meterValue: 0.72,
+  meterValue: 0.76,
 );
 
-const CrowdLevelStyle _packedCrowdLevel = CrowdLevelStyle(
-  label: 'Packed',
+const CrowdLevelStyle _crowdedCrowdLevel = CrowdLevelStyle(
+  label: 'Crowded',
   color: Color(0xFFDC2626),
   icon: Icons.groups_rounded,
-  meterValue: 0.92,
+  meterValue: 0.94,
 );
 
 const CrowdLevelStyle _unknownCrowdLevel = CrowdLevelStyle(
@@ -51,14 +58,16 @@ const CrowdLevelStyle _unknownCrowdLevel = CrowdLevelStyle(
 
 CrowdLevelStyle crowdLevelStyleFromIndex(int level) {
   switch (level) {
-    case 0:
-      return _lightCrowdLevel;
     case 1:
-      return _steadyCrowdLevel;
+      return _emptyCrowdLevel;
     case 2:
-      return _busyCrowdLevel;
+      return _lightCrowdLevel;
     case 3:
-      return _packedCrowdLevel;
+      return _moderateCrowdLevel;
+    case 4:
+      return _heavyCrowdLevel;
+    case 5:
+      return _crowdedCrowdLevel;
     default:
       return _unknownCrowdLevel;
   }
@@ -66,21 +75,26 @@ CrowdLevelStyle crowdLevelStyleFromIndex(int level) {
 
 CrowdLevelStyle crowdLevelStyleFromLabel(String? label) {
   switch ((label ?? '').trim().toLowerCase()) {
-    case 'light':
+    case 'empty':
     case 'free':
     case 'open':
+    case 'very low':
+      return _emptyCrowdLevel;
+    case 'light':
     case 'low':
       return _lightCrowdLevel;
-    case 'steady':
     case 'moderate':
     case 'medium':
-      return _steadyCrowdLevel;
+    case 'steady':
+      return _moderateCrowdLevel;
     case 'busy':
-      return _busyCrowdLevel;
+    case 'heavy':
+      return _heavyCrowdLevel;
     case 'packed':
     case 'crowded':
+    case 'crush load':
     case 'high':
-      return _packedCrowdLevel;
+      return _crowdedCrowdLevel;
     default:
       return _unknownCrowdLevel;
   }

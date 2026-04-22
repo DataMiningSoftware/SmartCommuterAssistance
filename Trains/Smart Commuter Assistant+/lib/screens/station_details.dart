@@ -49,7 +49,7 @@ class StationDetails extends StatelessWidget {
                     Row(
                       children: [
                         const Text('Current Crowd Level: '),
-                        const CrowdIndicator(level: 'Packed'),
+                        const CrowdIndicator(level: 'Crowded'),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -78,9 +78,9 @@ class StationDetails extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            _buildTrainCard('Kelana Jaya Line', 'KLCC', '2 min', 'Steady'),
+            _buildTrainCard('Kelana Jaya Line', 'KLCC', '2 min', 'Moderate'),
             _buildTrainCard('Ampang Line', 'Masjid Jamek', '5 min', 'Light'),
-            _buildTrainCard('KTM Komuter', 'Seremban', '8 min', 'Packed'),
+            _buildTrainCard('KTM Komuter', 'Seremban', '8 min', 'Crowded'),
             _buildTrainCard('Kelana Jaya Line', 'Gombak', '12 min', 'Light'),
 
             const SizedBox(height: 20),

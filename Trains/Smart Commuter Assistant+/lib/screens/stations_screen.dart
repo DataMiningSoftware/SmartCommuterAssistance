@@ -982,7 +982,7 @@ class _StationsScreenState extends State<StationsScreen> {
         time: cursor,
         grid: forecastGrid,
       );
-      final level = forecast?.occupancyLevel.clamp(0, 3) ?? 1;
+      final level = forecast?.occupancyLevel.clamp(0, 5) ?? 2;
       highestLevel = math.max(highestLevel, level);
 
       final etaMultiplier =
@@ -1043,13 +1043,15 @@ class _StationsScreenState extends State<StationsScreen> {
 
   static int _fallbackWaitMinutes(int level) {
     switch (level) {
-      case 0:
-        return 2;
       case 1:
-        return 4;
+        return 2;
       case 2:
-        return 7;
+        return 4;
       case 3:
+        return 6;
+      case 4:
+        return 8;
+      case 5:
         return 10;
       default:
         return 4;
@@ -1058,14 +1060,16 @@ class _StationsScreenState extends State<StationsScreen> {
 
   static double _fallbackEtaMultiplier(int level) {
     switch (level) {
-      case 0:
-        return 1.00;
       case 1:
-        return 1.08;
+        return 1.00;
       case 2:
-        return 1.18;
+        return 1.05;
       case 3:
-        return 1.30;
+        return 1.12;
+      case 4:
+        return 1.22;
+      case 5:
+        return 1.35;
       default:
         return 1.10;
     }
@@ -1465,7 +1469,7 @@ class _StationsScreenState extends State<StationsScreen> {
     }
 
     var selectedCode = codes.first;
-    var selectedLevel = 1;
+    var selectedLevel = 3;
 
     final submitted = await showModalBottomSheet<bool>(
       context: context,
@@ -1517,14 +1521,15 @@ class _StationsScreenState extends State<StationsScreen> {
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
-                      children: List<Widget>.generate(4, (index) {
-                        final ui = _crowdUiByLevel(index);
+                      children: List<Widget>.generate(5, (offset) {
+                        final level = offset + 1;
+                        final ui = _crowdUiByLevel(level);
                         return ChoiceChip(
-                          label: Text('L$index ${ui.label}'),
-                          selected: selectedLevel == index,
+                          label: Text('L$level ${ui.label}'),
+                          selected: selectedLevel == level,
                           selectedColor: ui.color.withValues(alpha: 0.18),
                           onSelected: (_) =>
-                              setModalState(() => selectedLevel = index),
+                              setModalState(() => selectedLevel = level),
                         );
                       }),
                     ),

@@ -30,7 +30,7 @@ class TrainPrediction {
       destination: json['destination'] ?? '',
       arrivalTime: DateTime.parse(json['arrivalTime']),
       delayMinutes: json['delayMinutes'] ?? 0,
-      crowdLevel: json['crowdLevel'] ?? 'Steady',
+      crowdLevel: json['crowdLevel'] ?? 'Moderate',
       confidence: (json['confidence'] ?? 0.95).toDouble(),
     );
   }

@@ -11,10 +11,11 @@ insert into public.crowd_reports (
 select
   s.stop_id,
   case
-    when rnd < 0.18 then 0
-    when rnd < 0.52 then 1
-    when rnd < 0.82 then 2
-    else 3
+    when rnd < 0.08 then 1
+    when rnd < 0.28 then 2
+    when rnd < 0.58 then 3
+    when rnd < 0.84 then 4
+    else 5
   end as occupancy_level,
   case
     when random() < 0.30 then 'user'
