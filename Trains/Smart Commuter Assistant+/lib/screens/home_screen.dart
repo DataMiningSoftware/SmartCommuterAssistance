@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isPreparingTrip = false;
   Future<List<NearbyStationCrowdForecast>>? _nearestCrowdFuture;
   late Future<List<_HomeStationSearchOption>> _stationSearchFuture;
+  late Future<Map<String, bool>> _stationClosedByStopFuture;
   Timer? _nearestAutoRefreshTimer;
   bool _isLoadingMap = true;
   String? _mapError;
@@ -47,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadLocation();
     _loadMapStops();
     _stationSearchFuture = _loadStationSearchOptions();
+    _stationClosedByStopFuture = _stationSearchFuture.then(
+      (options) => _loadStationClosedByStop(options, _departureTime),
+    );
     _startNearestCrowdAutoRefresh();
   }
 
@@ -58,6 +62,21 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isPreparingTrip) return;
     setState(() => _isPreparingTrip = true);
     try {
+      final closedByStop =
+          await _crowdReportsService.fetchClosedStatusForStopsAtTime(
+        option.stopCodes,
+        _departureTime,
+      );
+      final isClosed = option.stopCodes.any(
+        (stopCode) => closedByStop[stopCode.trim().toUpperCase()] ?? false,
+      );
+      if (isClosed) {
+        _showHomeMessage(
+          '${option.stationName} is unavailable during closing hours for the selected departure time.',
+        );
+        return;
+      }
+
       var position = _position;
       if (position == null) {
         await _loadLocation();
@@ -811,6 +830,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return _buildSearchOptions(groupedRows);
   }
 
+  Future<Map<String, bool>> _loadStationClosedByStop(
+    List<_HomeStationSearchOption> options,
+    DateTime time,
+  ) async {
+    final stopCodes = <String>{
+      for (final option in options)
+        ...option.stopCodes.map((code) => code.trim().toUpperCase()),
+    }.toList();
+    if (stopCodes.isEmpty) return const <String, bool>{};
+    return _crowdReportsService.fetchClosedStatusForStopsAtTime(
+        stopCodes, time);
+  }
+
   List<_HomeStationSearchOption> _buildSearchOptions(
     Map<String, List<Map<String, dynamic>>> groupedRows,
   ) {
@@ -936,11 +968,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                       return _HomeRouteSearchCard(
                         stationNamesFuture: _stationSearchFuture,
+                        stationClosedByStopFuture: _stationClosedByStopFuture,
                         controller: _routeSearchController,
                         departureTime: _departureTime,
                         routeMode: _routeMode,
                         onDepartureTimeSelected: (value) {
-                          setState(() => _departureTime = value);
+                          setState(() {
+                            _departureTime = value;
+                            _stationClosedByStopFuture =
+                                _stationSearchFuture.then(
+                              (options) =>
+                                  _loadStationClosedByStop(options, value),
+                            );
+                          });
                         },
                         onRouteModeChanged: (value) {
                           setState(() => _routeMode = value);
@@ -1046,6 +1086,7 @@ extension _HomeRouteModeUi on _HomeRouteMode {
 
 class _HomeRouteSearchCard extends StatefulWidget {
   final Future<List<_HomeStationSearchOption>> stationNamesFuture;
+  final Future<Map<String, bool>> stationClosedByStopFuture;
   final TextEditingController controller;
   final DateTime departureTime;
   final _HomeRouteMode routeMode;
@@ -1057,6 +1098,7 @@ class _HomeRouteSearchCard extends StatefulWidget {
 
   const _HomeRouteSearchCard({
     required this.stationNamesFuture,
+    required this.stationClosedByStopFuture,
     required this.controller,
     required this.departureTime,
     required this.routeMode,
@@ -1148,6 +1190,23 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
     return highest;
   }
 
+  bool _isClosedForTime(
+    Map<String, StopCrowdForecast> grid,
+    _HomeStationSearchOption option,
+    DateTime time,
+  ) {
+    for (final stopCode in option.stopCodes) {
+      final forecast = grid[CrowdReportsService.forecastKeyForTime(
+        stopId: stopCode,
+        time: time,
+      )];
+      if (forecast?.isClosedHours ?? false) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> _openDeparturePicker() async {
     final slots = _buildDepartureSlots();
     final selectedOption = _selectedStationOption;
@@ -1189,12 +1248,20 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                     final grid =
                         snapshot.data ?? const <String, StopCrowdForecast>{};
                     final previewTime = slots[activeIndex];
+                    final previewClosed = selectedOption == null
+                        ? false
+                        : _isClosedForTime(grid, selectedOption, previewTime);
                     final previewLevel = selectedOption == null
                         ? null
                         : _peakLevelForTime(grid, selectedOption, previewTime);
                     final previewUi = previewLevel == null
                         ? null
-                        : _HomeCrowdUi.fromLevel(previewLevel);
+                        : previewClosed
+                            ? const _HomeCrowdUi(
+                                label: 'Closing hours',
+                                color: Color(0xFF98A2B3),
+                              )
+                            : _HomeCrowdUi.fromLevel(previewLevel);
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -1286,9 +1353,21 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                                       ? null
                                       : _peakLevelForTime(
                                           grid, selectedOption, slot);
+                                  final isClosed = selectedOption == null
+                                      ? false
+                                      : _isClosedForTime(
+                                          grid,
+                                          selectedOption,
+                                          slot,
+                                        );
                                   final crowdUi = level == null
                                       ? null
-                                      : _HomeCrowdUi.fromLevel(level);
+                                      : isClosed
+                                          ? const _HomeCrowdUi(
+                                              label: 'Closing hours',
+                                              color: Color(0xFF98A2B3),
+                                            )
+                                          : _HomeCrowdUi.fromLevel(level);
 
                                   return MouseRegion(
                                     onEnter: (_) => setSheetState(
@@ -1473,217 +1552,294 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                   );
                 }
 
-                return Autocomplete<_HomeStationSearchOption>(
-                  optionsBuilder: (value) {
-                    final query = value.text.trim().toLowerCase();
-                    if (query.isEmpty) {
-                      return const Iterable<_HomeStationSearchOption>.empty();
+                return FutureBuilder<Map<String, bool>>(
+                  future: widget.stationClosedByStopFuture,
+                  builder: (context, availabilitySnapshot) {
+                    final closedByStop =
+                        availabilitySnapshot.data ?? const <String, bool>{};
+
+                    bool isOptionClosed(_HomeStationSearchOption option) {
+                      for (final stopCode in option.stopCodes) {
+                        if (closedByStop[stopCode.trim().toUpperCase()] ??
+                            false) {
+                          return true;
+                        }
+                      }
+                      return false;
                     }
-                    return stationOptions.where((station) {
-                      final inName =
-                          station.stationName.toLowerCase().contains(query);
-                      final inCode = station.stopCodes.any(
-                        (code) => code.toLowerCase().contains(query),
-                      );
-                      final inRoute = station.routeIds.any(
-                        (routeId) => routeId.toLowerCase().contains(query),
-                      );
-                      return inName || inCode || inRoute;
-                    }).take(12);
-                  },
-                  displayStringForOption: (option) => option.stationName,
-                  onSelected: (option) {
-                    _rememberSelectedStation(option);
-                    widget.onStationSelected(option);
-                  },
-                  fieldViewBuilder:
-                      (context, textController, focusNode, onFieldSubmitted) {
-                    if (textController.text != widget.controller.text) {
-                      textController.value = widget.controller.value;
-                    }
-                    _attachFocusNode(focusNode);
-                    return TextField(
-                      key: _fieldKey,
-                      controller: textController,
-                      focusNode: focusNode,
-                      scrollPadding: const EdgeInsets.only(
-                        left: 20,
-                        top: 20,
-                        right: 20,
-                        bottom: 260,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Search train station',
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: primary.withValues(alpha: 0.2),
+
+                    void showClosedStationMessage(
+                        _HomeStationSearchOption option) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${option.stationName} is unavailable during closing hours for the selected departure time.',
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: primary,
-                            width: 1.6,
-                          ),
-                        ),
-                      ),
-                      onTap: _ensureFieldVisible,
-                      onChanged: (_) {
-                        widget.controller.value = textController.value;
-                        final query = textController.text.trim().toLowerCase();
-                        _HomeStationSearchOption? exactMatch;
-                        for (final option in stationOptions) {
-                          if (option.stationName.toLowerCase() == query) {
-                            exactMatch = option;
-                            break;
-                          }
+                      );
+                    }
+
+                    return Autocomplete<_HomeStationSearchOption>(
+                      optionsBuilder: (value) {
+                        final query = value.text.trim().toLowerCase();
+                        if (query.isEmpty) {
+                          return const Iterable<
+                              _HomeStationSearchOption>.empty();
                         }
-                        if (exactMatch == null) {
-                          if (_selectedStationOption != null) {
-                            setState(() => _selectedStationOption = null);
-                          }
-                        } else {
-                          _rememberSelectedStation(exactMatch);
-                        }
-                      },
-                      onSubmitted: (value) {
-                        final text = value.trim();
-                        if (text.isNotEmpty) {
-                          final match = stationOptions.firstWhere(
-                            (option) =>
-                                option.stationName.toLowerCase() ==
-                                text.toLowerCase(),
-                            orElse: () => _HomeStationSearchOption(
-                              stationName: text,
-                              stopCodes: const <String>[],
-                              routeIds: const <String>[],
-                            ),
+                        return stationOptions.where((station) {
+                          final inName =
+                              station.stationName.toLowerCase().contains(query);
+                          final inCode = station.stopCodes.any(
+                            (code) => code.toLowerCase().contains(query),
                           );
-                          if (match.stopCodes.isNotEmpty) {
-                            _rememberSelectedStation(match);
-                          }
-                          widget.onStationSelected(match);
-                        }
+                          final inRoute = station.routeIds.any(
+                            (routeId) => routeId.toLowerCase().contains(query),
+                          );
+                          return inName || inCode || inRoute;
+                        }).take(12);
                       },
-                    );
-                  },
-                  optionsViewBuilder: (context, onSelected, options) {
-                    final optionList = options.toList();
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Container(
-                          width: math.min(
-                            MediaQuery.sizeOf(context).width - 32,
-                            430,
+                      displayStringForOption: (option) => option.stationName,
+                      onSelected: (option) {
+                        if (isOptionClosed(option)) {
+                          showClosedStationMessage(option);
+                          return;
+                        }
+                        _rememberSelectedStation(option);
+                        widget.onStationSelected(option);
+                      },
+                      fieldViewBuilder: (
+                        context,
+                        textController,
+                        focusNode,
+                        onFieldSubmitted,
+                      ) {
+                        if (textController.text != widget.controller.text) {
+                          textController.value = widget.controller.value;
+                        }
+                        _attachFocusNode(focusNode);
+                        return TextField(
+                          key: _fieldKey,
+                          controller: textController,
+                          focusNode: focusNode,
+                          scrollPadding: const EdgeInsets.only(
+                            left: 20,
+                            top: 20,
+                            right: 20,
+                            bottom: 260,
                           ),
-                          margin: const EdgeInsets.only(top: 6),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                                color: Theme.of(context)
-                                    .dividerColor
-                                    .withValues(alpha: 0.06)),
-                            boxShadow: appCardShadows(context),
+                          decoration: InputDecoration(
+                            hintText: 'Search train station',
+                            filled: true,
+                            fillColor: Colors.white,
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide(
+                                color: primary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide(
+                                color: primary,
+                                width: 1.6,
+                              ),
+                            ),
                           ),
-                          child:
-                              FutureBuilder<List<NearbyStationCrowdForecast>>(
-                            future: widget.nearestCrowdFuture,
-                            builder: (context, crowdSnapshot) {
-                              final crowdMap =
-                                  <String, NearbyStationCrowdForecast>{};
-                              if (crowdSnapshot.hasData) {
-                                for (final forecast in crowdSnapshot.data!) {
-                                  crowdMap[forecast.stationName.toUpperCase()] =
-                                      forecast;
-                                }
+                          onTap: _ensureFieldVisible,
+                          onChanged: (_) {
+                            widget.controller.value = textController.value;
+                            final query =
+                                textController.text.trim().toLowerCase();
+                            _HomeStationSearchOption? exactMatch;
+                            for (final option in stationOptions) {
+                              if (option.stationName.toLowerCase() == query) {
+                                exactMatch = option;
+                                break;
                               }
+                            }
+                            if (exactMatch == null ||
+                                isOptionClosed(exactMatch)) {
+                              if (_selectedStationOption != null) {
+                                setState(() => _selectedStationOption = null);
+                              }
+                            } else {
+                              _rememberSelectedStation(exactMatch);
+                            }
+                          },
+                          onSubmitted: (value) {
+                            final text = value.trim();
+                            if (text.isEmpty) return;
+                            final match = stationOptions.firstWhere(
+                              (option) =>
+                                  option.stationName.toLowerCase() ==
+                                  text.toLowerCase(),
+                              orElse: () => _HomeStationSearchOption(
+                                stationName: text,
+                                stopCodes: const <String>[],
+                                routeIds: const <String>[],
+                              ),
+                            );
+                            if (match.stopCodes.isNotEmpty &&
+                                isOptionClosed(match)) {
+                              showClosedStationMessage(match);
+                              return;
+                            }
+                            if (match.stopCodes.isNotEmpty) {
+                              _rememberSelectedStation(match);
+                            }
+                            widget.onStationSelected(match);
+                          },
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        final optionList = options.toList();
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Container(
+                              width: math.min(
+                                MediaQuery.sizeOf(context).width - 32,
+                                430,
+                              ),
+                              margin: const EdgeInsets.only(top: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .dividerColor
+                                      .withValues(alpha: 0.06),
+                                ),
+                                boxShadow: appCardShadows(context),
+                              ),
+                              child: FutureBuilder<
+                                  List<NearbyStationCrowdForecast>>(
+                                future: widget.nearestCrowdFuture,
+                                builder: (context, crowdSnapshot) {
+                                  final crowdMap =
+                                      <String, NearbyStationCrowdForecast>{};
+                                  if (crowdSnapshot.hasData) {
+                                    for (final forecast
+                                        in crowdSnapshot.data!) {
+                                      crowdMap[forecast.stationName
+                                          .toUpperCase()] = forecast;
+                                    }
+                                  }
 
-                              return ListView.separated(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 6),
-                                shrinkWrap: true,
-                                itemCount: optionList.length,
-                                separatorBuilder: (_, __) =>
-                                    const Divider(height: 1, thickness: 0.6),
-                                itemBuilder: (context, index) {
-                                  final option = optionList[index];
-                                  final crowdForecast = crowdMap[
-                                      option.stationName.toUpperCase()];
-                                  final crowdUi = crowdForecast != null
-                                      ? _HomeCrowdUi.fromLevel(crowdForecast
-                                              .forecast?.occupancyLevel ??
-                                          1)
-                                      : null;
+                                  return ListView.separated(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 6),
+                                    shrinkWrap: true,
+                                    itemCount: optionList.length,
+                                    separatorBuilder: (_, __) => const Divider(
+                                        height: 1, thickness: 0.6),
+                                    itemBuilder: (context, index) {
+                                      final option = optionList[index];
+                                      final optionClosed =
+                                          isOptionClosed(option);
+                                      final crowdForecast = crowdMap[
+                                          option.stationName.toUpperCase()];
+                                      final isClosed = optionClosed ||
+                                          (crowdForecast
+                                                  ?.forecast?.isClosedHours ??
+                                              false);
+                                      final crowdUi = crowdForecast != null
+                                          ? isClosed
+                                              ? const _HomeCrowdUi(
+                                                  label: 'Closing hours',
+                                                  color: Color(0xFF98A2B3),
+                                                )
+                                              : _HomeCrowdUi.fromLevel(
+                                                  crowdForecast.forecast
+                                                          ?.occupancyLevel ??
+                                                      1,
+                                                )
+                                          : optionClosed
+                                              ? const _HomeCrowdUi(
+                                                  label: 'Closing hours',
+                                                  color: Color(0xFF98A2B3),
+                                                )
+                                              : null;
 
-                                  return ListTile(
-                                    dense: true,
-                                    visualDensity: const VisualDensity(
-                                      horizontal: -1,
-                                      vertical: -2,
-                                    ),
-                                    leading: _HomeSearchRouteBadge(
-                                      routeIds: option.routeIds,
-                                    ),
-                                    title: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            option.stationName,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w700),
-                                          ),
+                                      return ListTile(
+                                        dense: true,
+                                        enabled: !optionClosed,
+                                        visualDensity: const VisualDensity(
+                                          horizontal: -1,
+                                          vertical: -2,
                                         ),
-                                        if (crowdUi != null) ...[
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: crowdUi.color
-                                                  .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              crowdUi.label,
-                                              style: TextStyle(
-                                                color: crowdUi.color,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w700,
+                                        leading: _HomeSearchRouteBadge(
+                                          routeIds: option.routeIds,
+                                        ),
+                                        title: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                option.stationName,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isClosed
+                                                      ? const Color(0xFF98A2B3)
+                                                      : null,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    subtitle: Wrap(
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: option.stopCodes
-                                          .map(
-                                            (code) =>
-                                                _HomeSearchCodeChip(code: code),
-                                          )
-                                          .toList(),
-                                    ),
-                                    onTap: () {
-                                      _rememberSelectedStation(option);
-                                      onSelected(option);
+                                            if (crowdUi != null) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 6,
+                                                  vertical: 2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: crowdUi.color
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  crowdUi.label,
+                                                  style: TextStyle(
+                                                    color: crowdUi.color,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        subtitle: Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: option.stopCodes
+                                              .map(
+                                                (code) => _HomeSearchCodeChip(
+                                                  code: code,
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                        onTap: optionClosed
+                                            ? () =>
+                                                showClosedStationMessage(option)
+                                            : () {
+                                                _rememberSelectedStation(
+                                                    option);
+                                                onSelected(option);
+                                              },
+                                      );
                                     },
                                   );
                                 },
-                              );
-                            },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 );
@@ -2410,7 +2566,13 @@ class _LegacyStationCrowdRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ui = _HomeCrowdUi.fromLevel(item.occupancyLevel);
+    final isClosed = item.isClosedHours;
+    final ui = isClosed
+        ? const _HomeCrowdUi(
+            label: 'Closing hours',
+            color: Color(0xFF98A2B3),
+          )
+        : _HomeCrowdUi.fromLevel(item.occupancyLevel);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
@@ -2435,15 +2597,20 @@ class _LegacyStationCrowdRow extends StatelessWidget {
               children: [
                 Text(
                   item.stationName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
+                    color: isClosed
+                        ? const Color(0xFF667085)
+                        : const Color(0xFF101828),
                   ),
                 ),
                 Text(
-                  '${item.stopId} • ${item.sourceType}',
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
+                  '${item.stopId} • ${CrowdReportsService.displaySourceType(item.sourceType)}',
+                  style: TextStyle(
+                    color: isClosed
+                        ? const Color(0xFF98A2B3)
+                        : const Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -2485,7 +2652,13 @@ class _StationCrowdRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ui = _HomeCrowdUi.fromLevel(item.occupancyLevel);
+    final isClosed = item.isClosedHours;
+    final ui = isClosed
+        ? const _HomeCrowdUi(
+            label: 'Closing hours',
+            color: Color(0xFF98A2B3),
+          )
+        : _HomeCrowdUi.fromLevel(item.occupancyLevel);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
@@ -2511,22 +2684,27 @@ class _StationCrowdRow extends StatelessWidget {
               children: [
                 Text(
                   item.stationName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
+                    color: isClosed
+                        ? const Color(0xFF667085)
+                        : const Color(0xFF101828),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '$routeSummary • $stopSummary',
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
+                  style: TextStyle(
+                    color: isClosed
+                        ? const Color(0xFF98A2B3)
+                        : const Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
                 ),
                 Text(
-                  item.sourceType,
+                  CrowdReportsService.displaySourceType(item.sourceType),
                   style: const TextStyle(
                     color: Color(0xFF98A2B3),
                     fontWeight: FontWeight.w700,

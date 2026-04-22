@@ -182,17 +182,21 @@ class _CrowdBoardStationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ui = _crowdUi(item.occupancyLevel);
+    final isClosed = item.isClosedHours;
+    final ui = _crowdUi(item.occupancyLevel, isClosedHours: isClosed);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' | ');
     final stopSummary = item.stopIds.join(', ');
+    const mutedText = Color(0xFF98A2B3);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: isClosed ? const Color(0xFFF8FAFC) : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
+          color: isClosed
+              ? const Color(0xFFD0D5DD)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.08),
         ),
       ),
       child: Row(
@@ -214,24 +218,27 @@ class _CrowdBoardStationTile extends StatelessWidget {
               children: [
                 Text(
                   item.stationName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
+                    color: isClosed
+                        ? const Color(0xFF667085)
+                        : const Color(0xFF101828),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$routeSummary | $stopSummary',
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
+                  style: TextStyle(
+                    color: isClosed ? mutedText : const Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  item.sourceType,
+                  CrowdReportsService.displaySourceType(item.sourceType),
                   style: const TextStyle(
-                    color: Color(0xFF98A2B3),
+                    color: mutedText,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -259,7 +266,10 @@ class _CrowdBoardStationTile extends StatelessWidget {
     );
   }
 
-  _CrowdBadgeUi _crowdUi(int level) {
+  _CrowdBadgeUi _crowdUi(int level, {bool isClosedHours = false}) {
+    if (isClosedHours) {
+      return const _CrowdBadgeUi('Closing hours', Color(0xFF98A2B3));
+    }
     final crowd = crowdLevelStyleFromIndex(level);
     return _CrowdBadgeUi(crowd.label, crowd.color);
   }

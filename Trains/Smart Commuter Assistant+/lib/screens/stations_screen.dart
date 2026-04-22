@@ -2291,6 +2291,9 @@ class _RoutePlanSheet extends StatelessWidget {
 
   static double _segmentForecastConfidence(_RouteSegmentPlan plan) {
     final source = plan.sourceType.toLowerCase();
+    if (CrowdReportsService.isClosedHoursSource(source)) {
+      return 0.99;
+    }
     double base;
     if (source.contains('user')) {
       base = 0.92;
@@ -2312,6 +2315,9 @@ class _RoutePlanSheet extends StatelessWidget {
 
   static String _forecastReason(_RouteSegmentPlan plan) {
     final source = plan.sourceType.toLowerCase();
+    if (CrowdReportsService.isClosedHoursSource(source)) {
+      return 'Train service is currently outside operating hours.';
+    }
     final reasons = <String>[];
     if (source.contains('user')) {
       reasons.add('recent rider reports');

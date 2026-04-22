@@ -15,7 +15,7 @@ class CrowdForecastScreen extends StatefulWidget {
 class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
   final CrowdReportsService _service = CrowdReportsService();
   late Future<List<StationOption>> _stationsFuture;
-  Future<CrowdReport?>? _reportFuture;
+  Future<StopCrowdForecast?>? _forecastFuture;
   String? _selectedStationId;
 
   @override
@@ -27,8 +27,16 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
   void _onPickStation(String stopId) {
     setState(() {
       _selectedStationId = stopId;
-      _reportFuture = _service.fetchLatestCrowdReport(stopId);
+      _forecastFuture = _fetchForecast(stopId);
     });
+  }
+
+  Future<StopCrowdForecast?> _fetchForecast(String stopId) async {
+    final forecasts = await _service.fetchForecastForStopsAtTime(
+      <String>[stopId],
+      DateTime.now(),
+    );
+    return forecasts[stopId.trim().toUpperCase()];
   }
 
   @override
@@ -73,7 +81,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     }
 
     _selectedStationId ??= stations.first.stopId;
-    _reportFuture ??= _service.fetchLatestCrowdReport(_selectedStationId!);
+    _forecastFuture ??= _fetchForecast(_selectedStationId!);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -102,44 +110,49 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
           ),
           const SizedBox(height: 14),
           Expanded(
-            child: FutureBuilder<CrowdReport?>(
-              future: _reportFuture,
-              builder: (context, reportSnap) {
-                if (reportSnap.connectionState == ConnectionState.waiting) {
+            child: FutureBuilder<StopCrowdForecast?>(
+              future: _forecastFuture,
+              builder: (context, forecastSnap) {
+                if (forecastSnap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (reportSnap.hasError) {
+                if (forecastSnap.hasError) {
                   return Center(
                     child: Text(
-                      'Failed to load crowd report: ${reportSnap.error}',
+                      'Failed to load crowd forecast: ${forecastSnap.error}',
                       textAlign: TextAlign.center,
                     ),
                   );
                 }
 
-                final report = reportSnap.data;
-                if (report == null) {
+                final forecast = forecastSnap.data;
+                if (forecast == null) {
                   return const Center(
                     child: Text('No forecast yet for this station.'),
                   );
                 }
 
-                final ui = _levelUi(report.occupancyLevel);
+                final isClosed = forecast.isClosedHours;
+                final ui = _levelUi(
+                  forecast.occupancyLevel,
+                  isClosedHours: isClosed,
+                );
                 return _CrowdLevelCard(
                   title: ui.title,
                   subtitle: ui.subtitle,
                   color: ui.color,
-                  level: report.occupancyLevel,
-                  sourceType: report.sourceType,
-                  createdAt: report.createdAt,
+                  level: forecast.occupancyLevel,
+                  sourceType: forecast.sourceType,
+                  createdAt: forecast.updatedAt,
                   confidence: _forecastConfidence(
-                    sourceType: report.sourceType,
-                    level: report.occupancyLevel,
+                    sourceType: forecast.sourceType,
+                    level: forecast.occupancyLevel,
                   ),
                   explanation: _forecastExplanation(
-                    sourceType: report.sourceType,
-                    level: report.occupancyLevel,
+                    sourceType: forecast.sourceType,
+                    level: forecast.occupancyLevel,
                   ),
+                  isClosedHours: isClosed,
                 );
               },
             ),
@@ -149,7 +162,15 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     );
   }
 
-  _LevelUi _levelUi(int level) {
+  _LevelUi _levelUi(int level, {bool isClosedHours = false}) {
+    if (isClosedHours) {
+      return const _LevelUi(
+        title: 'Closing hours',
+        subtitle:
+            'Train service is currently closed. Forecasts resume from 6:00 AM.',
+        color: Color(0xFF98A2B3),
+      );
+    }
     final crowd = crowdLevelStyleFromIndex(level);
     return _LevelUi(
       title: crowd.label,
@@ -170,6 +191,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     required int level,
   }) {
     final source = sourceType.toLowerCase();
+    if (CrowdReportsService.isClosedHoursSource(source)) {
+      return 0.99;
+    }
     double base;
     if (source.contains('user')) {
       base = 0.92;
@@ -193,6 +217,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     required int level,
   }) {
     final source = sourceType.toLowerCase();
+    if (CrowdReportsService.isClosedHoursSource(source)) {
+      return 'Train service is outside operating hours. Stations are shown as unavailable until 6:00 AM.';
+    }
     final reasons = <String>[];
     if (source.contains('user')) {
       reasons.add('based on recent rider reports');
@@ -235,6 +262,7 @@ class _CrowdLevelCard extends StatelessWidget {
   final DateTime? createdAt;
   final double confidence;
   final String explanation;
+  final bool isClosedHours;
 
   const _CrowdLevelCard({
     required this.title,
@@ -245,17 +273,25 @@ class _CrowdLevelCard extends StatelessWidget {
     required this.createdAt,
     required this.confidence,
     required this.explanation,
+    required this.isClosedHours,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isClosedHours ? const Color(0xFFF8FAFC) : Colors.white;
+    final borderColor =
+        isClosedHours ? const Color(0xFFD0D5DD) : const Color(0xFFE2E8F0);
+    final primaryTextColor =
+        isClosedHours ? const Color(0xFF667085) : const Color(0xFF101828);
+    final secondaryTextColor =
+        isClosedHours ? const Color(0xFF98A2B3) : const Color(0xFF64748B);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
         boxShadow: appCardShadows(context),
       ),
       child: Column(
@@ -270,7 +306,7 @@ class _CrowdLevelCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Level $level',
+                isClosedHours ? 'Closing hours' : 'Level $level',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: color,
@@ -281,35 +317,41 @@ class _CrowdLevelCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: primaryTextColor,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: secondaryTextColor),
           ),
           const SizedBox(height: 12),
           Text(
             'Forecast confidence: ${(confidence * 100).round()}%',
-            style: const TextStyle(
-              color: Color(0xFF475467),
+            style: TextStyle(
+              color: isClosedHours
+                  ? const Color(0xFF667085)
+                  : const Color(0xFF475467),
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             explanation,
-            style: const TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: secondaryTextColor),
           ),
           const SizedBox(height: 12),
           Text(
-            'Forecast source: $sourceType',
-            style: const TextStyle(color: Color(0xFF64748B)),
+            'Forecast source: ${CrowdReportsService.displaySourceType(sourceType)}',
+            style: TextStyle(color: secondaryTextColor),
           ),
           if (createdAt != null)
             Text(
               'Updated: ${createdAt!.toLocal()}',
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(color: secondaryTextColor),
             ),
         ],
       ),

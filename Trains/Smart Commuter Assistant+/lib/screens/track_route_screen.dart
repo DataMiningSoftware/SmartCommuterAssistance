@@ -58,6 +58,15 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   List<_RouteConnection> _routeEdges = <_RouteConnection>[];
   List<_TrackStationOption> _stationOptions = <_TrackStationOption>[];
   Map<String, int> _crowdByStopId = <String, int>{};
+  Map<String, bool> _closedByStopId = <String, bool>{};
+  Map<String, StopCrowdForecast> _adaptiveForecastByStopId =
+      <String, StopCrowdForecast>{};
+  int? _adaptiveRemainingMinutes;
+  DateTime? _adaptiveArrivalTime;
+  int _adaptiveHighestCrowdLevel = 0;
+  DateTime? _lastAdaptiveRefreshAt;
+  int _lastAdaptiveRefreshIndex = -1;
+  bool _isRefreshingAdaptiveForecasts = false;
   bool _reportMenuVisible = false;
   bool _isSubmittingReport = false;
   bool _isCreatingTrip = false;
@@ -91,9 +100,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     await _notificationService.requestPermissions();
     await _loadTrip();
     await _loadNetworkData();
+    await _loadCrowdForecasts();
     if (_trip != null) {
-      await _loadCrowdForecasts();
       await _computeRouteStops();
+      await _refreshAdaptiveForecasts(force: true);
     }
     if (!mounted) return;
     setState(() => _loading = false);
@@ -298,6 +308,19 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       for (final entry in forecasts.entries)
         entry.key.toUpperCase(): entry.value.occupancyLevel,
     };
+    _closedByStopId = <String, bool>{
+      for (final entry in forecasts.entries)
+        entry.key.toUpperCase(): entry.value.isClosedHours,
+    };
+  }
+
+  bool _isStationOptionClosed(_TrackStationOption option) {
+    for (final stopId in option.stopIds) {
+      if (_closedByStopId[stopId.trim().toUpperCase()] ?? false) {
+        return true;
+      }
+    }
+    return false;
   }
 
   _StopNode? _nearestStop(double latitude, double longitude) {
@@ -366,6 +389,12 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _routeStops = routeStops;
     _routeEdges = result.path;
     _estimatedTotalMinutes = result.totalMinutes;
+    _adaptiveForecastByStopId = <String, StopCrowdForecast>{};
+    _adaptiveRemainingMinutes = null;
+    _adaptiveArrivalTime = null;
+    _adaptiveHighestCrowdLevel = _highestRouteCrowdLevel(activeTripStops);
+    _lastAdaptiveRefreshAt = null;
+    _lastAdaptiveRefreshIndex = -1;
     _trip = ActiveTrip(
       originStopId: baseTrip.originStopId,
       destinationStopId: result.destinationStopId,
@@ -505,6 +534,215 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     }
   }
 
+  Future<void> _refreshAdaptiveForecasts({
+    bool force = false,
+  }) async {
+    final trip = _trip;
+    if (trip == null || _routeStops.isEmpty) return;
+    if (_isRefreshingAdaptiveForecasts && !force) return;
+
+    final now = DateTime.now();
+    final currentIndex = _resolvedCurrentIndex;
+    final lastRefreshAt = _lastAdaptiveRefreshAt;
+    final movedAlongRoute = currentIndex != _lastAdaptiveRefreshIndex;
+    final refreshAge = lastRefreshAt == null
+        ? const Duration(days: 1)
+        : now.difference(lastRefreshAt);
+    if (!force &&
+        !movedAlongRoute &&
+        refreshAge < const Duration(seconds: 45)) {
+      return;
+    }
+
+    final remainingEdges = currentIndex >= _routeEdges.length
+        ? const <_RouteConnection>[]
+        : _routeEdges.sublist(currentIndex);
+    if (_arrived || remainingEdges.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _adaptiveForecastByStopId = <String, StopCrowdForecast>{};
+        _adaptiveRemainingMinutes = 0;
+        _adaptiveArrivalTime = now;
+        _adaptiveHighestCrowdLevel =
+            _crowdByStopId[trip.destinationStopId.trim().toUpperCase()] ?? 0;
+        _lastAdaptiveRefreshAt = now;
+        _lastAdaptiveRefreshIndex = currentIndex;
+      });
+      return;
+    }
+
+    _isRefreshingAdaptiveForecasts = true;
+    try {
+      final stopIds = <String>{
+        for (final stop in _routeStops.skip(currentIndex))
+          stop.stopId.trim().toUpperCase(),
+      }.toList();
+      final probeTimes = <DateTime>[now];
+      var elapsedBaseMinutes = 0;
+      for (final edge in remainingEdges) {
+        probeTimes.add(now.add(Duration(minutes: elapsedBaseMinutes)));
+        elapsedBaseMinutes += edge.travelMinutes;
+      }
+
+      final grid = await _crowdReportsService.fetchForecastGrid(
+        stopIds: stopIds,
+        times: probeTimes,
+      );
+
+      final forecastByStop = <String, StopCrowdForecast>{};
+      var cursor = now;
+      var totalMinutes = 0;
+      var highestCrowdLevel = 0;
+
+      final currentStop = _routeStops[currentIndex];
+      final currentForecast = _bestForecastForStopAtTime(
+        stopId: currentStop.stopId,
+        time: now,
+        grid: grid,
+      );
+      if (currentForecast != null) {
+        forecastByStop[currentStop.stopId.trim().toUpperCase()] =
+            currentForecast;
+        highestCrowdLevel =
+            math.max(highestCrowdLevel, currentForecast.occupancyLevel);
+      }
+
+      for (var index = 0; index < remainingEdges.length; index++) {
+        final edge = remainingEdges[index];
+        final forecast = _forecastForConnectionAtTime(
+          connection: edge,
+          time: cursor,
+          grid: grid,
+        );
+        final fallbackLevel =
+            _crowdByStopId[edge.toStopId.trim().toUpperCase()] ?? 2;
+        final level = forecast?.occupancyLevel.clamp(0, 5) ?? fallbackLevel;
+        highestCrowdLevel = math.max(highestCrowdLevel, level);
+
+        forecastByStop[edge.toStopId.trim().toUpperCase()] = forecast ??
+            _fallbackForecastForStop(
+              stopId: edge.toStopId,
+              time: cursor,
+              level: level,
+            );
+
+        final etaMultiplier =
+            forecast?.etaMultiplier ?? _fallbackEtaMultiplier(level);
+        final movementMinutes = math.max(
+          edge.travelMinutes,
+          (edge.travelMinutes * etaMultiplier).round(),
+        );
+        final includeWait = index == 0 ||
+            edge.connectionType.toLowerCase().contains('transfer');
+        final waitMinutes = includeWait
+            ? (forecast?.expectedWaitMinutes ?? _fallbackWaitMinutes(level))
+            : 0;
+        final adjustedMinutes = movementMinutes + waitMinutes;
+        totalMinutes += adjustedMinutes;
+        cursor = cursor.add(Duration(minutes: adjustedMinutes));
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _crowdByStopId = <String, int>{
+          ..._crowdByStopId,
+          for (final entry in forecastByStop.entries)
+            entry.key: entry.value.occupancyLevel,
+        };
+        _adaptiveForecastByStopId = forecastByStop;
+        _adaptiveRemainingMinutes = totalMinutes;
+        _adaptiveArrivalTime = cursor;
+        _adaptiveHighestCrowdLevel = highestCrowdLevel;
+        _lastAdaptiveRefreshAt = now;
+        _lastAdaptiveRefreshIndex = currentIndex;
+      });
+    } catch (_) {
+      // Keep tracking resilient when the forecast refresh fails.
+    } finally {
+      _isRefreshingAdaptiveForecasts = false;
+    }
+  }
+
+  StopCrowdForecast? _forecastForConnectionAtTime({
+    required _RouteConnection connection,
+    required DateTime time,
+    required Map<String, StopCrowdForecast> grid,
+  }) {
+    final fromKey = CrowdReportsService.forecastKeyForTime(
+      stopId: connection.fromStopId,
+      time: time,
+    );
+    final toKey = CrowdReportsService.forecastKeyForTime(
+      stopId: connection.toStopId,
+      time: time,
+    );
+    return grid[fromKey] ?? grid[toKey];
+  }
+
+  StopCrowdForecast? _bestForecastForStopAtTime({
+    required String stopId,
+    required DateTime time,
+    required Map<String, StopCrowdForecast> grid,
+  }) {
+    final key = CrowdReportsService.forecastKeyForTime(
+      stopId: stopId,
+      time: time,
+    );
+    return grid[key];
+  }
+
+  StopCrowdForecast _fallbackForecastForStop({
+    required String stopId,
+    required DateTime time,
+    required int level,
+  }) {
+    return StopCrowdForecast(
+      stopId: stopId.trim().toUpperCase(),
+      forecastHour: time.hour,
+      isWeekend:
+          time.weekday == DateTime.saturday || time.weekday == DateTime.sunday,
+      occupancyLevel: level.clamp(0, 5),
+      expectedWaitMinutes: _fallbackWaitMinutes(level),
+      etaMultiplier: _fallbackEtaMultiplier(level),
+      sourceType: 'fallback',
+      updatedAt: null,
+    );
+  }
+
+  static int _fallbackWaitMinutes(int level) {
+    switch (level) {
+      case 1:
+        return 2;
+      case 2:
+        return 4;
+      case 3:
+        return 6;
+      case 4:
+        return 8;
+      case 5:
+        return 10;
+      default:
+        return 4;
+    }
+  }
+
+  static double _fallbackEtaMultiplier(int level) {
+    switch (level) {
+      case 1:
+        return 1.00;
+      case 2:
+        return 1.05;
+      case 3:
+        return 1.12;
+      case 4:
+        return 1.22;
+      case 5:
+        return 1.35;
+      default:
+        return 1.10;
+    }
+  }
+
   void _showTrackMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -575,6 +813,12 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
   Future<void> _startTripFromSearch(_TrackStationOption option) async {
     if (_isCreatingTrip || option.stopIds.isEmpty) return;
+    if (_isStationOptionClosed(option)) {
+      _showTrackMessage(
+        '${option.stationName} is unavailable during closing hours.',
+      );
+      return;
+    }
 
     setState(() => _isCreatingTrip = true);
     try {
@@ -648,6 +892,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       _trip = newTrip;
       await _loadCrowdForecasts();
       await _computeRouteStops();
+      await _refreshAdaptiveForecasts(force: true);
       _startTracking();
 
       if (!mounted) return;
@@ -706,6 +951,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       ),
       result: result,
     );
+    await _refreshAdaptiveForecasts(force: true);
 
     if (!mounted) return;
     setState(() {
@@ -744,7 +990,15 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                 (routeId) => routeId.toLowerCase().contains(search),
               );
               return inName || inStopId || inRouteId;
-            }).toList();
+            }).toList()
+              ..sort((a, b) {
+                final aClosed = _isStationOptionClosed(a);
+                final bClosed = _isStationOptionClosed(b);
+                if (aClosed == bClosed) {
+                  return a.stationName.compareTo(b.stationName);
+                }
+                return aClosed ? 1 : -1;
+              });
 
             return SafeArea(
               child: Padding(
@@ -792,22 +1046,32 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                               const Divider(height: 1, thickness: 0.6),
                           itemBuilder: (context, index) {
                             final option = filteredOptions[index];
+                            final isClosed = _isStationOptionClosed(option);
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
+                              enabled: !isClosed,
                               leading: _TrackSearchRouteBadge(
                                 routeIds: option.routeIds,
                               ),
                               title: Text(
                                 option.stationName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
+                                  color:
+                                      isClosed ? const Color(0xFF98A2B3) : null,
                                 ),
                               ),
                               subtitle: Text(
                                 '${option.routeIds.join(' • ')}  |  ${option.stopIds.join(', ')}',
                               ),
-                              trailing: const Icon(Icons.north_east_rounded),
-                              onTap: () => Navigator.of(context).pop(option),
+                              trailing: Icon(
+                                Icons.north_east_rounded,
+                                color:
+                                    isClosed ? const Color(0xFF98A2B3) : null,
+                              ),
+                              onTap: isClosed
+                                  ? null
+                                  : () => Navigator.of(context).pop(option),
                             );
                           },
                         ),
@@ -877,6 +1141,11 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         await _handleProgressNotifications(nearestIndex);
       }
       if (_arrived) {
+        await _refreshAdaptiveForecasts(force: true);
+      } else {
+        await _refreshAdaptiveForecasts(force: nearestIndex != previousIndex);
+      }
+      if (_arrived) {
         await _handleArrivalNotification();
       }
     } catch (_) {
@@ -928,6 +1197,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   int? get _remainingMinutes {
+    if (_adaptiveRemainingMinutes != null) return _adaptiveRemainingMinutes;
     if (_routeEdges.isEmpty) return _estimatedTotalMinutes;
     if (_resolvedCurrentIndex >= _routeEdges.length) return 0;
     return _routeEdges
@@ -937,11 +1207,44 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
   DateTime? get _estimatedArrivalTime {
     if (_arrived) return DateTime.now();
+    if (_adaptiveArrivalTime != null) return _adaptiveArrivalTime;
     final remainingMinutes = _remainingMinutes;
     if (remainingMinutes == null) return null;
     return DateTime.now().add(
       Duration(minutes: remainingMinutes < 0 ? 0 : remainingMinutes),
     );
+  }
+
+  int get _displayHighestCrowdLevel {
+    if (_adaptiveHighestCrowdLevel > 0) return _adaptiveHighestCrowdLevel;
+    return _trip?.highestCrowdLevel ?? 0;
+  }
+
+  int? get _etaDriftMinutes {
+    final adaptive = _adaptiveRemainingMinutes;
+    if (adaptive == null || _routeEdges.isEmpty) return null;
+    final base = _resolvedCurrentIndex >= _routeEdges.length
+        ? 0
+        : _routeEdges
+            .skip(_resolvedCurrentIndex)
+            .fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
+    return adaptive - base;
+  }
+
+  int? _crowdLevelForTimelineItem(_TrackTimelineItem item) {
+    final primaryKey = item.primaryStop.stopId.trim().toUpperCase();
+    final secondaryKey = item.secondaryStop?.stopId.trim().toUpperCase();
+    final levels = <int>[
+      _adaptiveForecastByStopId[primaryKey]?.occupancyLevel ??
+          _crowdByStopId[primaryKey] ??
+          0,
+      if (secondaryKey != null)
+        _adaptiveForecastByStopId[secondaryKey]?.occupancyLevel ??
+            _crowdByStopId[secondaryKey] ??
+            0,
+    ]..removeWhere((level) => level <= 0);
+    if (levels.isEmpty) return null;
+    return levels.reduce(math.max);
   }
 
   List<_TrackTimelineItem> _buildTimelineItems() {
@@ -1040,6 +1343,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       }
       if (!mounted) return;
       _closeReportMenu();
+      await _refreshAdaptiveForecasts(force: true);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1101,9 +1406,15 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         _trip = null;
         _routeStops = <_StopNode>[];
         _routeEdges = <_RouteConnection>[];
+        _adaptiveForecastByStopId = <String, StopCrowdForecast>{};
         _nearestIndex = -1;
         _arrived = false;
         _estimatedTotalMinutes = null;
+        _adaptiveRemainingMinutes = null;
+        _adaptiveArrivalTime = null;
+        _adaptiveHighestCrowdLevel = 0;
+        _lastAdaptiveRefreshAt = null;
+        _lastAdaptiveRefreshIndex = -1;
         _reportMenuVisible = false;
       });
       NavigationState.instance.goTo(0);
@@ -1137,6 +1448,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
               ? _EmptyTrackState(
                   controller: _emptyTripSearchController,
                   stationOptions: _stationOptions,
+                  closedByStopId: _closedByStopId,
                   isSearching: _isCreatingTrip,
                   onOptionSelected: (option) {
                     _pendingSearchOption = option;
@@ -1156,6 +1468,12 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                     if (selected == null) {
                       _showTrackMessage(
                           'Pick a station from the search results.');
+                      return;
+                    }
+                    if (_isStationOptionClosed(selected)) {
+                      _showTrackMessage(
+                        '${selected.stationName} is unavailable during closing hours.',
+                      );
                       return;
                     }
                     unawaited(_startTripFromSearch(selected));
@@ -1179,6 +1497,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                                 arrived: _arrived,
                                 estimatedMinutes: _remainingMinutes,
                                 estimatedArrivalTime: _estimatedArrivalTime,
+                                highestCrowdLevel: _displayHighestCrowdLevel,
+                                etaDriftMinutes: _etaDriftMinutes,
                                 progress: _progressValue,
                                 currentStationName: _currentStationName,
                                 onChangeDestination:
@@ -1223,6 +1543,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                                             status:
                                                 _statusForTimelineItem(item),
                                             flashValue: flashValue,
+                                            crowdLevel:
+                                                _crowdLevelForTimelineItem(
+                                                    item),
                                           );
                                         },
                                       ),
@@ -1599,6 +1922,8 @@ class _TrackHeader extends StatelessWidget {
   final bool arrived;
   final int? estimatedMinutes;
   final DateTime? estimatedArrivalTime;
+  final int highestCrowdLevel;
+  final int? etaDriftMinutes;
   final int remainingStops;
   final double progress;
   final String currentStationName;
@@ -1611,6 +1936,8 @@ class _TrackHeader extends StatelessWidget {
     required this.arrived,
     required this.estimatedMinutes,
     required this.estimatedArrivalTime,
+    required this.highestCrowdLevel,
+    required this.etaDriftMinutes,
     required this.remainingStops,
     required this.progress,
     required this.currentStationName,
@@ -1621,8 +1948,8 @@ class _TrackHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crowdLabel = _crowdLabel(trip.highestCrowdLevel);
-    final crowdColor = crowdLevelColor(trip.highestCrowdLevel);
+    final crowdLabel = _crowdLabel(highestCrowdLevel);
+    final crowdColor = crowdLevelColor(highestCrowdLevel);
     final localizations = MaterialLocalizations.of(context);
     final durationLabel = switch (estimatedMinutes) {
       null => 'Time left: syncing',
@@ -1633,6 +1960,27 @@ class _TrackHeader extends StatelessWidget {
         : estimatedArrivalTime == null
             ? 'Arrive by: syncing'
             : 'Arrive by ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(estimatedArrivalTime!))}';
+    final etaDeltaLabel = switch (etaDriftMinutes) {
+      null => null,
+      final value when value >= 2 => 'Adaptive ETA: +${value}m',
+      final value when value <= -2 => 'Adaptive ETA: ${value}m',
+      _ => 'Adaptive ETA: on track',
+    };
+    final etaDeltaColor = switch (etaDriftMinutes) {
+      final value? when value >= 2 => const Color(0xFFB42318),
+      final value? when value <= -2 => const Color(0xFF067647),
+      _ => const Color(0xFF475467),
+    };
+    final etaDeltaBackground = switch (etaDriftMinutes) {
+      final value? when value >= 2 => const Color(0xFFFEF3F2),
+      final value? when value <= -2 => const Color(0xFFECFDF3),
+      _ => const Color(0xFFF4F7FB),
+    };
+    final etaDeltaBorder = switch (etaDriftMinutes) {
+      final value? when value >= 2 => const Color(0xFFFDA29B),
+      final value? when value <= -2 => const Color(0xFFA6F4C5),
+      _ => const Color(0xFFD0D5DD),
+    };
 
     return Container(
       width: double.infinity,
@@ -1742,6 +2090,13 @@ class _TrackHeader extends StatelessWidget {
               _HeaderChip(
                 label: arrivalLabel,
               ),
+              if (etaDeltaLabel != null)
+                _HeaderChip(
+                  label: etaDeltaLabel,
+                  backgroundColor: etaDeltaBackground,
+                  textColor: etaDeltaColor,
+                  borderColor: etaDeltaBorder,
+                ),
             ],
           ),
           const SizedBox(height: 10),
@@ -1881,11 +2236,13 @@ class _TrackStopTile extends StatelessWidget {
   final _TrackTimelineItem item;
   final _TrackStopStatus status;
   final double flashValue;
+  final int? crowdLevel;
 
   const _TrackStopTile({
     required this.item,
     required this.status,
     required this.flashValue,
+    required this.crowdLevel,
   });
 
   @override
@@ -1925,6 +2282,10 @@ class _TrackStopTile extends StatelessWidget {
             : routeColor;
     final metaColor =
         isPassed ? const Color(0xFF98A2B3) : const Color(0xFF667085);
+    final crowdColor = crowdLevel == null
+        ? const Color(0xFF667085)
+        : crowdLevelColor(crowdLevel!);
+    final crowdLabel = crowdLevel == null ? null : crowdLevelLabel(crowdLevel!);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2047,6 +2408,14 @@ class _TrackStopTile extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (crowdLabel != null) ...[
+                    const SizedBox(height: 8),
+                    _TrackTimelineFlag(
+                      label: 'Forecast: $crowdLabel',
+                      color: crowdColor,
+                      backgroundColor: crowdColor.withValues(alpha: 0.10),
+                    ),
+                  ],
                   if (isCurrent) ...[
                     const SizedBox(height: 8),
                     Container(
@@ -2652,6 +3021,7 @@ class _HoldActionPillButtonState extends State<_HoldActionPillButton> {
 class _EmptyTrackState extends StatelessWidget {
   final TextEditingController controller;
   final List<_TrackStationOption> stationOptions;
+  final Map<String, bool> closedByStopId;
   final bool isSearching;
   final ValueChanged<_TrackStationOption> onOptionSelected;
   final VoidCallback onSearch;
@@ -2659,10 +3029,20 @@ class _EmptyTrackState extends StatelessWidget {
   const _EmptyTrackState({
     required this.controller,
     required this.stationOptions,
+    required this.closedByStopId,
     required this.isSearching,
     required this.onOptionSelected,
     required this.onSearch,
   });
+
+  bool _isClosed(_TrackStationOption option) {
+    for (final stopId in option.stopIds) {
+      if (closedByStopId[stopId.trim().toUpperCase()] ?? false) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2785,8 +3165,10 @@ class _EmptyTrackState extends StatelessWidget {
                                 const Divider(height: 1, thickness: 0.6),
                             itemBuilder: (context, index) {
                               final option = optionList[index];
+                              final isClosed = _isClosed(option);
                               return ListTile(
                                 dense: true,
+                                enabled: !isClosed,
                                 visualDensity: const VisualDensity(
                                   horizontal: -1,
                                   vertical: -2,
@@ -2796,8 +3178,11 @@ class _EmptyTrackState extends StatelessWidget {
                                 ),
                                 title: Text(
                                   option.stationName,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w800,
+                                    color: isClosed
+                                        ? const Color(0xFF98A2B3)
+                                        : null,
                                   ),
                                 ),
                                 subtitle: Wrap(
@@ -2810,10 +3195,22 @@ class _EmptyTrackState extends StatelessWidget {
                                       )
                                       .toList(),
                                 ),
-                                onTap: () {
-                                  onOptionSelected(option);
-                                  onSelected(option);
-                                },
+                                trailing: isClosed
+                                    ? const Text(
+                                        'Closing hours',
+                                        style: TextStyle(
+                                          color: Color(0xFF98A2B3),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      )
+                                    : null,
+                                onTap: isClosed
+                                    ? null
+                                    : () {
+                                        onOptionSelected(option);
+                                        onSelected(option);
+                                      },
                               );
                             },
                           ),

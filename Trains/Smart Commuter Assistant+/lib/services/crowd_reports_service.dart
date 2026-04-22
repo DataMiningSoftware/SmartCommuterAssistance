@@ -26,6 +26,8 @@ class CrowdReport {
     required this.sourceType,
     required this.createdAt,
   });
+
+  bool get isClosedHours => CrowdReportsService.isClosedHoursSource(sourceType);
 }
 
 class CrowdReportDisplayItem {
@@ -62,6 +64,8 @@ class StationCrowdBoardItem {
   });
 
   String get stopId => stopIds.isEmpty ? '' : stopIds.first;
+
+  bool get isClosedHours => CrowdReportsService.isClosedHoursSource(sourceType);
 }
 
 class StopCrowdForecast {
@@ -84,6 +88,8 @@ class StopCrowdForecast {
     required this.sourceType,
     required this.updatedAt,
   });
+
+  bool get isClosedHours => CrowdReportsService.isClosedHoursSource(sourceType);
 }
 
 class NearbyStationCrowdForecast {
@@ -105,6 +111,38 @@ class NearbyStationCrowdForecast {
 class CrowdReportsService {
   final SupabaseClient _client = Supabase.instance.client;
   final TransitNetworkService _transitNetworkService = TransitNetworkService();
+
+  static bool isClosedHoursSource(String sourceType) {
+    return sourceType.trim().toLowerCase() == 'closed_hours';
+  }
+
+  static String displaySourceType(String sourceType) {
+    final normalized = sourceType.trim().toLowerCase();
+    if (normalized.isEmpty) return 'Unknown';
+    if (normalized == 'closed_hours') return 'Closing hours';
+    if (normalized == 'user') return 'Rider report';
+    if (normalized == 'user_blend') return 'Forecast + rider reports';
+    if (normalized.startsWith('forecast+')) {
+      return 'Forecast + rider reports';
+    }
+    if (normalized.contains('trend') || normalized == 'forecast') {
+      return 'Hourly forecast';
+    }
+    if (normalized.contains('simulated')) {
+      return 'Simulation fallback';
+    }
+    if (normalized == 'delay') return 'Delay report';
+    if (normalized == 'fallback' || normalized == 'unknown') {
+      return 'Offline fallback';
+    }
+    return normalized
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+  }
 
   Future<List<StationOption>> fetchStationOptions() async {
     final network = await _transitNetworkService.loadNetwork();
@@ -427,6 +465,17 @@ class CrowdReportsService {
       }
     }
 
+    for (final stopId in normalizedStopIds) {
+      for (final time in times) {
+        if (!_isSystemClosed(time)) continue;
+        final key = forecastKeyForTime(stopId: stopId, time: time);
+        forecasts[key] = _closedHoursForecast(
+          stopId: stopId,
+          time: time,
+        );
+      }
+    }
+
     return forecasts;
   }
 
@@ -449,6 +498,17 @@ class CrowdReportsService {
       }
     }
     return output;
+  }
+
+  Future<Map<String, bool>> fetchClosedStatusForStopsAtTime(
+    List<String> stopIds,
+    DateTime time,
+  ) async {
+    final forecasts = await fetchForecastForStopsAtTime(stopIds, time);
+    return <String, bool>{
+      for (final entry in forecasts.entries)
+        entry.key: entry.value.isClosedHours,
+    };
   }
 
   Future<List<NearbyStationCrowdForecast>> fetchNearestStationsWithCrowd({
@@ -611,6 +671,10 @@ class CrowdReportsService {
     return time.weekday == DateTime.saturday || time.weekday == DateTime.sunday;
   }
 
+  static bool _isSystemClosed(DateTime time) {
+    return time.hour < 6;
+  }
+
   static int _defaultWaitMinutes(int level) {
     switch (level) {
       case 1:
@@ -643,6 +707,22 @@ class CrowdReportsService {
       default:
         return 1.1;
     }
+  }
+
+  static StopCrowdForecast _closedHoursForecast({
+    required String stopId,
+    required DateTime time,
+  }) {
+    return StopCrowdForecast(
+      stopId: stopId.trim().toUpperCase(),
+      forecastHour: time.hour,
+      isWeekend: _isWeekend(time),
+      occupancyLevel: 1,
+      expectedWaitMinutes: 0,
+      etaMultiplier: 1.0,
+      sourceType: 'closed_hours',
+      updatedAt: null,
+    );
   }
 
   static StopCrowdForecast _forecastFromCrowdReport({
