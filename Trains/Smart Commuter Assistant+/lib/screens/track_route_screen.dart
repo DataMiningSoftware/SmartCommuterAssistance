@@ -39,6 +39,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   final CrowdReportsService _crowdReportsService = CrowdReportsService();
   final DatabaseService _databaseService = DatabaseService();
   final NotificationService _notificationService = NotificationService();
+  final TextEditingController _emptyTripSearchController =
+      TextEditingController();
 
   final Map<String, _StopNode> _stopsById = <String, _StopNode>{};
   final List<_RouteConnection> _connections = <_RouteConnection>[];
@@ -58,6 +60,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   Map<String, int> _crowdByStopId = <String, int>{};
   bool _reportMenuVisible = false;
   bool _isSubmittingReport = false;
+  bool _isCreatingTrip = false;
+  bool _cancelTripPromptOpen = false;
+  _TrackStationOption? _pendingSearchOption;
 
   @override
   void initState() {
@@ -76,6 +81,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _emptyTripSearchController.dispose();
     _pulseController.dispose();
     _reportRevealController.dispose();
     super.dispose();
@@ -84,19 +90,16 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   Future<void> _bootstrap() async {
     await _notificationService.requestPermissions();
     await _loadTrip();
-    if (_trip == null) {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
-      return;
-    }
-
     await _loadNetworkData();
-    await _loadCrowdForecasts();
-    await _computeRouteStops();
+    if (_trip != null) {
+      await _loadCrowdForecasts();
+      await _computeRouteStops();
+    }
     if (!mounted) return;
     setState(() => _loading = false);
-    _startTracking();
+    if (_trip != null) {
+      _startTracking();
+    }
   }
 
   Future<void> _loadTrip() async {
@@ -118,6 +121,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       routePreference: 'efficiency',
       highestCrowdLevel: 0,
       createdAt: DateTime.now(),
+      estimatedTotalMinutes: null,
       stops: <ActiveTripStop>[
         ActiveTripStop(
           stopId: widget.startStopId!,
@@ -339,6 +343,24 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     };
   }
 
+  _StopNode? _nearestStop(double latitude, double longitude) {
+    _StopNode? nearest;
+    var nearestMeters = double.infinity;
+    for (final stop in _stopsById.values) {
+      final meters = Geolocator.distanceBetween(
+        latitude,
+        longitude,
+        stop.latitude,
+        stop.longitude,
+      );
+      if (meters < nearestMeters) {
+        nearestMeters = meters;
+        nearest = stop;
+      }
+    }
+    return nearest;
+  }
+
   Future<void> _computeRouteStops() async {
     final trip = _trip;
     if (trip == null) return;
@@ -395,6 +417,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       routePreference: baseTrip.routePreference,
       highestCrowdLevel: _highestRouteCrowdLevel(activeTripStops),
       createdAt: baseTrip.createdAt,
+      estimatedTotalMinutes: result.totalMinutes,
       stops: activeTripStops,
     );
     await _tripService.saveTrip(_trip!);
@@ -529,6 +552,162 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<bool?> _showPackedRoutePrompt(String destinationName) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.sentiment_dissatisfied_rounded,
+                      color: Color(0xFFDC2626),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Looks like your route is packed.',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'A calmer trip to $destinationName is available, but it may take longer.',
+                  style: const TextStyle(
+                    color: Color(0xFF667085),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Take a more relaxed route'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Keep with crowded route'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _startTripFromSearch(_TrackStationOption option) async {
+    if (_isCreatingTrip || option.stopIds.isEmpty) return;
+
+    setState(() => _isCreatingTrip = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showTrackMessage('Enable location services before starting a trip.');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _showTrackMessage('Location permission is required to start a trip.');
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      final originStop = _nearestStop(position.latitude, position.longitude);
+      if (originStop == null) {
+        _showTrackMessage('Could not determine your nearest station yet.');
+        return;
+      }
+
+      final forecasts = await _crowdReportsService.fetchForecastForStopsAtTime(
+        option.stopIds,
+        DateTime.now(),
+      );
+      var highestCrowdLevel = 0;
+      for (final forecast in forecasts.values) {
+        if (forecast.occupancyLevel > highestCrowdLevel) {
+          highestCrowdLevel = forecast.occupancyLevel;
+        }
+      }
+
+      var routePreference = 'efficiency';
+      if (highestCrowdLevel > 1) {
+        final useComfort = await _showPackedRoutePrompt(option.stationName);
+        if (useComfort == null) return;
+        routePreference = useComfort ? 'comfort' : 'efficiency';
+      }
+
+      final newTrip = ActiveTrip(
+        originStopId: originStop.stopId,
+        destinationStopId: option.stopIds.first,
+        originName: originStop.stopName,
+        destinationName: option.stationName,
+        routePreference: routePreference,
+        highestCrowdLevel: highestCrowdLevel,
+        createdAt: DateTime.now(),
+        estimatedTotalMinutes: null,
+        stops: <ActiveTripStop>[
+          ActiveTripStop(
+            stopId: originStop.stopId,
+            stopName: originStop.stopName,
+            routeId: originStop.routeId,
+          ),
+          ActiveTripStop(
+            stopId: option.stopIds.first,
+            stopName: option.stationName,
+            routeId: option.routeIds.isEmpty ? 'N/A' : option.routeIds.first,
+          ),
+        ],
+      );
+
+      await _tripService.saveTrip(newTrip);
+      _trip = newTrip;
+      await _loadCrowdForecasts();
+      await _computeRouteStops();
+      _startTracking();
+
+      if (!mounted) return;
+      setState(() {
+        _emptyTripSearchController.clear();
+        _pendingSearchOption = null;
+        _nearestIndex = 0;
+        _arrived = false;
+        _reportMenuVisible = false;
+      });
+    } catch (e) {
+      _showTrackMessage('Could not start trip: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isCreatingTrip = false);
+      }
+    }
+  }
+
   Future<void> _changeDestinationFromCurrentStation() async {
     final trip = _trip;
     if (trip == null || _routeStops.isEmpty || _stationOptions.isEmpty) return;
@@ -563,6 +742,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         routePreference: trip.routePreference,
         highestCrowdLevel: trip.highestCrowdLevel,
         createdAt: DateTime.now(),
+        estimatedTotalMinutes: result.totalMinutes,
         stops: trip.stops,
       ),
       result: result,
@@ -788,12 +968,71 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     return math.max(_routeStops.length - _resolvedCurrentIndex - 1, 0);
   }
 
-  int get _remainingMinutes {
-    if (_routeEdges.isEmpty) return _estimatedTotalMinutes ?? 0;
+  int? get _remainingMinutes {
+    if (_routeEdges.isEmpty) return _estimatedTotalMinutes;
     if (_resolvedCurrentIndex >= _routeEdges.length) return 0;
     return _routeEdges
         .skip(_resolvedCurrentIndex)
         .fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
+  }
+
+  DateTime? get _estimatedArrivalTime {
+    if (_arrived) return DateTime.now();
+    final remainingMinutes = _remainingMinutes;
+    if (remainingMinutes == null) return null;
+    return DateTime.now().add(
+      Duration(minutes: remainingMinutes < 0 ? 0 : remainingMinutes),
+    );
+  }
+
+  List<_TrackTimelineItem> _buildTimelineItems() {
+    final items = <_TrackTimelineItem>[];
+    var index = 0;
+    while (index < _routeStops.length) {
+      final stop = _routeStops[index];
+      final nextStop =
+          index + 1 < _routeStops.length ? _routeStops[index + 1] : null;
+      final previousRouteId = index > 0 ? _routeStops[index - 1].routeId : null;
+      final canMergeInterchange = nextStop != null &&
+          stop.stopName.toUpperCase() == nextStop.stopName.toUpperCase() &&
+          stop.routeId != nextStop.routeId;
+
+      if (canMergeInterchange) {
+        items.add(
+          _TrackTimelineItem(
+            primaryStop: stop,
+            secondaryStop: nextStop,
+            startIndex: index,
+            endIndex: index + 1,
+            previousRouteId: previousRouteId,
+          ),
+        );
+        index += 2;
+        continue;
+      }
+
+      items.add(
+        _TrackTimelineItem(
+          primaryStop: stop,
+          secondaryStop: null,
+          startIndex: index,
+          endIndex: index,
+          previousRouteId: previousRouteId,
+        ),
+      );
+      index += 1;
+    }
+    return items;
+  }
+
+  _TrackStopStatus _statusForTimelineItem(_TrackTimelineItem item) {
+    if (item.endIndex < _resolvedCurrentIndex) {
+      return _TrackStopStatus.passed;
+    }
+    if (item.startIndex > _resolvedCurrentIndex) {
+      return _TrackStopStatus.upcoming;
+    }
+    return _TrackStopStatus.current;
   }
 
   double get _progressValue {
@@ -862,49 +1101,56 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Future<void> _cancelTrip() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Cancel active trip?'),
-          content: const Text(
-            'This will stop live tracking and clear the saved route.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Keep Trip'),
+    setState(() => _cancelTripPromptOpen = true);
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Cancel active trip?'),
+            content: const Text(
+              'This will stop live tracking and clear the saved route.',
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
-                foregroundColor: Colors.white,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Keep Trip'),
               ),
-              child: const Text('Cancel Trip'),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirm != true) return;
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Cancel Trip'),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirm != true) return;
 
-    _pollTimer?.cancel();
-    await _notificationService.cancelAllNotifications();
-    await _tripService.clearTrip();
-    if (!mounted) return;
-    setState(() {
-      _trip = null;
-      _routeStops = <_StopNode>[];
-      _routeEdges = <_RouteConnection>[];
-      _nearestIndex = -1;
-      _arrived = false;
-      _estimatedTotalMinutes = null;
-      _reportMenuVisible = false;
-    });
-    NavigationState.instance.goTo(0);
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      _pollTimer?.cancel();
+      await _notificationService.cancelAllNotifications();
+      await _tripService.clearTrip();
+      if (!mounted) return;
+      setState(() {
+        _trip = null;
+        _routeStops = <_StopNode>[];
+        _routeEdges = <_RouteConnection>[];
+        _nearestIndex = -1;
+        _arrived = false;
+        _estimatedTotalMinutes = null;
+        _reportMenuVisible = false;
+      });
+      NavigationState.instance.goTo(0);
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _cancelTripPromptOpen = false);
+      }
     }
   }
 
@@ -919,8 +1165,30 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           ? const Center(child: CircularProgressIndicator())
           : trip == null
               ? _EmptyTrackState(
-                  onOpenHome: () {
-                    Navigator.of(context).maybePop();
+                  controller: _emptyTripSearchController,
+                  stationOptions: _stationOptions,
+                  isSearching: _isCreatingTrip,
+                  onOptionSelected: (option) {
+                    _pendingSearchOption = option;
+                    _emptyTripSearchController.text = option.stationName;
+                  },
+                  onSearch: () {
+                    final query =
+                        _emptyTripSearchController.text.trim().toLowerCase();
+                    _TrackStationOption? selected = _pendingSearchOption;
+                    selected ??=
+                        _stationOptions.cast<_TrackStationOption?>().firstWhere(
+                              (option) =>
+                                  option != null &&
+                                  option.stationName.toLowerCase() == query,
+                              orElse: () => null,
+                            );
+                    if (selected == null) {
+                      _showTrackMessage(
+                          'Pick a station from the search results.');
+                      return;
+                    }
+                    unawaited(_startTripFromSearch(selected));
                   },
                 )
               : AnimatedBuilder(
@@ -928,6 +1196,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   builder: (context, _) {
                     final flashValue =
                         Curves.easeInOut.transform(_pulseController.value);
+                    final timelineItems = _buildTimelineItems();
                     return Stack(
                       children: [
                         Padding(
@@ -939,6 +1208,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                                 trip: trip,
                                 arrived: _arrived,
                                 estimatedMinutes: _remainingMinutes,
+                                estimatedArrivalTime: _estimatedArrivalTime,
                                 progress: _progressValue,
                                 currentStationName: _currentStationName,
                                 onChangeDestination:
@@ -973,31 +1243,15 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                                     : ListView.separated(
                                         padding:
                                             const EdgeInsets.only(bottom: 108),
-                                        itemCount: _routeStops.length,
+                                        itemCount: timelineItems.length,
                                         separatorBuilder: (_, __) =>
                                             const SizedBox(height: 6),
                                         itemBuilder: (context, index) {
-                                          final stop = _routeStops[index];
-                                          final status = index <
-                                                  _resolvedCurrentIndex
-                                              ? _TrackStopStatus.passed
-                                              : index == _resolvedCurrentIndex
-                                                  ? _TrackStopStatus.current
-                                                  : _TrackStopStatus.upcoming;
-                                          final previousRouteId = index > 0
-                                              ? _routeStops[index - 1].routeId
-                                              : null;
-                                          final showTransfer =
-                                              previousRouteId != null &&
-                                                  previousRouteId !=
-                                                      stop.routeId;
+                                          final item = timelineItems[index];
                                           return _TrackStopTile(
-                                            stop: stop,
-                                            status: status,
-                                            showTransfer: showTransfer,
-                                            previousRouteId: previousRouteId,
-                                            crowdLevel:
-                                                _crowdByStopId[stop.stopId],
+                                            item: item,
+                                            status:
+                                                _statusForTimelineItem(item),
                                             flashValue: flashValue,
                                           );
                                         },
@@ -1051,17 +1305,25 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                                     hoverForegroundColor: Colors.white,
                                     borderColor: const Color(0xFFF1B5B8),
                                     colorOnHover: false,
+                                    forceActive: _cancelTripPromptOpen,
                                   ),
                                   const SizedBox(width: 12),
-                                  _HoldActionPillButton(
+                                  _ActionPillButton(
                                     icon: Icons.campaign_rounded,
                                     label: _isSubmittingReport
                                         ? 'Sending...'
                                         : 'Report',
-                                    onHoldComplete: _isSubmittingReport
+                                    onPressed: _isSubmittingReport
                                         ? null
                                         : _openReportMenu,
-                                    enabled: !_isSubmittingReport,
+                                    baseBackgroundColor:
+                                        Theme.of(context).cardColor,
+                                    hoverBackgroundColor:
+                                        const Color(0xFF0A3A8B),
+                                    baseForegroundColor:
+                                        const Color(0xFF0A3A8B),
+                                    hoverForegroundColor: Colors.white,
+                                    borderColor: const Color(0xFFDCE6F5),
                                   ),
                                 ],
                               ),
@@ -1187,9 +1449,15 @@ class _LegacyTrackHeader extends StatelessWidget {
 
 class _HeaderChip extends StatelessWidget {
   final String label;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color? borderColor;
 
   const _HeaderChip({
     required this.label,
+    this.backgroundColor = const Color(0xFFEEF4FF),
+    this.textColor = const Color(0xFF0A3A8B),
+    this.borderColor,
   });
 
   @override
@@ -1197,13 +1465,14 @@ class _HeaderChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFEEF4FF),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
+        border: borderColor == null ? null : Border.all(color: borderColor!),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Color(0xFF0A3A8B),
+        style: TextStyle(
+          color: textColor,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -1358,7 +1627,8 @@ class _LegacyTrackStopTile extends StatelessWidget {
 class _TrackHeader extends StatelessWidget {
   final ActiveTrip trip;
   final bool arrived;
-  final int estimatedMinutes;
+  final int? estimatedMinutes;
+  final DateTime? estimatedArrivalTime;
   final int remainingStops;
   final double progress;
   final String currentStationName;
@@ -1370,6 +1640,7 @@ class _TrackHeader extends StatelessWidget {
     required this.trip,
     required this.arrived,
     required this.estimatedMinutes,
+    required this.estimatedArrivalTime,
     required this.remainingStops,
     required this.progress,
     required this.currentStationName,
@@ -1381,6 +1652,17 @@ class _TrackHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final crowdLabel = _crowdLabel(trip.highestCrowdLevel);
+    final crowdColor = crowdLevelColor(trip.highestCrowdLevel);
+    final localizations = MaterialLocalizations.of(context);
+    final durationLabel = switch (estimatedMinutes) {
+      null => 'Time left: syncing',
+      final value => 'Time left: ${_formatDuration(value)}',
+    };
+    final arrivalLabel = arrived
+        ? 'Arrived'
+        : estimatedArrivalTime == null
+            ? 'Arrive by: syncing'
+            : 'Arrive by ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(estimatedArrivalTime!))}';
 
     return Container(
       width: double.infinity,
@@ -1477,10 +1759,18 @@ class _TrackHeader extends StatelessWidget {
             children: [
               if (trip.routePreference == 'comfort')
                 const _HeaderChip(label: 'Relaxed route'),
-              _HeaderChip(label: 'Crowd: $crowdLabel'),
+              _HeaderChip(
+                label: 'Crowd: $crowdLabel',
+                backgroundColor: crowdColor.withValues(alpha: 0.12),
+                textColor: crowdColor,
+                borderColor: crowdColor.withValues(alpha: 0.28),
+              ),
               _HeaderChip(label: 'Stops left: $remainingStops'),
               _HeaderChip(
-                label: 'ETA: ${_formatDuration(estimatedMinutes)}',
+                label: durationLabel,
+              ),
+              _HeaderChip(
+                label: arrivalLabel,
               ),
             ],
           ),
@@ -1618,28 +1908,30 @@ class _RouteStationPill extends StatelessWidget {
 }
 
 class _TrackStopTile extends StatelessWidget {
-  final _StopNode stop;
+  final _TrackTimelineItem item;
   final _TrackStopStatus status;
-  final bool showTransfer;
-  final String? previousRouteId;
-  final int? crowdLevel;
   final double flashValue;
 
   const _TrackStopTile({
-    required this.stop,
+    required this.item,
     required this.status,
-    required this.showTransfer,
-    required this.previousRouteId,
-    required this.crowdLevel,
     required this.flashValue,
   });
 
   @override
   Widget build(BuildContext context) {
+    final stop = item.primaryStop;
+    final secondaryStop = item.secondaryStop;
+    final isInterchange = secondaryStop != null;
     final routeColor = getRouteColor(stop.routeId);
+    final secondaryRouteColor = secondaryStop == null
+        ? routeColor
+        : getRouteColor(secondaryStop.routeId);
     final isCurrent = status == _TrackStopStatus.current;
     final isPassed = status == _TrackStopStatus.passed;
     final connectorColor = isPassed ? const Color(0xFFBFC6D4) : routeColor;
+    final secondaryConnectorColor =
+        isPassed ? const Color(0xFFBFC6D4) : secondaryRouteColor;
     final cardColor = isPassed
         ? const Color(0xFFF4F5F7)
         : isCurrent
@@ -1654,7 +1946,11 @@ class _TrackStopTile extends StatelessWidget {
         : isCurrent
             ? const Color(0xFFFACC15)
             : const Color(0xFFE3EAF7);
-    final titleColor = isPassed ? const Color(0xFF98A2B3) : routeColor;
+    final titleColor = isPassed
+        ? const Color(0xFF98A2B3)
+        : isInterchange
+            ? const Color(0xFF344054)
+            : routeColor;
     final metaColor =
         isPassed ? const Color(0xFF98A2B3) : const Color(0xFF667085);
 
@@ -1667,42 +1963,27 @@ class _TrackStopTile extends StatelessWidget {
             width: 36,
             child: Column(
               children: [
-                if (showTransfer)
-                  Container(
-                    width: 4,
-                    height: 18,
-                    color: getRouteColor(previousRouteId ?? stop.routeId),
-                  )
-                else
-                  Container(
-                    width: 4,
-                    height: 18,
-                    color:
-                        connectorColor.withValues(alpha: isPassed ? 0.45 : 1),
-                  ),
                 Container(
-                  width: 18,
+                  width: 4,
                   height: 18,
-                  decoration: BoxDecoration(
-                    color:
-                        connectorColor.withValues(alpha: isPassed ? 0.75 : 1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: isCurrent
-                        ? [
-                            BoxShadow(
-                              color: const Color(0x55FACC15),
-                              blurRadius: 12 + (flashValue * 6),
-                              spreadRadius: 1.5,
-                            ),
-                          ]
-                        : null,
+                  color: connectorColor.withValues(alpha: isPassed ? 0.45 : 1),
+                ),
+                _TrackStationMarker(
+                  primaryColor:
+                      connectorColor.withValues(alpha: isPassed ? 0.75 : 1),
+                  secondaryColor: secondaryConnectorColor.withValues(
+                    alpha: isPassed ? 0.75 : 1,
                   ),
+                  split: isInterchange,
+                  flashValue: flashValue,
+                  highlight: isCurrent,
                 ),
                 Container(
                   width: 4,
                   height: 32,
-                  color: connectorColor.withValues(alpha: isPassed ? 0.45 : 1),
+                  color:
+                      (isInterchange ? secondaryConnectorColor : connectorColor)
+                          .withValues(alpha: isPassed ? 0.45 : 1),
                 ),
               ],
             ),
@@ -1720,7 +2001,7 @@ class _TrackStopTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (showTransfer)
+                  if (isInterchange)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
@@ -1735,25 +2016,25 @@ class _TrackStopTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          stop.stopName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                            color: titleColor,
-                          ),
-                        ),
+                        child: isInterchange && !isPassed
+                            ? _TrackSplitRouteText(
+                                text: stop.stopName,
+                                primaryColor: routeColor,
+                                secondaryColor: secondaryRouteColor,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              )
+                            : Text(
+                                stop.stopName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                  color: titleColor,
+                                ),
+                              ),
                       ),
-                      if (crowdLevel != null)
-                        Text(
-                          _TrackHeader._crowdLabel(crowdLevel!),
-                          style: TextStyle(
-                            color: isPassed
-                                ? const Color(0xFF98A2B3)
-                                : _crowdColor(crowdLevel!),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1805,9 +2086,158 @@ class _TrackStopTile extends StatelessWidget {
       ),
     );
   }
+}
 
-  static Color _crowdColor(int level) {
-    return crowdLevelColor(level);
+class _TrackSplitRouteText extends StatelessWidget {
+  final String text;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final TextStyle style;
+
+  const _TrackSplitRouteText({
+    required this.text,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) {
+        final rect = bounds.isEmpty ? const Rect.fromLTWH(0, 0, 1, 1) : bounds;
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryColor,
+            primaryColor,
+            secondaryColor,
+            secondaryColor,
+          ],
+          stops: const [0, 0.46, 0.54, 1],
+        ).createShader(rect);
+      },
+      child: Text(
+        text,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: style.copyWith(color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _TrackTimelineItem {
+  final _StopNode primaryStop;
+  final _StopNode? secondaryStop;
+  final int startIndex;
+  final int endIndex;
+  final String? previousRouteId;
+
+  const _TrackTimelineItem({
+    required this.primaryStop,
+    required this.secondaryStop,
+    required this.startIndex,
+    required this.endIndex,
+    required this.previousRouteId,
+  });
+}
+
+class _TrackStationMarker extends StatelessWidget {
+  final Color primaryColor;
+  final Color secondaryColor;
+  final bool split;
+  final double flashValue;
+  final bool highlight;
+
+  const _TrackStationMarker({
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.split,
+    required this.flashValue,
+    required this.highlight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: highlight
+            ? [
+                BoxShadow(
+                  color: const Color(0x55FACC15),
+                  blurRadius: 12 + (flashValue * 6),
+                  spreadRadius: 1.5,
+                ),
+              ]
+            : null,
+      ),
+      child: ClipOval(
+        child: CustomPaint(
+          painter: _TrackStationMarkerPainter(
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
+            split: split,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackStationMarkerPainter extends CustomPainter {
+  final Color primaryColor;
+  final Color secondaryColor;
+  final bool split;
+
+  const _TrackStationMarkerPainter({
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.split,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final paint = Paint()..style = PaintingStyle.fill;
+    if (!split) {
+      paint.color = primaryColor;
+      canvas.drawOval(rect, paint);
+      return;
+    }
+
+    paint.color = primaryColor;
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(size.width, 0)
+        ..lineTo(0, size.height)
+        ..close(),
+      paint,
+    );
+
+    paint.color = secondaryColor;
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width, 0)
+        ..lineTo(size.width, size.height)
+        ..lineTo(0, size.height)
+        ..close(),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrackStationMarkerPainter oldDelegate) {
+    return oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.secondaryColor != secondaryColor ||
+        oldDelegate.split != split;
   }
 }
 
@@ -1978,6 +2408,7 @@ class _ActionPillButton extends StatefulWidget {
   final Color hoverForegroundColor;
   final Color borderColor;
   final bool colorOnHover;
+  final bool forceActive;
 
   const _ActionPillButton({
     required this.icon,
@@ -1989,6 +2420,7 @@ class _ActionPillButton extends StatefulWidget {
     required this.hoverForegroundColor,
     required this.borderColor,
     this.colorOnHover = true,
+    this.forceActive = false,
   });
 
   @override
@@ -2001,7 +2433,8 @@ class _ActionPillButtonState extends State<_ActionPillButton> {
 
   @override
   Widget build(BuildContext context) {
-    final active = _pressed || (widget.colorOnHover && _hovered);
+    final active =
+        widget.forceActive || _pressed || (widget.colorOnHover && _hovered);
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() {
@@ -2181,45 +2614,196 @@ class _HoldActionPillButtonState extends State<_HoldActionPillButton> {
 }
 
 class _EmptyTrackState extends StatelessWidget {
-  final VoidCallback onOpenHome;
+  final TextEditingController controller;
+  final List<_TrackStationOption> stationOptions;
+  final bool isSearching;
+  final ValueChanged<_TrackStationOption> onOptionSelected;
+  final VoidCallback onSearch;
 
   const _EmptyTrackState({
-    required this.onOpenHome,
+    required this.controller,
+    required this.stationOptions,
+    required this.isSearching,
+    required this.onOptionSelected,
+    required this.onSearch,
   });
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.route_rounded,
-              size: 42,
-              color: Color(0xFF0A3A8B),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFDCE6F5)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12101828),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'No active trip yet.',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.route_rounded,
+                      size: 30,
+                      color: Color(0xFF0A3A8B),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'No active trip yet.',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Search for a destination here and start tracking straight from the track page.',
+                  style: TextStyle(
+                    color: Color(0xFF667085),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Autocomplete<_TrackStationOption>(
+                  optionsBuilder: (value) {
+                    final query = value.text.trim().toLowerCase();
+                    if (query.isEmpty) {
+                      return const Iterable<_TrackStationOption>.empty();
+                    }
+                    return stationOptions.where((station) {
+                      final inName =
+                          station.stationName.toLowerCase().contains(query);
+                      final inCode = station.stopIds.any(
+                        (code) => code.toLowerCase().contains(query),
+                      );
+                      final inRoute = station.routeIds.any(
+                        (routeId) => routeId.toLowerCase().contains(query),
+                      );
+                      return inName || inCode || inRoute;
+                    }).take(12);
+                  },
+                  displayStringForOption: (option) => option.stationName,
+                  onSelected: onOptionSelected,
+                  fieldViewBuilder:
+                      (context, textController, focusNode, onFieldSubmitted) {
+                    if (textController.text != controller.text) {
+                      textController.value = controller.value;
+                    }
+                    return TextField(
+                      controller: textController,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        hintText: 'Search train station',
+                        prefixIcon: Icon(Icons.search_rounded),
+                      ),
+                      onChanged: (_) => controller.value = textController.value,
+                      onSubmitted: (_) => onSearch(),
+                    );
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    final optionList = options.toList();
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          width: math.min(
+                            MediaQuery.sizeOf(context).width - 48,
+                            430,
+                          ),
+                          margin: const EdgeInsets.only(top: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFDCE6F5)),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x14101828),
+                                blurRadius: 12,
+                                offset: Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            shrinkWrap: true,
+                            itemCount: optionList.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1, thickness: 0.6),
+                            itemBuilder: (context, index) {
+                              final option = optionList[index];
+                              return ListTile(
+                                dense: true,
+                                visualDensity: const VisualDensity(
+                                  horizontal: -1,
+                                  vertical: -2,
+                                ),
+                                leading: _TrackSearchRouteBadge(
+                                  routeIds: option.routeIds,
+                                ),
+                                title: Text(
+                                  option.stationName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                subtitle: Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: option.stopIds
+                                      .map(
+                                        (code) =>
+                                            _TrackStopCodeChip(code: code),
+                                      )
+                                      .toList(),
+                                ),
+                                onTap: () {
+                                  onOptionSelected(option);
+                                  onSelected(option);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: isSearching ? null : onSearch,
+                    icon: isSearching
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.search_rounded),
+                    label: Text(isSearching ? 'Starting trip...' : 'Search'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Choose a destination from the home page first. The trip will stay saved even after the app restarts.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF667085),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onOpenHome,
-              child: const Text('Back'),
-            ),
-          ],
+          ),
         ),
       ),
     );

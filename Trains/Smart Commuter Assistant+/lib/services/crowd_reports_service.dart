@@ -166,6 +166,27 @@ class CrowdReportsService {
     return latestByStop;
   }
 
+  Future<Map<String, CrowdReport>> fetchLatestUserCrowdReportsForStops(
+    List<String> stopIds,
+  ) async {
+    if (stopIds.isEmpty) return const <String, CrowdReport>{};
+
+    final rows = await _client
+        .from('crowd_reports')
+        .select('stop_id,occupancy_level,source_type,created_at')
+        .inFilter('stop_id', stopIds)
+        .eq('source_type', 'user')
+        .order('created_at', ascending: false);
+
+    final latestByStop = <String, CrowdReport>{};
+    for (final row in rows.whereType<Map>()) {
+      final report = _toCrowdReport(Map<String, dynamic>.from(row));
+      if (report == null) continue;
+      latestByStop.putIfAbsent(report.stopId, () => report);
+    }
+    return latestByStop;
+  }
+
   Future<void> insertUserCrowdReport({
     required String stopId,
     required int occupancyLevel,
@@ -382,38 +403,65 @@ class CrowdReportsService {
     }
 
     Map<String, CrowdReport> latestByStop = const <String, CrowdReport>{};
+    Map<String, CrowdReport> latestUserByStop = const <String, CrowdReport>{};
     try {
       latestByStop = await fetchLatestCrowdReportsForStops(normalizedStopIds);
+      latestUserByStop = await fetchLatestUserCrowdReportsForStops(
+        normalizedStopIds,
+      );
     } catch (_) {
       latestByStop = const <String, CrowdReport>{};
-    }
-    for (final stopId in normalizedStopIds) {
-      final latest = latestByStop[stopId];
-      for (final time in times) {
-        final key = forecastKeyForTime(stopId: stopId, time: time);
-        if (forecasts.containsKey(key) || latest == null) continue;
-        forecasts[key] = StopCrowdForecast(
-          stopId: stopId,
-          forecastHour: time.hour,
-          isWeekend: _isWeekend(time),
-          occupancyLevel: latest.occupancyLevel,
-          expectedWaitMinutes: _defaultWaitMinutes(latest.occupancyLevel),
-          etaMultiplier: _defaultEtaMultiplier(latest.occupancyLevel),
-          sourceType: latest.sourceType,
-          updatedAt: latest.createdAt,
-        );
-      }
+      latestUserByStop = const <String, CrowdReport>{};
     }
 
+    final now = DateTime.now();
     for (final stopId in normalizedStopIds) {
+      final latest = latestByStop[stopId];
+      final latestUser = latestUserByStop[stopId];
+      final userBlendWeight = latestUser == null
+          ? 0.0
+          : _liveReportBlendWeight(report: latestUser, now: now);
+      final fallbackWeight = latest == null
+          ? 0.0
+          : _liveReportBlendWeight(report: latest, now: now);
       for (final time in times) {
         final key = forecastKeyForTime(stopId: stopId, time: time);
         final existing = forecasts[key];
         if (existing != null) {
-          forecasts[key] = _applyTenMinuteSimulation(
+          final simulated = _applyTenMinuteSimulation(
             base: existing,
             time: time,
           );
+          forecasts[key] = userBlendWeight > 0
+              ? _blendForecastWithLiveReport(
+                  base: simulated,
+                  liveReport: latestUser!,
+                  weight: userBlendWeight,
+                )
+              : simulated;
+          continue;
+        }
+
+        if (userBlendWeight > 0) {
+          forecasts[key] = _forecastFromCrowdReport(
+            report: latestUser!,
+            time: time,
+            sourceType: 'user_blend',
+          );
+          continue;
+        }
+
+        if (latest != null && fallbackWeight > 0) {
+          final fallback = _forecastFromCrowdReport(
+            report: latest,
+            time: time,
+          );
+          forecasts[key] = latest.sourceType == 'user'
+              ? fallback
+              : _applyTenMinuteSimulation(
+                  base: fallback,
+                  time: time,
+                );
         } else {
           forecasts[key] = _simulateForecast(
             stopId: stopId,
@@ -670,6 +718,68 @@ class CrowdReportsService {
       default:
         return 1.1;
     }
+  }
+
+  static StopCrowdForecast _forecastFromCrowdReport({
+    required CrowdReport report,
+    required DateTime time,
+    String? sourceType,
+  }) {
+    final level = report.occupancyLevel.clamp(0, 3);
+    return StopCrowdForecast(
+      stopId: report.stopId.trim().toUpperCase(),
+      forecastHour: time.hour,
+      isWeekend: _isWeekend(time),
+      occupancyLevel: level,
+      expectedWaitMinutes: _defaultWaitMinutes(level),
+      etaMultiplier: _defaultEtaMultiplier(level),
+      sourceType: sourceType ?? report.sourceType,
+      updatedAt: report.createdAt,
+    );
+  }
+
+  static StopCrowdForecast _blendForecastWithLiveReport({
+    required StopCrowdForecast base,
+    required CrowdReport liveReport,
+    required double weight,
+  }) {
+    final level = ((base.occupancyLevel * (1 - weight)) +
+            (liveReport.occupancyLevel * weight))
+        .round()
+        .clamp(0, 3);
+    return StopCrowdForecast(
+      stopId: base.stopId,
+      forecastHour: base.forecastHour,
+      isWeekend: base.isWeekend,
+      occupancyLevel: level,
+      expectedWaitMinutes: _defaultWaitMinutes(level),
+      etaMultiplier: _defaultEtaMultiplier(level),
+      sourceType: 'forecast+${liveReport.sourceType}',
+      updatedAt: liveReport.createdAt ?? base.updatedAt,
+    );
+  }
+
+  static double _liveReportBlendWeight({
+    required CrowdReport report,
+    required DateTime now,
+  }) {
+    final createdAt = report.createdAt;
+    if (createdAt == null) {
+      return report.sourceType == 'user' ? 0.55 : 0.2;
+    }
+
+    final ageMinutes = now.difference(createdAt.toLocal()).inMinutes.abs();
+    if (ageMinutes > 120) return 0;
+
+    if (report.sourceType == 'user') {
+      if (ageMinutes <= 15) return 0.75;
+      if (ageMinutes <= 45) return 0.55;
+      return 0.35;
+    }
+
+    if (ageMinutes <= 15) return 0.35;
+    if (ageMinutes <= 45) return 0.25;
+    return 0.15;
   }
 
   static StopCrowdForecast _applyTenMinuteSimulation({

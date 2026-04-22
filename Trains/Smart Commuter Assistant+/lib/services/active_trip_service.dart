@@ -39,6 +39,7 @@ class ActiveTrip {
   final String routePreference;
   final int highestCrowdLevel;
   final DateTime createdAt;
+  final int? estimatedTotalMinutes;
   final List<ActiveTripStop> stops;
 
   const ActiveTrip({
@@ -49,6 +50,7 @@ class ActiveTrip {
     required this.routePreference,
     required this.highestCrowdLevel,
     required this.createdAt,
+    required this.estimatedTotalMinutes,
     required this.stops,
   });
 
@@ -74,6 +76,9 @@ class ActiveTrip {
           : int.tryParse(json['highestCrowdLevel']?.toString() ?? '') ?? 0,
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
+      estimatedTotalMinutes: json['estimatedTotalMinutes'] is num
+          ? (json['estimatedTotalMinutes'] as num).toInt()
+          : int.tryParse(json['estimatedTotalMinutes']?.toString() ?? ''),
       stops: stops,
     );
   }
@@ -87,8 +92,15 @@ class ActiveTrip {
       'routePreference': routePreference,
       'highestCrowdLevel': highestCrowdLevel,
       'createdAt': createdAt.toIso8601String(),
+      'estimatedTotalMinutes': estimatedTotalMinutes,
       'stops': stops.map((stop) => stop.toJson()).toList(),
     };
+  }
+
+  DateTime? get estimatedArrivalTime {
+    final minutes = estimatedTotalMinutes;
+    if (minutes == null) return null;
+    return createdAt.add(Duration(minutes: minutes < 0 ? 0 : minutes));
   }
 }
 

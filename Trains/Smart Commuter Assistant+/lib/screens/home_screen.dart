@@ -32,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final StationService _stationService = StationService();
   final TextEditingController _routeSearchController = TextEditingController();
   Position? _position;
-  String _locationStatus = 'Getting location...';
   bool _isLoadingLocation = false;
   bool _isPreparingTrip = false;
   Future<List<NearbyStationCrowdForecast>>? _nearestCrowdFuture;
@@ -41,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingMap = true;
   String? _mapError;
   final Map<String, _MapStop> _mapStopsById = <String, _MapStop>{};
+  final List<_HomeRouteConnection> _routeConnections = <_HomeRouteConnection>[];
   DateTime _departureTime = DateTime.now();
+  _HomeRouteMode _routeMode = _HomeRouteMode.auto;
 
   @override
   void initState() {
@@ -76,53 +77,112 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      final destinationStopId = option.stopCodes.isEmpty
-          ? option.stationName
-          : option.stopCodes.first;
-      final forecasts = option.stopCodes.isEmpty
-          ? <String, StopCrowdForecast>{}
-          : await _crowdReportsService.fetchForecastForStopsAtTime(
-              option.stopCodes,
-              _departureTime,
+      final nearestStop = nearestStops.first;
+      if (_routeConnections.isEmpty && !_isLoadingMap) {
+        await _loadMapStops();
+      }
+
+      _HomeRoutePreview? selectedPreview;
+      if (option.stopCodes.isNotEmpty && _routeConnections.isNotEmpty) {
+        final forecasts =
+            await _crowdReportsService.fetchForecastForStopsAtTime(
+          _mapStopsById.keys.toList(),
+          _departureTime,
+        );
+        final crowdByStopId = <String, int>{
+          for (final entry in forecasts.entries)
+            entry.key.toUpperCase(): entry.value.occupancyLevel,
+        };
+
+        final efficientResult = _bestPathToStops(
+          originStopId: nearestStop.stopId,
+          destinationStopIds: option.stopCodes,
+          preferComfort: false,
+          crowdByStopId: crowdByStopId,
+        );
+        if (efficientResult == null) {
+          _showHomeMessage('No route found for ${option.stationName}.');
+          return;
+        }
+
+        final efficientPreview = _buildRoutePreview(
+          result: efficientResult,
+          originName: nearestStop.stopName,
+          destinationName: option.stationName,
+          routePreference: 'efficiency',
+          crowdByStopId: crowdByStopId,
+        );
+
+        _HomeRoutePreview? relaxedPreview;
+        if (_routeMode != _HomeRouteMode.efficiency) {
+          final comfortResult = _bestPathToStops(
+            originStopId: nearestStop.stopId,
+            destinationStopIds: option.stopCodes,
+            preferComfort: true,
+            crowdByStopId: crowdByStopId,
+          );
+          relaxedPreview = comfortResult == null
+              ? null
+              : _buildRoutePreview(
+                  result: comfortResult,
+                  originName: nearestStop.stopName,
+                  destinationName: option.stationName,
+                  routePreference: 'comfort',
+                  crowdByStopId: crowdByStopId,
+                );
+        }
+
+        final shouldPrompt = _routeMode == _HomeRouteMode.auto &&
+            relaxedPreview != null &&
+            _shouldPromptRelaxedRoute(
+              efficientPreview: efficientPreview,
+              relaxedPreview: relaxedPreview,
             );
-      var highestCrowdLevel = 0;
-      for (final forecast in forecasts.values) {
-        if (forecast.occupancyLevel > highestCrowdLevel) {
-          highestCrowdLevel = forecast.occupancyLevel;
+
+        if (shouldPrompt) {
+          selectedPreview = await _showPackedRoutePrompt(
+            destinationName: option.stationName,
+            efficientPreview: efficientPreview,
+            relaxedPreview: relaxedPreview,
+          );
+          if (selectedPreview == null) return;
+        } else if (_routeMode == _HomeRouteMode.comfort &&
+            relaxedPreview != null) {
+          selectedPreview = relaxedPreview;
+        } else {
+          selectedPreview = efficientPreview;
         }
       }
 
-      var routePreference = 'efficiency';
-      if (highestCrowdLevel > 1) {
-        final useComfort = await _showPackedRoutePrompt(option.stationName);
-        if (useComfort == null) return;
-        routePreference = useComfort ? 'comfort' : 'efficiency';
-      }
-
-      final nearestStop = nearestStops.first;
-      final placeholderStops = <ActiveTripStop>[
+      final fallbackDestinationStopId = option.stopCodes.isEmpty
+          ? option.stationName
+          : option.stopCodes.first;
+      final fallbackStops = <ActiveTripStop>[
         ActiveTripStop(
           stopId: nearestStop.stopId,
           stopName: nearestStop.stopName,
           routeId: nearestStop.routeId,
         ),
         ActiveTripStop(
-          stopId: destinationStopId,
+          stopId: fallbackDestinationStopId,
           stopName: option.stationName,
           routeId: option.routeIds.isEmpty ? 'N/A' : option.routeIds.first,
         ),
       ];
+      final preview = selectedPreview;
 
       await _activeTripService.saveTrip(
         ActiveTrip(
           originStopId: nearestStop.stopId,
-          destinationStopId: destinationStopId,
+          destinationStopId:
+              preview?.result.destinationStopId ?? fallbackDestinationStopId,
           originName: nearestStop.stopName,
           destinationName: option.stationName,
-          routePreference: routePreference,
-          highestCrowdLevel: highestCrowdLevel,
+          routePreference: preview?.routePreference ?? 'efficiency',
+          highestCrowdLevel: preview?.highestCrowdLevel ?? 0,
           createdAt: DateTime.now(),
-          stops: placeholderStops,
+          estimatedTotalMinutes: preview?.totalMinutes,
+          stops: preview?.activeTripStops ?? fallbackStops,
         ),
       );
       if (!mounted) return;
@@ -139,10 +199,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<bool?> _showPackedRoutePrompt(String destinationName) {
-    return showModalBottomSheet<bool>(
+  Future<_HomeRoutePreview?> _showPackedRoutePrompt({
+    required String destinationName,
+    required _HomeRoutePreview efficientPreview,
+    required _HomeRoutePreview relaxedPreview,
+  }) {
+    final efficientReasoning = _buildChoiceReasoningLabels(
+      preview: efficientPreview,
+      comparison: relaxedPreview,
+      prioritizeCrowd: false,
+    );
+    final relaxedReasoning = _buildChoiceReasoningLabels(
+      preview: relaxedPreview,
+      comparison: efficientPreview,
+      prioritizeCrowd: true,
+    );
+    return showModalBottomSheet<_HomeRoutePreview>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -178,20 +253,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Take a more relaxed route'),
-                  ),
+                _HomeRouteChoiceCard(
+                  title: 'Efficient route',
+                  subtitle: 'Fastest option right now',
+                  preview: efficientPreview,
+                  reasoningLabels: efficientReasoning,
+                  actionLabel: 'Keep this route',
+                  isPrimary: false,
+                  onTap: () => Navigator.of(context).pop(efficientPreview),
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Keep with crowded route'),
-                  ),
+                _HomeRouteChoiceCard(
+                  title: 'Relaxed route',
+                  subtitle: 'Calmer ride with a small detour',
+                  preview: relaxedPreview,
+                  reasoningLabels: relaxedReasoning,
+                  actionLabel: 'Take a more relaxed route',
+                  isPrimary: true,
+                  onTap: () => Navigator.of(context).pop(relaxedPreview),
                 ),
               ],
             ),
@@ -208,6 +287,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  bool _shouldPromptRelaxedRoute({
+    required _HomeRoutePreview efficientPreview,
+    required _HomeRoutePreview relaxedPreview,
+  }) {
+    if (_sameRouteResult(efficientPreview.result, relaxedPreview.result)) {
+      return false;
+    }
+    if (efficientPreview.highestCrowdLevel <= 1) return false;
+
+    final crowdImprovement =
+        efficientPreview.highestCrowdLevel - relaxedPreview.highestCrowdLevel;
+    if (crowdImprovement <= 0) return false;
+
+    final timeDelta =
+        relaxedPreview.totalMinutes - efficientPreview.totalMinutes;
+    if (timeDelta <= 0) return true;
+    if (crowdImprovement >= 2) return timeDelta <= 12;
+    return timeDelta <= 6;
+  }
+
+  List<String> _buildChoiceReasoningLabels({
+    required _HomeRoutePreview preview,
+    required _HomeRoutePreview comparison,
+    required bool prioritizeCrowd,
+  }) {
+    final labels = <String>[];
+    final crowdDelta = comparison.highestCrowdLevel - preview.highestCrowdLevel;
+    final crowdLabel = _formatCrowdDeltaLabel(crowdDelta);
+    final timeLabel = _formatTimeDeltaLabel(
+      preview.totalMinutes - comparison.totalMinutes,
+      preferNoPenalty: prioritizeCrowd,
+    );
+
+    if (prioritizeCrowd && crowdLabel != null) {
+      labels.add(crowdLabel);
+    }
+    if (timeLabel != null) {
+      labels.add(timeLabel);
+    }
+    if (!prioritizeCrowd && crowdLabel != null) {
+      labels.add(crowdLabel);
+    }
+    labels.add(_formatTransferCountLabel(preview.transferCount));
+    return labels;
+  }
+
+  String? _formatCrowdDeltaLabel(int delta) {
+    if (delta == 0) return null;
+    final magnitude = delta.abs();
+    final suffix = magnitude == 1 ? '' : 's';
+    final direction = delta > 0 ? 'lower' : 'higher';
+    return '$magnitude crowd level$suffix $direction';
+  }
+
+  String? _formatTimeDeltaLabel(
+    int delta, {
+    required bool preferNoPenalty,
+  }) {
+    if (delta < 0) return 'Fastest';
+    if (delta == 0) return preferNoPenalty ? 'No time penalty' : 'Fastest';
+    return '+$delta min';
+  }
+
+  String _formatTransferCountLabel(int count) {
+    if (count <= 0) return 'Direct ride';
+    return count == 1 ? '1 transfer' : '$count transfers';
+  }
+
   @override
   void dispose() {
     _nearestAutoRefreshTimer?.cancel();
@@ -220,7 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _locationStatus = 'Location service is disabled');
         return;
       }
 
@@ -229,11 +375,9 @@ class _HomeScreenState extends State<HomeScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied) {
-        setState(() => _locationStatus = 'Location permission denied');
         return;
       }
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _locationStatus = 'Location permission denied forever');
         return;
       }
 
@@ -243,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _position = position;
-        _locationStatus = 'Location updated';
         _nearestCrowdFuture =
             _crowdReportsService.fetchNearestStationsWithCrowd(
           latitude: position.latitude,
@@ -254,7 +397,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _locationStatus = 'Location error: $e');
     } finally {
       if (mounted) setState(() => _isLoadingLocation = false);
     }
@@ -340,6 +482,38 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
 
+      final edgeRows = <Map<String, dynamic>>[];
+      try {
+        final remoteEdges =
+            await Supabase.instance.client.from('route_connections').select(
+                  'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
+                );
+        final maps = remoteEdges
+            .whereType<Map>()
+            .map((row) => Map<String, dynamic>.from(row))
+            .toList();
+        edgeRows.addAll(maps);
+        if (maps.isNotEmpty) {
+          await _databaseService.cacheRouteConnections(maps);
+        }
+      } catch (_) {}
+
+      if (edgeRows.isEmpty) {
+        final cachedEdges = await _databaseService.getCachedRouteConnections();
+        edgeRows.addAll(
+          cachedEdges.map((row) => Map<String, dynamic>.from(row)),
+        );
+      }
+
+      _routeConnections
+        ..clear()
+        ..addAll(_mapEdgeRows(edgeRows));
+      if (_routeConnections.isEmpty) {
+        _routeConnections.addAll(
+          _buildFallbackConnections(_mapStopsById.values.toList()),
+        );
+      }
+
       if (!mounted) return;
       setState(() => _isLoadingMap = false);
     } catch (e) {
@@ -349,6 +523,314 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingMap = false;
       });
     }
+  }
+
+  List<_HomeRouteConnection> _mapEdgeRows(List<Map<String, dynamic>> edgeRows) {
+    final output = <_HomeRouteConnection>[];
+    for (final row in edgeRows) {
+      final from = (row['from_stop_id']?.toString() ?? '').trim().toUpperCase();
+      final to = (row['to_stop_id']?.toString() ?? '').trim().toUpperCase();
+      if (!_mapStopsById.containsKey(from) || !_mapStopsById.containsKey(to)) {
+        continue;
+      }
+      final routeId = normalizeRouteId(
+        (row['route_id']?.toString() ?? '').trim().toUpperCase(),
+      );
+      final type =
+          (row['connection_type']?.toString() ?? 'standard_stop').trim();
+      final minutesRaw = row['travel_time_minutes'];
+      final minutes = minutesRaw is num
+          ? minutesRaw.toInt()
+          : int.tryParse(minutesRaw?.toString() ?? '') ?? 2;
+      output.add(
+        _HomeRouteConnection(
+          fromStopId: from,
+          toStopId: to,
+          routeId: routeId,
+          connectionType: type,
+          travelMinutes: minutes,
+        ),
+      );
+    }
+    return output;
+  }
+
+  List<_HomeRouteConnection> _buildFallbackConnections(List<_MapStop> stops) {
+    final edges = <_HomeRouteConnection>[];
+    final seen = <String>{};
+
+    void addEdge({
+      required String from,
+      required String to,
+      required String routeId,
+      required String type,
+      required int minutes,
+    }) {
+      final key = '$from|$to|$routeId|$type';
+      if (!seen.add(key)) return;
+      edges.add(
+        _HomeRouteConnection(
+          fromStopId: from,
+          toStopId: to,
+          routeId: routeId,
+          connectionType: type,
+          travelMinutes: minutes,
+        ),
+      );
+    }
+
+    final byLine = <String, List<_MapStop>>{};
+    for (final stop in stops) {
+      byLine.putIfAbsent(stop.routeId, () => <_MapStop>[]).add(stop);
+    }
+    for (final entry in byLine.entries) {
+      final ordered = List<_MapStop>.from(entry.value)
+        ..sort((a, b) => _compareStopCode(a.stopId, b.stopId));
+      for (var i = 0; i < ordered.length - 1; i++) {
+        addEdge(
+          from: ordered[i].stopId,
+          to: ordered[i + 1].stopId,
+          routeId: entry.key,
+          type: 'standard_stop',
+          minutes: 2,
+        );
+        addEdge(
+          from: ordered[i + 1].stopId,
+          to: ordered[i].stopId,
+          routeId: entry.key,
+          type: 'standard_stop',
+          minutes: 2,
+        );
+      }
+    }
+
+    final byStation = <String, List<_MapStop>>{};
+    for (final stop in stops) {
+      byStation
+          .putIfAbsent(stop.stopName.toUpperCase(), () => <_MapStop>[])
+          .add(stop);
+    }
+    for (final stationStops in byStation.values) {
+      if (stationStops.length < 2) continue;
+      for (var i = 0; i < stationStops.length - 1; i++) {
+        for (var j = i + 1; j < stationStops.length; j++) {
+          final a = stationStops[i];
+          final b = stationStops[j];
+          if (a.routeId == b.routeId) continue;
+          addEdge(
+            from: a.stopId,
+            to: b.stopId,
+            routeId: b.routeId,
+            type: 'interchange_transfer',
+            minutes: 3,
+          );
+          addEdge(
+            from: b.stopId,
+            to: a.stopId,
+            routeId: a.routeId,
+            type: 'interchange_transfer',
+            minutes: 3,
+          );
+        }
+      }
+    }
+    return edges;
+  }
+
+  _HomeDijkstraResult? _bestPathToStops({
+    required String originStopId,
+    required List<String> destinationStopIds,
+    required bool preferComfort,
+    required Map<String, int> crowdByStopId,
+  }) {
+    _HomeDijkstraResult? bestResult;
+    for (final destinationStopId in destinationStopIds) {
+      final result = _shortestPath(
+        originStopId: originStopId,
+        destinationStopId: destinationStopId,
+        preferComfort: preferComfort,
+        crowdByStopId: crowdByStopId,
+      );
+      if (result == null) continue;
+      if (bestResult == null ||
+          result.weightedMinutes < bestResult.weightedMinutes ||
+          (result.weightedMinutes == bestResult.weightedMinutes &&
+              result.totalMinutes < bestResult.totalMinutes)) {
+        bestResult = result;
+      }
+    }
+    return bestResult;
+  }
+
+  _HomeDijkstraResult? _shortestPath({
+    required String originStopId,
+    required String destinationStopId,
+    required bool preferComfort,
+    required Map<String, int> crowdByStopId,
+  }) {
+    if (!_mapStopsById.containsKey(originStopId) ||
+        !_mapStopsById.containsKey(destinationStopId)) {
+      return null;
+    }
+
+    final adjacency = <String, List<_HomeRouteConnection>>{};
+    void addEdge(_HomeRouteConnection edge) {
+      adjacency
+          .putIfAbsent(edge.fromStopId, () => <_HomeRouteConnection>[])
+          .add(edge);
+    }
+
+    for (final edge in _routeConnections) {
+      addEdge(edge);
+      addEdge(edge.reversed());
+    }
+
+    final distances = <String, int>{originStopId: 0};
+    final previousNode = <String, String>{};
+    final previousEdge = <String, _HomeRouteConnection>{};
+    final visited = <String>{};
+
+    while (visited.length < _mapStopsById.length) {
+      String? current;
+      var currentDistance = 1 << 30;
+      for (final id in _mapStopsById.keys) {
+        if (visited.contains(id)) continue;
+        final dist = distances[id];
+        if (dist == null) continue;
+        if (dist < currentDistance) {
+          currentDistance = dist;
+          current = id;
+        }
+      }
+
+      if (current == null || currentDistance >= (1 << 29)) break;
+      if (current == destinationStopId) break;
+      visited.add(current);
+
+      for (final edge in adjacency[current] ?? const <_HomeRouteConnection>[]) {
+        if (visited.contains(edge.toStopId)) continue;
+        final penalty = preferComfort
+            ? _crowdPenaltyForStop(crowdByStopId, edge.toStopId)
+            : 0;
+        final candidate = currentDistance + edge.travelMinutes + penalty;
+        if (candidate < (distances[edge.toStopId] ?? (1 << 30))) {
+          distances[edge.toStopId] = candidate;
+          previousNode[edge.toStopId] = current;
+          previousEdge[edge.toStopId] = edge;
+        }
+      }
+    }
+
+    if (!previousEdge.containsKey(destinationStopId)) return null;
+    final path = <_HomeRouteConnection>[];
+    var cursor = destinationStopId;
+    while (cursor != originStopId) {
+      final edge = previousEdge[cursor];
+      final parent = previousNode[cursor];
+      if (edge == null || parent == null) break;
+      path.add(edge);
+      cursor = parent;
+    }
+    if (cursor != originStopId) return null;
+
+    final ordered = path.reversed.toList();
+    final total = ordered.fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
+    return _HomeDijkstraResult(
+      destinationStopId: destinationStopId,
+      path: ordered,
+      totalMinutes: total,
+      weightedMinutes: distances[destinationStopId] ?? total,
+    );
+  }
+
+  int _crowdPenaltyForStop(Map<String, int> crowdByStopId, String stopId) {
+    switch (crowdByStopId[stopId] ?? 0) {
+      case 1:
+        return 3;
+      case 2:
+        return 9;
+      case 3:
+        return 18;
+      default:
+        return 0;
+    }
+  }
+
+  _HomeRoutePreview _buildRoutePreview({
+    required _HomeDijkstraResult result,
+    required String originName,
+    required String destinationName,
+    required String routePreference,
+    required Map<String, int> crowdByStopId,
+  }) {
+    final activeTripStops = <ActiveTripStop>[];
+    final originStop = _mapStopsById[result.path.isEmpty
+        ? result.destinationStopId
+        : result.path.first.fromStopId];
+    if (originStop != null) {
+      activeTripStops.add(
+        ActiveTripStop(
+          stopId: originStop.stopId,
+          stopName: originStop.stopName,
+          routeId: originStop.routeId,
+        ),
+      );
+    }
+    for (final edge in result.path) {
+      final stop = _mapStopsById[edge.toStopId];
+      if (stop == null) continue;
+      activeTripStops.add(
+        ActiveTripStop(
+          stopId: stop.stopId,
+          stopName: stop.stopName,
+          routeId: edge.routeId,
+        ),
+      );
+    }
+
+    final highestCrowdLevel = activeTripStops.fold<int>(
+      0,
+      (highest, stop) => math.max(highest, crowdByStopId[stop.stopId] ?? 0),
+    );
+    final routeLines = <String>[];
+    String? previousLine;
+    for (final edge in result.path) {
+      final line = normalizeRouteId(edge.routeId);
+      if (line == previousLine) continue;
+      routeLines.add(line);
+      previousLine = line;
+    }
+    final transferCount = result.path
+        .where((edge) => edge.connectionType == 'interchange_transfer')
+        .length;
+
+    return _HomeRoutePreview(
+      routePreference: routePreference,
+      originName: originName,
+      destinationName: destinationName,
+      highestCrowdLevel: highestCrowdLevel,
+      totalMinutes: result.totalMinutes,
+      routeLines: routeLines,
+      transferCount: transferCount,
+      stopCount: activeTripStops.length,
+      activeTripStops: activeTripStops,
+      result: result,
+    );
+  }
+
+  bool _sameRouteResult(_HomeDijkstraResult a, _HomeDijkstraResult b) {
+    if (a.destinationStopId != b.destinationStopId) return false;
+    if (a.path.length != b.path.length) return false;
+    for (var i = 0; i < a.path.length; i++) {
+      final left = a.path[i];
+      final right = b.path[i];
+      if (left.fromStopId != right.fromStopId ||
+          left.toStopId != right.toStopId ||
+          left.routeId != right.routeId) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<List<_HomeStationSearchOption>> _loadStationSearchOptions() async {
@@ -461,32 +943,6 @@ class _HomeScreenState extends State<HomeScreen> {
     NavigationState.instance.goTo(1);
   }
 
-  Future<void> _pickDepartureTime() async {
-    final now = DateTime.now();
-    final initial = _departureTime.isAfter(now) ? _departureTime : now;
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 14)),
-    );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (pickedTime == null || !mounted) return;
-    setState(() {
-      _departureTime = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      );
-    });
-  }
-
   List<_MapStop> _nearestMapStops({int limit = 5}) {
     final position = _position;
     if (position == null) return const <_MapStop>[];
@@ -539,21 +995,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: 'Ride smart, skip the squeeze.',
                     subtitle:
                         'Live crowd-aware routing, trip tracking, and route glow in one place.',
-                    status: _isLoadingLocation
-                        ? 'Refreshing live location...'
-                        : _locationStatus,
-                    networkSource: _isLoadingMap
-                        ? 'Syncing live station map...'
-                        : _mapError == null
-                            ? 'Live station map ready'
-                            : 'Live station map offline',
                   ),
                   const SizedBox(height: 16),
                   _HomeRouteSearchCard(
                     stationNamesFuture: _stationSearchFuture,
                     controller: _routeSearchController,
-                    departureLabel: _formatDepartureTime(_departureTime),
-                    onPickTime: _pickDepartureTime,
+                    departureTime: _departureTime,
+                    routeMode: _routeMode,
+                    onDepartureTimeSelected: (value) {
+                      setState(() => _departureTime = value);
+                    },
+                    onRouteModeChanged: (value) {
+                      setState(() => _routeMode = value);
+                    },
                     onStationSelected: _handleStationSelected,
                     nearestCrowdFuture: _nearestCrowdFuture,
                     isPreparingTrip: _isPreparingTrip,
@@ -635,11 +1089,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+enum _HomeRouteMode {
+  auto,
+  efficiency,
+  comfort,
+}
+
+extension _HomeRouteModeUi on _HomeRouteMode {
+  String get label {
+    switch (this) {
+      case _HomeRouteMode.auto:
+        return 'Auto';
+      case _HomeRouteMode.efficiency:
+        return 'Efficient';
+      case _HomeRouteMode.comfort:
+        return 'Relaxed';
+    }
+  }
+
+  String get helperText {
+    switch (this) {
+      case _HomeRouteMode.auto:
+        return 'Compare efficient and relaxed routes, then ask only when the calmer route is worth it.';
+      case _HomeRouteMode.efficiency:
+        return 'Always keep the fastest route.';
+      case _HomeRouteMode.comfort:
+        return 'Prefer lower crowd even if the trip takes a little longer.';
+    }
+  }
+}
+
 class _HomeRouteSearchCard extends StatefulWidget {
   final Future<List<_HomeStationSearchOption>> stationNamesFuture;
   final TextEditingController controller;
-  final String departureLabel;
-  final VoidCallback onPickTime;
+  final DateTime departureTime;
+  final _HomeRouteMode routeMode;
+  final ValueChanged<DateTime> onDepartureTimeSelected;
+  final ValueChanged<_HomeRouteMode> onRouteModeChanged;
   final ValueChanged<_HomeStationSearchOption> onStationSelected;
   final Future<List<NearbyStationCrowdForecast>>? nearestCrowdFuture;
   final bool isPreparingTrip;
@@ -647,8 +1133,10 @@ class _HomeRouteSearchCard extends StatefulWidget {
   const _HomeRouteSearchCard({
     required this.stationNamesFuture,
     required this.controller,
-    required this.departureLabel,
-    required this.onPickTime,
+    required this.departureTime,
+    required this.routeMode,
+    required this.onDepartureTimeSelected,
+    required this.onRouteModeChanged,
     required this.onStationSelected,
     required this.nearestCrowdFuture,
     required this.isPreparingTrip,
@@ -659,8 +1147,10 @@ class _HomeRouteSearchCard extends StatefulWidget {
 }
 
 class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
+  final CrowdReportsService _crowdReportsService = CrowdReportsService();
   final GlobalKey _fieldKey = GlobalKey();
   FocusNode? _trackedFocusNode;
+  _HomeStationSearchOption? _selectedStationOption;
 
   @override
   void dispose() {
@@ -694,9 +1184,268 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
     });
   }
 
+  void _rememberSelectedStation(_HomeStationSearchOption option) {
+    if (!mounted) return;
+    setState(() => _selectedStationOption = option);
+  }
+
+  List<DateTime> _buildDepartureSlots() {
+    final now = DateTime.now();
+    var minute = now.minute < 30 ? 30 : 0;
+    var hour = now.minute < 30 ? now.hour : now.hour + 1;
+    var start = DateTime(now.year, now.month, now.day, hour, minute);
+    if (start.isBefore(now)) {
+      start = start.add(const Duration(minutes: 30));
+    }
+    return List<DateTime>.generate(
+      10,
+      (index) => start.add(Duration(minutes: index * 30)),
+    );
+  }
+
+  int? _peakLevelForTime(
+    Map<String, StopCrowdForecast> grid,
+    _HomeStationSearchOption option,
+    DateTime time,
+  ) {
+    int? highest;
+    for (final stopCode in option.stopCodes) {
+      final forecast = grid[CrowdReportsService.forecastKeyForTime(
+        stopId: stopCode,
+        time: time,
+      )];
+      if (forecast == null) continue;
+      final level = forecast.occupancyLevel;
+      if (highest == null || level > highest) {
+        highest = level;
+      }
+    }
+    return highest;
+  }
+
+  Future<void> _openDeparturePicker() async {
+    final slots = _buildDepartureSlots();
+    final selectedOption = _selectedStationOption;
+    final forecastsFuture =
+        selectedOption == null || selectedOption.stopCodes.isEmpty
+            ? Future<Map<String, StopCrowdForecast>>.value(
+                const <String, StopCrowdForecast>{},
+              )
+            : _crowdReportsService.fetchForecastGrid(
+                stopIds: selectedOption.stopCodes,
+                times: slots,
+              );
+
+    final selectedTime = await showModalBottomSheet<DateTime>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        var activeIndex = slots.indexWhere(
+          (slot) =>
+              slot.hour == widget.departureTime.hour &&
+              slot.minute == widget.departureTime.minute,
+        );
+        if (activeIndex < 0) activeIndex = 0;
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  16 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: FutureBuilder<Map<String, StopCrowdForecast>>(
+                  future: forecastsFuture,
+                  builder: (context, snapshot) {
+                    final grid =
+                        snapshot.data ?? const <String, StopCrowdForecast>{};
+                    final previewTime = slots[activeIndex];
+                    final previewLevel = selectedOption == null
+                        ? null
+                        : _peakLevelForTime(grid, selectedOption, previewTime);
+                    final previewUi = previewLevel == null
+                        ? null
+                        : _HomeCrowdUi.fromLevel(previewLevel);
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Choose departure time',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          selectedOption == null
+                              ? 'Choose a station first if you want to preview crowd before starting.'
+                              : 'Hover or tap a time to preview crowd for ${selectedOption.stationName}.',
+                          style: const TextStyle(
+                            color: Color(0xFF667085),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFD7E1F0)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Leaving at',
+                                      style: TextStyle(
+                                        color: Color(0xFF667085),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatDepartureTime(previewTime),
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (previewUi != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        previewUi.color.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    previewUi.label,
+                                    style: TextStyle(
+                                      color: previewUi.color,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            for (var index = 0; index < slots.length; index++)
+                              Builder(
+                                builder: (context) {
+                                  final slot = slots[index];
+                                  final isActive = activeIndex == index;
+                                  final level = selectedOption == null
+                                      ? null
+                                      : _peakLevelForTime(
+                                          grid, selectedOption, slot);
+                                  final crowdUi = level == null
+                                      ? null
+                                      : _HomeCrowdUi.fromLevel(level);
+
+                                  return MouseRegion(
+                                    onEnter: (_) => setSheetState(
+                                        () => activeIndex = index),
+                                    child: InkWell(
+                                      onTap: () =>
+                                          Navigator.of(context).pop(slot),
+                                      borderRadius: BorderRadius.circular(18),
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 140),
+                                        width: 148,
+                                        padding: const EdgeInsets.all(14),
+                                        decoration: BoxDecoration(
+                                          color: isActive
+                                              ? const Color(0xFF0A3A8B)
+                                              : Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          border: Border.all(
+                                            color: isActive
+                                                ? const Color(0xFF0A3A8B)
+                                                : const Color(0xFFD7E1F0),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _formatDepartureTime(slot),
+                                              style: TextStyle(
+                                                color: isActive
+                                                    ? Colors.white
+                                                    : const Color(0xFF101828),
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              crowdUi?.label ??
+                                                  'Preview after station',
+                                              style: TextStyle(
+                                                color: isActive
+                                                    ? Colors.white
+                                                        .withValues(alpha: 0.88)
+                                                    : crowdUi?.color ??
+                                                        const Color(0xFF667085),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (selectedTime != null) {
+      widget.onDepartureTimeSelected(selectedTime);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     return AnimatedPadding(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
@@ -705,10 +1454,20 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFFFFCF5),
+              primary.withValues(alpha: 0.09),
+              const Color(0xFFFFFFFF),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(26),
           border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.08)),
+            color: primary.withValues(alpha: 0.18),
+            width: 1.2,
+          ),
           boxShadow: appCardShadows(context, prominent: true),
         ),
         child: Column(
@@ -724,8 +1483,37 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Search a destination and the app will switch to a calmer path when the direct option feels too packed.',
+              'Search a destination, set your routing style, and preview crowd before you leave.',
               style: TextStyle(
+                color: Color(0xFF667085),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Route style',
+              style: TextStyle(
+                color: Color(0xFF475467),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final mode in _HomeRouteMode.values)
+                  _HomeRouteModeChip(
+                    mode: mode,
+                    selected: widget.routeMode == mode,
+                    onTap: () => widget.onRouteModeChanged(mode),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.routeMode.helperText,
+              style: const TextStyle(
                 color: Color(0xFF667085),
                 fontWeight: FontWeight.w600,
               ),
@@ -779,7 +1567,10 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                     }).take(12);
                   },
                   displayStringForOption: (option) => option.stationName,
-                  onSelected: widget.onStationSelected,
+                  onSelected: (option) {
+                    _rememberSelectedStation(option);
+                    widget.onStationSelected(option);
+                  },
                   fieldViewBuilder:
                       (context, textController, focusNode, onFieldSubmitted) {
                     if (textController.text != widget.controller.text) {
@@ -799,18 +1590,40 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                       decoration: InputDecoration(
                         hintText: 'Search train station',
                         filled: true,
-                        fillColor:
-                            Theme.of(context).inputDecorationTheme.fillColor,
+                        fillColor: Colors.white,
                         prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: IconButton(
-                          onPressed: widget.onPickTime,
-                          icon: const Icon(Icons.schedule_rounded),
-                          tooltip: 'Choose departure time',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: primary,
+                            width: 1.6,
+                          ),
                         ),
                       ),
                       onTap: _ensureFieldVisible,
                       onChanged: (_) {
                         widget.controller.value = textController.value;
+                        final query = textController.text.trim().toLowerCase();
+                        _HomeStationSearchOption? exactMatch;
+                        for (final option in stationOptions) {
+                          if (option.stationName.toLowerCase() == query) {
+                            exactMatch = option;
+                            break;
+                          }
+                        }
+                        if (exactMatch == null) {
+                          if (_selectedStationOption != null) {
+                            setState(() => _selectedStationOption = null);
+                          }
+                        } else {
+                          _rememberSelectedStation(exactMatch);
+                        }
                       },
                       onSubmitted: (value) {
                         final text = value.trim();
@@ -825,6 +1638,9 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                               routeIds: const <String>[],
                             ),
                           );
+                          if (match.stopCodes.isNotEmpty) {
+                            _rememberSelectedStation(match);
+                          }
                           widget.onStationSelected(match);
                         }
                       },
@@ -932,7 +1748,10 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                                           )
                                           .toList(),
                                     ),
-                                    onTap: () => onSelected(option),
+                                    onTap: () {
+                                      _rememberSelectedStation(option);
+                                      onSelected(option);
+                                    },
                                   );
                                 },
                               );
@@ -947,34 +1766,96 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
             ),
             const SizedBox(height: 12),
             InkWell(
-              onTap: widget.onPickTime,
+              onTap: _openDeparturePicker,
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: Theme.of(context)
-                          .dividerColor
-                          .withValues(alpha: 0.08)),
+                    color: primary.withValues(alpha: 0.14),
+                  ),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.access_time_filled_rounded, size: 18),
-                    const SizedBox(width: 10),
-                    Text(
-                      widget.departureLabel,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Departure time',
+                            style: TextStyle(
+                              color: Color(0xFF667085),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatDepartureTime(widget.departureTime),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedStationOption == null
+                                ? 'Open the picker to choose a time.'
+                                : 'Open the picker to preview crowd before you leave.',
+                            style: const TextStyle(
+                              color: Color(0xFF667085),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const Spacer(),
                     const Icon(Icons.chevron_right_rounded),
                   ],
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeRouteModeChip extends StatelessWidget {
+  final _HomeRouteMode mode;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _HomeRouteModeChip({
+    required this.mode,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF0A3A8B) : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? const Color(0xFF0A3A8B) : const Color(0xFFD6E0EF),
+          ),
+        ),
+        child: Text(
+          mode.label,
+          style: TextStyle(
+            color: selected ? Colors.white : const Color(0xFF344054),
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );
@@ -1178,15 +2059,11 @@ class _HeroCard extends StatelessWidget {
   final ThemeData theme;
   final String title;
   final String subtitle;
-  final String status;
-  final String networkSource;
 
   const _HeroCard({
     required this.theme,
     required this.title,
     required this.subtitle,
-    required this.status,
-    required this.networkSource,
   });
 
   @override
@@ -1221,51 +2098,6 @@ class _HeroCard extends StatelessWidget {
             style: const TextStyle(
               color: Color(0xFFD6E4FF),
               height: 1.35,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _StatusChip(icon: Icons.my_location_rounded, label: status),
-              _StatusChip(icon: Icons.hub_rounded, label: networkSource),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _StatusChip({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.white),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1338,10 +2170,19 @@ class _LiveTripSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = MaterialLocalizations.of(context);
     final originRouteId =
         trip.stops.isEmpty ? 'N/A' : normalizeRouteId(trip.stops.first.routeId);
     final destinationRouteId =
         trip.stops.isEmpty ? 'N/A' : normalizeRouteId(trip.stops.last.routeId);
+    final crowdUi = _HomeCrowdUi.fromLevel(trip.highestCrowdLevel);
+    final estimatedArrivalTime = trip.estimatedArrivalTime;
+    final arrivalLabel = switch (estimatedArrivalTime) {
+      null => 'ETA syncing',
+      final value when value.isBefore(DateTime.now()) => 'Arriving now',
+      final value =>
+        'Arrive by ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))}',
+    };
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -1422,18 +2263,49 @@ class _LiveTripSummary extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.14),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: crowdUi.color.withValues(alpha: 0.48),
+                  ),
                 ),
-                child: Text(
-                  'Crowd level: ${_HomeCrowdUi.fromLevel(trip.highestCrowdLevel).label}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                child: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      color: Color(0xFF344054),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Crowd level: '),
+                      TextSpan(
+                        text: crowdUi.label,
+                        style: TextStyle(
+                          color: crowdUi.color,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Text(
+                  arrivalLabel,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
               ElevatedButton.icon(
                 onPressed: () => NavigationState.instance.goTo(2),
                 icon: const Icon(Icons.track_changes_rounded),
@@ -1884,12 +2756,284 @@ class _MapStop {
   });
 }
 
+class _HomeRouteConnection {
+  final String fromStopId;
+  final String toStopId;
+  final String routeId;
+  final String connectionType;
+  final int travelMinutes;
+
+  const _HomeRouteConnection({
+    required this.fromStopId,
+    required this.toStopId,
+    required this.routeId,
+    required this.connectionType,
+    required this.travelMinutes,
+  });
+
+  _HomeRouteConnection reversed() {
+    return _HomeRouteConnection(
+      fromStopId: toStopId,
+      toStopId: fromStopId,
+      routeId: routeId,
+      connectionType: connectionType,
+      travelMinutes: travelMinutes,
+    );
+  }
+}
+
+class _HomeDijkstraResult {
+  final String destinationStopId;
+  final List<_HomeRouteConnection> path;
+  final int totalMinutes;
+  final int weightedMinutes;
+
+  const _HomeDijkstraResult({
+    required this.destinationStopId,
+    required this.path,
+    required this.totalMinutes,
+    required this.weightedMinutes,
+  });
+}
+
+class _HomeRoutePreview {
+  final String routePreference;
+  final String originName;
+  final String destinationName;
+  final int highestCrowdLevel;
+  final int totalMinutes;
+  final List<String> routeLines;
+  final int transferCount;
+  final int stopCount;
+  final List<ActiveTripStop> activeTripStops;
+  final _HomeDijkstraResult result;
+
+  const _HomeRoutePreview({
+    required this.routePreference,
+    required this.originName,
+    required this.destinationName,
+    required this.highestCrowdLevel,
+    required this.totalMinutes,
+    required this.routeLines,
+    required this.transferCount,
+    required this.stopCount,
+    required this.activeTripStops,
+    required this.result,
+  });
+}
+
+class _HomeRouteChoiceCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final _HomeRoutePreview preview;
+  final List<String> reasoningLabels;
+  final String actionLabel;
+  final bool isPrimary;
+  final VoidCallback onTap;
+
+  const _HomeRouteChoiceCard({
+    required this.title,
+    required this.subtitle,
+    required this.preview,
+    required this.reasoningLabels,
+    required this.actionLabel,
+    required this.isPrimary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final crowdUi = _HomeCrowdUi.fromLevel(preview.highestCrowdLevel);
+    final button = isPrimary
+        ? ElevatedButton(
+            onPressed: onTap,
+            child: Text(actionLabel),
+          )
+        : OutlinedButton(
+            onPressed: onTap,
+            child: Text(actionLabel),
+          );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isPrimary ? const Color(0xFFBFD2F3) : const Color(0xFFD9E2F2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF667085),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: crowdUi.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  crowdUi.label,
+                  style: TextStyle(
+                    color: crowdUi.color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (reasoningLabels.isNotEmpty) ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: reasoningLabels
+                  .map(
+                    (label) => _HomeRouteMetricChip(
+                      label: label,
+                      backgroundColor: isPrimary
+                          ? const Color(0xFFEEF4FF)
+                          : const Color(0xFFF4F7FC),
+                      textColor: isPrimary
+                          ? const Color(0xFF0A3A8B)
+                          : const Color(0xFF344054),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _HomeRouteMetricChip(
+                label: 'ETA ${_formatMinutes(preview.totalMinutes)}',
+              ),
+              _HomeRouteMetricChip(
+                label: preview.transferCount == 0
+                    ? 'Direct ride'
+                    : preview.transferCount == 1
+                        ? '1 transfer'
+                        : '${preview.transferCount} transfers',
+              ),
+              _HomeRouteMetricChip(
+                label: preview.routeLines.isEmpty
+                    ? 'Route pending'
+                    : preview.routeLines.join(' | '),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(width: double.infinity, child: button),
+        ],
+      ),
+    );
+  }
+
+  static String _formatMinutes(int minutes) {
+    if (minutes < 60) return '${minutes}m';
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    if (mins == 0) return '${hours}h';
+    return '${hours}h ${mins}m';
+  }
+}
+
+class _HomeRouteMetricChip extends StatelessWidget {
+  final String label;
+  final Color backgroundColor;
+  final Color textColor;
+
+  const _HomeRouteMetricChip({
+    required this.label,
+    this.backgroundColor = const Color(0xFFF4F7FC),
+    this.textColor = const Color(0xFF344054),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+int _compareStopCode(String a, String b) {
+  final pa = _HomeStopIdParts.tryParse(a);
+  final pb = _HomeStopIdParts.tryParse(b);
+  if (pa == null || pb == null) return a.compareTo(b);
+  if (pa.prefix != pb.prefix) return pa.prefix.compareTo(pb.prefix);
+  if (pa.number != pb.number) return pa.number.compareTo(pb.number);
+  return pa.suffix.compareTo(pb.suffix);
+}
+
+class _HomeStopIdParts {
+  final String prefix;
+  final int number;
+  final String suffix;
+
+  const _HomeStopIdParts({
+    required this.prefix,
+    required this.number,
+    required this.suffix,
+  });
+
+  static _HomeStopIdParts? tryParse(String stopId) {
+    final match = RegExp(r'^([A-Z]+)(\d+)([A-Z]*)$')
+        .firstMatch(stopId.trim().toUpperCase());
+    if (match == null) return null;
+    final number = int.tryParse(match.group(2) ?? '');
+    if (number == null) return null;
+    return _HomeStopIdParts(
+      prefix: match.group(1) ?? '',
+      number: number,
+      suffix: match.group(3) ?? '',
+    );
+  }
+}
+
 String _formatDepartureTime(DateTime value) {
   final local = value.toLocal();
-  final day = local.day.toString().padLeft(2, '0');
-  final month = local.month.toString().padLeft(2, '0');
   final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
   final minute = local.minute.toString().padLeft(2, '0');
   final suffix = local.hour >= 12 ? 'PM' : 'AM';
-  return 'Depart $day/$month $hour:$minute $suffix';
+  return '$hour:$minute $suffix';
 }
