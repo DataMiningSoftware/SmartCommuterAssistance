@@ -26,7 +26,10 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE users(
@@ -96,10 +99,14 @@ class DatabaseService {
         ''');
 
         await _createRouteCacheTables(db);
+        await _createIndexes(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createRouteCacheTables(db);
+        }
+        if (oldVersion < 3) {
+          await _createIndexes(db);
         }
       },
     );
@@ -128,6 +135,28 @@ class DatabaseService {
         travel_time_minutes INTEGER NOT NULL DEFAULT 2,
         UNIQUE(from_stop_id, to_stop_id, route_id, connection_type)
       )
+    ''');
+  }
+
+  Future<void> _createIndexes(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_recent_searches_user_searched_at
+      ON recent_searches(user_id, searched_at DESC)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_travel_history_user_travel_date
+      ON travel_history(user_id, travel_date DESC)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_favorite_routes_user_id
+      ON favorite_routes(user_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_cached_route_connections_from_stop
+      ON cached_route_connections(from_stop_id)
     ''');
   }
 
@@ -192,7 +221,10 @@ class DatabaseService {
       for (final stop in stops) {
         final stopId = stop['stop_id']?.toString();
         final stopName = stop['stop_name']?.toString();
-        if (stopId == null || stopId.isEmpty || stopName == null || stopName.isEmpty) {
+        if (stopId == null ||
+            stopId.isEmpty ||
+            stopName == null ||
+            stopName.isEmpty) {
           continue;
         }
         await txn.insert(
@@ -217,7 +249,8 @@ class DatabaseService {
     return db.query('cached_train_stops');
   }
 
-  Future<void> cacheRouteConnections(List<Map<String, dynamic>> connections) async {
+  Future<void> cacheRouteConnections(
+      List<Map<String, dynamic>> connections) async {
     final db = await database;
     await db.transaction((txn) async {
       await txn.delete('cached_route_connections');
@@ -225,7 +258,12 @@ class DatabaseService {
         final from = edge['from_stop_id']?.toString();
         final to = edge['to_stop_id']?.toString();
         final route = edge['route_id']?.toString();
-        if (from == null || from.isEmpty || to == null || to.isEmpty || route == null || route.isEmpty) {
+        if (from == null ||
+            from.isEmpty ||
+            to == null ||
+            to.isEmpty ||
+            route == null ||
+            route.isEmpty) {
           continue;
         }
         await txn.insert(
@@ -234,7 +272,8 @@ class DatabaseService {
             'from_stop_id': from,
             'to_stop_id': to,
             'route_id': route,
-            'connection_type': edge['connection_type']?.toString() ?? 'standard_stop',
+            'connection_type':
+                edge['connection_type']?.toString() ?? 'standard_stop',
             'travel_time_minutes': _toInt(edge['travel_time_minutes']) ?? 2,
           },
           conflictAlgorithm: ConflictAlgorithm.replace,

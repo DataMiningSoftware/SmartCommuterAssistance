@@ -69,6 +69,15 @@ The app uses a Malaysian flag-inspired color scheme:
    - Add Google Maps API key for map functionality
    - Configure local notifications
 
+4. **Supabase Database Setup**
+   - Populate `public.train_stops_kl` first.
+   - Run `lib/PythonScript/stop_catalog_setup.sql`.
+   - Run `lib/PythonScript/route_connections_setup.sql`.
+   - Run `lib/PythonScript/find_route_rpc_setup.sql`.
+   - Run `lib/PythonScript/crowd_reports_setup.sql`.
+   - Run `lib/PythonScript/crowd_forecast_setup.sql`.
+   - Optional seed: `lib/PythonScript/randomized_crowd_predictions_seed.sql`
+
 ## Current Implementation Status
 
 ### ✅ Completed

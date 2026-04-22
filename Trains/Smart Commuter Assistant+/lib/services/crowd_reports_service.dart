@@ -183,21 +183,27 @@ class CrowdReportsService {
     required String stopId,
     required int occupancyLevel,
   }) async {
-    await _client.from('crowd_reports').insert({
-      'stop_id': stopId,
-      'occupancy_level': occupancyLevel.clamp(0, 3),
-      'source_type': 'user',
-    });
+    await _client.rpc(
+      'submit_crowd_report',
+      params: {
+        'p_stop_id': stopId.trim().toUpperCase(),
+        'p_source_type': 'user',
+        'p_occupancy_level': occupancyLevel.clamp(0, 3),
+      },
+    );
   }
 
   Future<void> insertUserDelayReport({
     required String stopId,
   }) async {
-    await _client.from('crowd_reports').insert({
-      'stop_id': stopId,
-      'occupancy_level': 0,
-      'source_type': 'delay',
-    });
+    await _client.rpc(
+      'submit_crowd_report',
+      params: {
+        'p_stop_id': stopId.trim().toUpperCase(),
+        'p_source_type': 'delay',
+        'p_occupancy_level': 0,
+      },
+    );
   }
 
   Future<List<StationCrowdBoardItem>> fetchStationCrowdBoard({

@@ -7,33 +7,39 @@ language sql
 security definer
 set search_path = public
 as $$
-  with recursive paths as (
+  with recursive params as (
     select
-      array[upper(trim(rc.from_stop_id)), upper(trim(rc.to_stop_id))]::text[] as path_array,
-      upper(trim(rc.to_stop_id)) as current_stop,
+      public.normalize_stop_id(start_stop) as start_id,
+      public.normalize_stop_id(end_stop) as end_id
+  ),
+  paths as (
+    select
+      array[rc.from_stop_id, rc.to_stop_id]::text[] as path_array,
+      rc.to_stop_id as current_stop,
       rc.travel_time_minutes as total_time,
       1 as depth
     from public.route_connections rc
-    where upper(trim(rc.from_stop_id)) = upper(trim(start_stop))
+    join params p on rc.from_stop_id = p.start_id
 
     union all
 
     select
-      p.path_array || upper(trim(rc.to_stop_id)),
-      upper(trim(rc.to_stop_id)) as current_stop,
-      p.total_time + rc.travel_time_minutes as total_time,
-      p.depth + 1 as depth
-    from paths p
+      path.path_array || rc.to_stop_id,
+      rc.to_stop_id as current_stop,
+      path.total_time + rc.travel_time_minutes as total_time,
+      path.depth + 1 as depth
+    from paths path
     join public.route_connections rc
-      on upper(trim(rc.from_stop_id)) = p.current_stop
-    where p.depth < 40
-      and not (upper(trim(rc.to_stop_id)) = any (p.path_array))
+      on rc.from_stop_id = path.current_stop
+    where path.depth < 40
+      and not (rc.to_stop_id = any (path.path_array))
   )
   select
-    path_array,
-    total_time
-  from paths
-  where current_stop = upper(trim(end_stop))
+    path.path_array,
+    path.total_time
+  from paths path
+  join params p on true
+  where path.current_stop = p.end_id
   order by total_time asc, cardinality(path_array) asc
   limit 1;
 $$;

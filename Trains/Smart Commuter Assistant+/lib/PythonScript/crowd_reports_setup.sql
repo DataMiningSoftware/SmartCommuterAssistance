@@ -7,6 +7,12 @@ create table if not exists public.crowd_reports (
   created_at timestamptz not null default now()
 );
 
+update public.crowd_reports
+set
+  stop_id = public.normalize_stop_id(stop_id),
+  source_type = lower(trim(source_type))
+where true;
+
 do $$
 begin
   if exists (
@@ -38,6 +44,18 @@ end $$;
 create index if not exists idx_crowd_reports_stop_created_at
 on public.crowd_reports (stop_id, created_at desc);
 
+create index if not exists idx_crowd_reports_stop_source_created_at
+on public.crowd_reports (stop_id, source_type, created_at desc);
+
+do $$
+begin
+  alter table public.crowd_reports
+    add constraint crowd_reports_stop_fk
+    foreign key (stop_id) references public.transit_stops(stop_id) not valid;
+exception
+  when duplicate_object then null;
+end $$;
+
 alter table public.crowd_reports enable row level security;
 
 -- App clients can read latest predictions.
@@ -45,16 +63,79 @@ drop policy if exists "anon can read crowd reports" on public.crowd_reports;
 create policy "anon can read crowd reports"
 on public.crowd_reports
 for select
-to anon
+to anon, authenticated
 using (true);
 
--- App users can submit crowd reports from mobile client.
 drop policy if exists "anon can insert user crowd reports" on public.crowd_reports;
-create policy "anon can insert user crowd reports"
-on public.crowd_reports
-for insert
-to anon
-with check (
-  source_type in ('user', 'delay')
-  and occupancy_level between 0 and 3
-);
+drop policy if exists "authenticated can insert user crowd reports" on public.crowd_reports;
+
+create or replace function public.submit_crowd_report(
+  p_stop_id text,
+  p_source_type text default 'user',
+  p_occupancy_level integer default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_stop_id text := public.normalize_stop_id(p_stop_id);
+  v_source_type text := lower(trim(coalesce(p_source_type, 'user')));
+  v_occupancy_level smallint;
+  v_created_at timestamptz;
+begin
+  if v_stop_id = '' then
+    raise exception 'stop_id is required';
+  end if;
+
+  if v_source_type not in ('user', 'delay') then
+    raise exception 'Unsupported crowd report source type: %', v_source_type;
+  end if;
+
+  if not exists (
+    select 1
+    from public.transit_stops ts
+    where ts.stop_id = v_stop_id
+  ) then
+    raise exception 'Unknown stop_id: %', v_stop_id;
+  end if;
+
+  if exists (
+    select 1
+    from public.crowd_reports cr
+    where cr.stop_id = v_stop_id
+      and cr.source_type = v_source_type
+      and cr.created_at >= now() - interval '30 seconds'
+  ) then
+    raise exception 'Please wait before submitting another report for this stop.';
+  end if;
+
+  v_occupancy_level := case
+    when v_source_type = 'delay' then 0
+    else greatest(0, least(coalesce(p_occupancy_level, 0), 3))
+  end;
+
+  insert into public.crowd_reports (
+    stop_id,
+    occupancy_level,
+    source_type
+  )
+  values (
+    v_stop_id,
+    v_occupancy_level,
+    v_source_type
+  )
+  returning created_at into v_created_at;
+
+  return jsonb_build_object(
+    'stop_id', v_stop_id,
+    'occupancy_level', v_occupancy_level,
+    'source_type', v_source_type,
+    'created_at', v_created_at
+  );
+end;
+$$;
+
+grant execute on function public.submit_crowd_report(text, text, integer)
+to anon, authenticated;

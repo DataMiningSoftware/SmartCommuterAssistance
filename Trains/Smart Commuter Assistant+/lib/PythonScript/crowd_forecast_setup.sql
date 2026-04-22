@@ -13,8 +13,23 @@ create table if not exists public.crowd_forecast_hourly (
   unique (stop_id, forecast_hour, is_weekend)
 );
 
+update public.crowd_forecast_hourly
+set
+  stop_id = public.normalize_stop_id(stop_id),
+  source_type = lower(trim(source_type))
+where true;
+
 create index if not exists idx_crowd_forecast_stop_hour_weekend
 on public.crowd_forecast_hourly (stop_id, forecast_hour, is_weekend);
+
+do $$
+begin
+  alter table public.crowd_forecast_hourly
+    add constraint crowd_forecast_hourly_stop_fk
+    foreign key (stop_id) references public.transit_stops(stop_id) not valid;
+exception
+  when duplicate_object then null;
+end $$;
 
 alter table public.crowd_forecast_hourly enable row level security;
 
@@ -22,5 +37,5 @@ drop policy if exists "anon can read hourly crowd forecasts" on public.crowd_for
 create policy "anon can read hourly crowd forecasts"
 on public.crowd_forecast_hourly
 for select
-to anon
+to anon, authenticated
 using (true);

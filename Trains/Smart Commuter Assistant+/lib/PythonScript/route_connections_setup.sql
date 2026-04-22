@@ -10,6 +10,38 @@ create table if not exists public.route_connections (
   unique (from_stop_id, to_stop_id, route_id, connection_type)
 );
 
+update public.route_connections
+set
+  from_stop_id = public.normalize_stop_id(from_stop_id),
+  to_stop_id = public.normalize_stop_id(to_stop_id),
+  route_id = upper(trim(route_id)),
+  connection_type = lower(trim(connection_type))
+where true;
+
+create index if not exists idx_route_connections_from_stop
+on public.route_connections (from_stop_id);
+
+create index if not exists idx_route_connections_to_stop
+on public.route_connections (to_stop_id);
+
+do $$
+begin
+  alter table public.route_connections
+    add constraint route_connections_from_stop_fk
+    foreign key (from_stop_id) references public.transit_stops(stop_id) not valid;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.route_connections
+    add constraint route_connections_to_stop_fk
+    foreign key (to_stop_id) references public.transit_stops(stop_id) not valid;
+exception
+  when duplicate_object then null;
+end $$;
+
 -- 2) Enable RLS and allow app (anon/authenticated) read access.
 alter table public.route_connections enable row level security;
 

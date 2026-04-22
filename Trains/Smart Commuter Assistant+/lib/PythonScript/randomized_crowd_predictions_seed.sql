@@ -22,10 +22,8 @@ select
   end as source_type,
   now() - ((g.sample_no - 1) * interval '10 minutes')
 from (
-  select distinct upper(trim(stop_id)) as stop_id
-  from public.train_stops_kl
-  where stop_id is not null
-    and trim(stop_id) <> ''
+  select stop_id
+  from public.transit_stops
 ) s
 cross join lateral generate_series(1, 6) as g(sample_no)
 cross join lateral (
