@@ -8,13 +8,12 @@ from pathlib import Path
 
 import pandas as pd
 
-
 FIXED_HOLIDAYS = {
-    (1, 1),   # New Year
-    (5, 1),   # Labour Day
+    (1, 1),  # New Year
+    (5, 1),  # Labour Day
     (8, 31),  # Merdeka
     (9, 16),  # Malaysia Day
-    (12, 25), # Christmas
+    (12, 25),  # Christmas
 }
 
 ROUTE_PRESSURE = {
@@ -229,7 +228,9 @@ def peak_period_score(
     when: datetime,
     is_weekend: int | None = None,
 ) -> int:
-    weekend = (1 if when.weekday() >= 5 else 0) if is_weekend is None else int(is_weekend)
+    weekend = (
+        (1 if when.weekday() >= 5 else 0) if is_weekend is None else int(is_weekend)
+    )
     minutes = (when.hour * 60) + when.minute
 
     if weekend == 1:
@@ -245,9 +246,7 @@ def peak_period_score(
         16 * 60 + 30 <= minutes < 19 * 60 + 30
     ):
         return 2
-    if (6 * 60 <= minutes < 6 * 60 + 30) or (
-        16 * 60 <= minutes < 16 * 60 + 30
-    ):
+    if (6 * 60 <= minutes < 6 * 60 + 30) or (16 * 60 <= minutes < 16 * 60 + 30):
         return 1
     return 0
 
@@ -367,7 +366,9 @@ def estimate_occupancy_percent(
     trend_strength: float = 0.0,
 ) -> float:
     peak_period = int(features.get("peak_period", 0))
-    station_pressure = int(features.get("station_pressure", station_pressure_score(stop)))
+    station_pressure = int(
+        features.get("station_pressure", station_pressure_score(stop))
+    )
     is_weekend = int(features.get("is_weekend", 0))
     is_raining = int(features.get("is_raining", 0))
     is_holiday = int(features.get("is_holiday", 0))

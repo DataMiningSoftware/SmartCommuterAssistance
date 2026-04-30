@@ -15,7 +15,6 @@ from crowd_feature_utils import (
     parse_extra_holiday_dates,
 )
 
-
 LINE_COLUMN_BY_ROUTE = {
     "KJ": "rail_lrt_kj",
     "AG": "rail_lrt_ampang",
@@ -82,9 +81,7 @@ def compute_line_strength(df: pd.DataFrame) -> dict[tuple[str, bool], float]:
                 fallback_values.append(mean_value)
 
     fallback_mean = (
-        float(sum(fallback_values) / len(fallback_values))
-        if fallback_values
-        else 1.0
+        float(sum(fallback_values) / len(fallback_values)) if fallback_values else 1.0
     )
     for route in ["KJ", "AG", "MRT", "PYL", "MR", "BRT"]:
         for is_weekend in [False, True]:

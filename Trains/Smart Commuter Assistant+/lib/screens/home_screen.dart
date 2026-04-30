@@ -2492,6 +2492,10 @@ class _NearestStationCrowdCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final occupancyLevel = item.forecast?.occupancyLevel ?? 0;
     final ui = _HomeCrowdUi.fromLevel(occupancyLevel);
+    final statusTags = CrowdReportsService.statusTagsFor(
+      sourceType: item.forecast?.sourceType ?? 'fallback',
+      fromCache: item.forecast?.fromCache == true || item.fromCache,
+    );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -2547,6 +2551,10 @@ class _NearestStationCrowdCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          if (statusTags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _StatusTagWrap(tags: statusTags),
+          ],
         ],
       ),
     );
@@ -2576,6 +2584,10 @@ class _LegacyStationCrowdRow extends StatelessWidget {
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
+    final statusTags = CrowdReportsService.statusTagsFor(
+      sourceType: item.sourceType,
+      fromCache: item.fromCache,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -2615,6 +2627,10 @@ class _LegacyStationCrowdRow extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
+                if (statusTags.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _StatusTagWrap(tags: statusTags),
+                ],
               ],
             ),
           ),
@@ -2662,6 +2678,10 @@ class _StationCrowdRow extends StatelessWidget {
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
+    final statusTags = CrowdReportsService.statusTagsFor(
+      sourceType: item.sourceType,
+      fromCache: item.fromCache,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -2711,6 +2731,10 @@ class _StationCrowdRow extends StatelessWidget {
                     fontSize: 11,
                   ),
                 ),
+                if (statusTags.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _StatusTagWrap(tags: statusTags),
+                ],
               ],
             ),
           ),
@@ -2731,6 +2755,42 @@ class _StationCrowdRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatusTagWrap extends StatelessWidget {
+  final List<String> tags;
+
+  const _StatusTagWrap({
+    required this.tags,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: tags
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F7FC),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: const Color(0xFFDCE4F3)),
+              ),
+              child: Text(
+                tag,
+                style: const TextStyle(
+                  color: Color(0xFF344054),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }

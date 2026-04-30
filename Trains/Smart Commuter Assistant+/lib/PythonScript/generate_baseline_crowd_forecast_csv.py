@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 COMMERCIAL_STATIONS = {
     "BANDAR UTAMA",
     "BUKIT BINTANG",
@@ -135,9 +134,7 @@ def build_station_catalog(stops_csv: Path) -> pd.DataFrame:
         .nunique()
     )
     interchange_names = {
-        station_name
-        for station_name, line_count in counts.items()
-        if line_count > 1
+        station_name for station_name, line_count in counts.items() if line_count > 1
     }
     df["station_category"] = df.apply(
         classify_station_category,
@@ -173,9 +170,7 @@ def build_forecast_rows(catalog: pd.DataFrame) -> pd.DataFrame:
                     }
                 )
 
-    return pd.DataFrame(rows).sort_values(
-        by=["stop_id", "is_weekend", "forecast_hour"]
-    )
+    return pd.DataFrame(rows).sort_values(by=["stop_id", "is_weekend", "forecast_hour"])
 
 
 def parse_args() -> argparse.Namespace:
@@ -221,8 +216,8 @@ if __name__ == "__main__":
     print(f"Categorized stops written to {args.catalog_output}")
     print(f"Forecast rows written to {args.forecast_output}")
     print(
-        catalog[
-            ["station_id", "station_name", "station_category"]
-        ].head(10).to_string(index=False)
+        catalog[["station_id", "station_name", "station_category"]]
+        .head(10)
+        .to_string(index=False)
     )
     print(forecast.head(10).to_string(index=False))

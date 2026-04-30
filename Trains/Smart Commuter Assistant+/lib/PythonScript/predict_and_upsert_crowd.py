@@ -16,7 +16,6 @@ from crowd_feature_utils import (
     parse_extra_holiday_dates,
 )
 
-
 KL_TIMEZONE = ZoneInfo("Asia/Kuala_Lumpur")
 OPEN_METEO_URL = (
     "https://api.open-meteo.com/v1/forecast"
@@ -103,7 +102,9 @@ def upsert_predictions(
 if __name__ == "__main__":
     supabase_url = os.getenv("SUPABASE_URL", "").strip()
     supabase_service_key = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
-    stop_ids_raw = os.getenv("STOP_IDS", "").strip() or os.getenv("STATION_IDS", "").strip()
+    stop_ids_raw = (
+        os.getenv("STOP_IDS", "").strip() or os.getenv("STATION_IDS", "").strip()
+    )
     global_event_level = float(os.getenv("GLOBAL_EVENT_LEVEL", "0").strip() or 0)
 
     if not supabase_url or not supabase_service_key:
@@ -123,7 +124,9 @@ if __name__ == "__main__":
     else:
         stop_ids = sorted(stop_metadata.keys())
     if not stop_ids:
-        raise RuntimeError("No valid stop IDs were supplied or found in train_stops_kl.csv.")
+        raise RuntimeError(
+            "No valid stop IDs were supplied or found in train_stops_kl.csv."
+        )
 
     supabase_client = create_client(supabase_url, supabase_service_key)
     upsert_predictions(

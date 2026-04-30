@@ -15,7 +15,7 @@ class TrainLoadingTransition extends StatefulWidget {
     required this.isLoading,
     required this.child,
     this.loadingLabel = 'Loading your journey...',
-    this.arrivalLabel = 'Arriving at station...',
+    this.arrivalLabel = 'Page ready',
     this.fadeDuration = const Duration(milliseconds: 420),
   });
 
@@ -31,7 +31,7 @@ enum _LoaderPhase {
 
 class _TrainLoadingTransitionState extends State<TrainLoadingTransition>
     with TickerProviderStateMixin {
-  static const Duration _runDuration = Duration(milliseconds: 1700);
+  static const Duration _runDuration = Duration(milliseconds: 1300);
   static const Duration _stopDuration = Duration(milliseconds: 900);
   static const Duration _stationPauseDuration = Duration(milliseconds: 260);
   static const double _loopStart = -0.24;
@@ -338,7 +338,9 @@ class _TrainBody extends StatelessWidget {
           height: height,
           padding: EdgeInsets.symmetric(horizontal: width * 0.12),
           decoration: BoxDecoration(
-            color: isStopping ? theme.colorScheme.primary : theme.colorScheme.error,
+            color: isStopping
+                ? theme.colorScheme.primary
+                : theme.colorScheme.error,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: theme.colorScheme.error, width: 1),
             boxShadow: [

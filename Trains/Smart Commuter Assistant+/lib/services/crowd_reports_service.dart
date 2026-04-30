@@ -53,6 +53,7 @@ class StationCrowdBoardItem {
   final int occupancyLevel;
   final String sourceType;
   final DateTime? updatedAt;
+  final bool fromCache;
 
   const StationCrowdBoardItem({
     required this.stationName,
@@ -61,11 +62,26 @@ class StationCrowdBoardItem {
     required this.occupancyLevel,
     required this.sourceType,
     required this.updatedAt,
+    this.fromCache = false,
   });
 
   String get stopId => stopIds.isEmpty ? '' : stopIds.first;
 
   bool get isClosedHours => CrowdReportsService.isClosedHoursSource(sourceType);
+
+  StationCrowdBoardItem copyWith({
+    bool? fromCache,
+  }) {
+    return StationCrowdBoardItem(
+      stationName: stationName,
+      stopIds: stopIds,
+      routeIds: routeIds,
+      occupancyLevel: occupancyLevel,
+      sourceType: sourceType,
+      updatedAt: updatedAt,
+      fromCache: fromCache ?? this.fromCache,
+    );
+  }
 }
 
 class StopCrowdForecast {
@@ -77,6 +93,7 @@ class StopCrowdForecast {
   final double etaMultiplier;
   final String sourceType;
   final DateTime? updatedAt;
+  final bool fromCache;
 
   const StopCrowdForecast({
     required this.stopId,
@@ -87,9 +104,26 @@ class StopCrowdForecast {
     required this.etaMultiplier,
     required this.sourceType,
     required this.updatedAt,
+    this.fromCache = false,
   });
 
   bool get isClosedHours => CrowdReportsService.isClosedHoursSource(sourceType);
+
+  StopCrowdForecast copyWith({
+    bool? fromCache,
+  }) {
+    return StopCrowdForecast(
+      stopId: stopId,
+      forecastHour: forecastHour,
+      isWeekend: isWeekend,
+      occupancyLevel: occupancyLevel,
+      expectedWaitMinutes: expectedWaitMinutes,
+      etaMultiplier: etaMultiplier,
+      sourceType: sourceType,
+      updatedAt: updatedAt,
+      fromCache: fromCache ?? this.fromCache,
+    );
+  }
 }
 
 class NearbyStationCrowdForecast {
@@ -98,6 +132,7 @@ class NearbyStationCrowdForecast {
   final String routeId;
   final double distanceMeters;
   final StopCrowdForecast? forecast;
+  final bool fromCache;
 
   const NearbyStationCrowdForecast({
     required this.stopId,
@@ -105,12 +140,58 @@ class NearbyStationCrowdForecast {
     required this.routeId,
     required this.distanceMeters,
     required this.forecast,
+    this.fromCache = false,
   });
+
+  NearbyStationCrowdForecast copyWith({
+    StopCrowdForecast? forecast,
+    bool? fromCache,
+  }) {
+    return NearbyStationCrowdForecast(
+      stopId: stopId,
+      stationName: stationName,
+      routeId: routeId,
+      distanceMeters: distanceMeters,
+      forecast: forecast ?? this.forecast,
+      fromCache: fromCache ?? this.fromCache,
+    );
+  }
 }
 
 class CrowdReportsService {
   final SupabaseClient _client = Supabase.instance.client;
   final TransitNetworkService _transitNetworkService = TransitNetworkService();
+  static const Duration _latestReportsCacheTtl = Duration(seconds: 20);
+  static const Duration _forecastGridCacheTtl = Duration(seconds: 30);
+  static const Duration _stationBoardCacheTtl = Duration(seconds: 30);
+  static const Duration _nearestStationsCacheTtl = Duration(seconds: 45);
+  static final Map<String, _TimedCacheEntry<Map<String, CrowdReport>>>
+      _latestReportsCache =
+      <String, _TimedCacheEntry<Map<String, CrowdReport>>>{};
+  static final Map<String, _TimedCacheEntry<Map<String, CrowdReport>>>
+      _latestUserReportsCache =
+      <String, _TimedCacheEntry<Map<String, CrowdReport>>>{};
+  static final Map<String, _TimedCacheEntry<Map<String, StopCrowdForecast>>>
+      _forecastGridCache =
+      <String, _TimedCacheEntry<Map<String, StopCrowdForecast>>>{};
+  static final Map<String, _TimedCacheEntry<List<StationCrowdBoardItem>>>
+      _stationBoardCache =
+      <String, _TimedCacheEntry<List<StationCrowdBoardItem>>>{};
+  static final Map<String, _TimedCacheEntry<List<NearbyStationCrowdForecast>>>
+      _nearestStationsCache =
+      <String, _TimedCacheEntry<List<NearbyStationCrowdForecast>>>{};
+  static final Map<String, Future<Map<String, CrowdReport>>>
+      _latestReportsInFlight = <String, Future<Map<String, CrowdReport>>>{};
+  static final Map<String, Future<Map<String, CrowdReport>>>
+      _latestUserReportsInFlight = <String, Future<Map<String, CrowdReport>>>{};
+  static final Map<String, Future<Map<String, StopCrowdForecast>>>
+      _forecastGridInFlight =
+      <String, Future<Map<String, StopCrowdForecast>>>{};
+  static final Map<String, Future<List<StationCrowdBoardItem>>>
+      _stationBoardInFlight = <String, Future<List<StationCrowdBoardItem>>>{};
+  static final Map<String, Future<List<NearbyStationCrowdForecast>>>
+      _nearestStationsInFlight =
+      <String, Future<List<NearbyStationCrowdForecast>>>{};
 
   static bool isClosedHoursSource(String sourceType) {
     return sourceType.trim().toLowerCase() == 'closed_hours';
@@ -142,6 +223,33 @@ class CrowdReportsService {
           (part) => '${part[0].toUpperCase()}${part.substring(1)}',
         )
         .join(' ');
+  }
+
+  static List<String> statusTagsFor({
+    required String sourceType,
+    bool fromCache = false,
+  }) {
+    final tags = <String>[];
+    if (fromCache) {
+      tags.add('Forecast cached');
+    }
+    final normalized = sourceType.trim().toLowerCase();
+    if (normalized == 'closed_hours') {
+      tags.add('Service inactive');
+      return tags;
+    }
+    if (normalized.contains('forecast+') || normalized == 'user_blend') {
+      tags.add('Live report blended');
+    } else if (normalized == 'user') {
+      tags.add('Live rider report');
+    } else if (normalized.contains('trend') || normalized == 'forecast') {
+      tags.add('Forecast model');
+    } else if (normalized.contains('simulated') ||
+        normalized == 'fallback' ||
+        normalized == 'unknown') {
+      tags.add('Offline fallback');
+    }
+    return tags;
   }
 
   Future<List<StationOption>> fetchStationOptions() async {
@@ -178,43 +286,65 @@ class CrowdReportsService {
   Future<Map<String, CrowdReport>> fetchLatestCrowdReportsForStops(
       List<String> stopIds,
       {bool includeDelayReports = false}) async {
-    if (stopIds.isEmpty) return const <String, CrowdReport>{};
+    final normalizedStopIds = _normalizeStopIds(stopIds);
+    if (normalizedStopIds.isEmpty) return const <String, CrowdReport>{};
 
-    final rows = await _client
-        .from('crowd_reports')
-        .select('stop_id,occupancy_level,source_type,created_at')
-        .inFilter('stop_id', stopIds)
-        .order('created_at', ascending: false);
-
-    final latestByStop = <String, CrowdReport>{};
-    for (final row in rows.whereType<Map>()) {
-      final report = _toCrowdReport(Map<String, dynamic>.from(row));
-      if (report == null) continue;
-      if (!includeDelayReports && report.sourceType == 'delay') continue;
-      latestByStop.putIfAbsent(report.stopId, () => report);
+    _evictExpired(_latestReportsCache, _latestReportsCacheTtl);
+    final key = _reportsCacheKey(
+      stopIds: normalizedStopIds,
+      includeDelayReports: includeDelayReports,
+    );
+    final cached = _latestReportsCache[key];
+    if (cached != null && !cached.isExpired(_latestReportsCacheTtl)) {
+      return cached.value;
     }
-    return latestByStop;
+
+    final inFlight = _latestReportsInFlight[key];
+    if (inFlight != null) return inFlight;
+
+    final future = _fetchLatestCrowdReportsForStopsRemote(
+      normalizedStopIds,
+      includeDelayReports: includeDelayReports,
+    ).then((latestByStop) {
+      _latestReportsCache[key] = _TimedCacheEntry(latestByStop);
+      return latestByStop;
+    }).whenComplete(() {
+      _latestReportsInFlight.remove(key);
+    });
+    _latestReportsInFlight[key] = future;
+    return future;
   }
 
   Future<Map<String, CrowdReport>> fetchLatestUserCrowdReportsForStops(
     List<String> stopIds,
   ) async {
-    if (stopIds.isEmpty) return const <String, CrowdReport>{};
+    final normalizedStopIds = _normalizeStopIds(stopIds);
+    if (normalizedStopIds.isEmpty) return const <String, CrowdReport>{};
 
-    final rows = await _client
-        .from('crowd_reports')
-        .select('stop_id,occupancy_level,source_type,created_at')
-        .inFilter('stop_id', stopIds)
-        .eq('source_type', 'user')
-        .order('created_at', ascending: false);
-
-    final latestByStop = <String, CrowdReport>{};
-    for (final row in rows.whereType<Map>()) {
-      final report = _toCrowdReport(Map<String, dynamic>.from(row));
-      if (report == null) continue;
-      latestByStop.putIfAbsent(report.stopId, () => report);
+    _evictExpired(_latestUserReportsCache, _latestReportsCacheTtl);
+    final key = _reportsCacheKey(
+      stopIds: normalizedStopIds,
+      includeDelayReports: false,
+      sourceType: 'user',
+    );
+    final cached = _latestUserReportsCache[key];
+    if (cached != null && !cached.isExpired(_latestReportsCacheTtl)) {
+      return cached.value;
     }
-    return latestByStop;
+
+    final inFlight = _latestUserReportsInFlight[key];
+    if (inFlight != null) return inFlight;
+
+    final future = _fetchLatestUserCrowdReportsForStopsRemote(
+      normalizedStopIds,
+    ).then((latestByStop) {
+      _latestUserReportsCache[key] = _TimedCacheEntry(latestByStop);
+      return latestByStop;
+    }).whenComplete(() {
+      _latestUserReportsInFlight.remove(key);
+    });
+    _latestUserReportsInFlight[key] = future;
+    return future;
   }
 
   Future<void> insertUserCrowdReport({
@@ -229,6 +359,7 @@ class CrowdReportsService {
         'p_occupancy_level': occupancyLevel.clamp(1, 5),
       },
     );
+    _invalidateDynamicCaches();
   }
 
   Future<void> insertUserDelayReport({
@@ -242,12 +373,41 @@ class CrowdReportsService {
         'p_occupancy_level': 0,
       },
     );
+    _invalidateDynamicCaches();
   }
 
   Future<List<StationCrowdBoardItem>> fetchStationCrowdBoard({
     DateTime? time,
   }) async {
     final effectiveTime = time ?? DateTime.now();
+    _evictExpired(_stationBoardCache, _stationBoardCacheTtl);
+    final cacheKey =
+        'board|${effectiveTime.hour}|${_isWeekend(effectiveTime) ? 1 : 0}';
+    final cached = _stationBoardCache[cacheKey];
+    if (cached != null && !cached.isExpired(_stationBoardCacheTtl)) {
+      return cached.value
+          .map((item) => item.copyWith(fromCache: true))
+          .toList();
+    }
+
+    final inFlight = _stationBoardInFlight[cacheKey];
+    if (inFlight != null) return inFlight;
+
+    final future = _fetchStationCrowdBoardRemote(
+      effectiveTime: effectiveTime,
+    ).then((items) {
+      _stationBoardCache[cacheKey] = _TimedCacheEntry(items);
+      return items;
+    }).whenComplete(() {
+      _stationBoardInFlight.remove(cacheKey);
+    });
+    _stationBoardInFlight[cacheKey] = future;
+    return future;
+  }
+
+  Future<List<StationCrowdBoardItem>> _fetchStationCrowdBoardRemote({
+    required DateTime effectiveTime,
+  }) async {
     final grouped = <String, _StationBoardGroup>{};
     final network = await _transitNetworkService.loadNetwork();
     for (final stop in network.stopsById.values) {
@@ -369,13 +529,81 @@ class CrowdReportsService {
       return const <String, StopCrowdForecast>{};
     }
 
-    final normalizedStopIds = stopIds
-        .map((id) => id.trim().toUpperCase())
-        .where((id) => id.isNotEmpty)
-        .toSet()
-        .toList();
+    final normalizedStopIds = _normalizeStopIds(stopIds);
     if (normalizedStopIds.isEmpty) return const <String, StopCrowdForecast>{};
 
+    _evictExpired(_forecastGridCache, _forecastGridCacheTtl);
+    final key = _forecastGridCacheKey(
+      stopIds: normalizedStopIds,
+      times: times,
+    );
+    final cached = _forecastGridCache[key];
+    if (cached != null && !cached.isExpired(_forecastGridCacheTtl)) {
+      return <String, StopCrowdForecast>{
+        for (final entry in cached.value.entries)
+          entry.key: entry.value.copyWith(fromCache: true),
+      };
+    }
+
+    final inFlight = _forecastGridInFlight[key];
+    if (inFlight != null) return inFlight;
+
+    final future = _fetchForecastGridRemote(
+      normalizedStopIds: normalizedStopIds,
+      times: times,
+    ).then((forecasts) {
+      _forecastGridCache[key] = _TimedCacheEntry(forecasts);
+      return forecasts;
+    }).whenComplete(() {
+      _forecastGridInFlight.remove(key);
+    });
+    _forecastGridInFlight[key] = future;
+    return future;
+  }
+
+  Future<Map<String, CrowdReport>> _fetchLatestCrowdReportsForStopsRemote(
+    List<String> normalizedStopIds, {
+    required bool includeDelayReports,
+  }) async {
+    final rows = await _client
+        .from('crowd_reports')
+        .select('stop_id,occupancy_level,source_type,created_at')
+        .inFilter('stop_id', normalizedStopIds)
+        .order('created_at', ascending: false);
+
+    final latestByStop = <String, CrowdReport>{};
+    for (final row in rows.whereType<Map>()) {
+      final report = _toCrowdReport(Map<String, dynamic>.from(row));
+      if (report == null) continue;
+      if (!includeDelayReports && report.sourceType == 'delay') continue;
+      latestByStop.putIfAbsent(report.stopId, () => report);
+    }
+    return latestByStop;
+  }
+
+  Future<Map<String, CrowdReport>> _fetchLatestUserCrowdReportsForStopsRemote(
+    List<String> normalizedStopIds,
+  ) async {
+    final rows = await _client
+        .from('crowd_reports')
+        .select('stop_id,occupancy_level,source_type,created_at')
+        .inFilter('stop_id', normalizedStopIds)
+        .eq('source_type', 'user')
+        .order('created_at', ascending: false);
+
+    final latestByStop = <String, CrowdReport>{};
+    for (final row in rows.whereType<Map>()) {
+      final report = _toCrowdReport(Map<String, dynamic>.from(row));
+      if (report == null) continue;
+      latestByStop.putIfAbsent(report.stopId, () => report);
+    }
+    return latestByStop;
+  }
+
+  Future<Map<String, StopCrowdForecast>> _fetchForecastGridRemote({
+    required List<String> normalizedStopIds,
+    required List<DateTime> times,
+  }) async {
     final hours = <int>{
       for (final time in times) time.hour,
     }.toList();
@@ -516,6 +744,50 @@ class CrowdReportsService {
     required double longitude,
     required DateTime departureTime,
     int limit = 5,
+  }) async {
+    _evictExpired(_nearestStationsCache, _nearestStationsCacheTtl);
+    final cacheKey = _nearestStationsCacheKey(
+      latitude: latitude,
+      longitude: longitude,
+      departureTime: departureTime,
+      limit: limit,
+    );
+    final cached = _nearestStationsCache[cacheKey];
+    if (cached != null && !cached.isExpired(_nearestStationsCacheTtl)) {
+      return cached.value
+          .map(
+            (item) => item.copyWith(
+              forecast: item.forecast?.copyWith(fromCache: true),
+              fromCache: true,
+            ),
+          )
+          .toList();
+    }
+
+    final inFlight = _nearestStationsInFlight[cacheKey];
+    if (inFlight != null) return inFlight;
+
+    final future = _fetchNearestStationsWithCrowdRemote(
+      latitude: latitude,
+      longitude: longitude,
+      departureTime: departureTime,
+      limit: limit,
+    ).then((items) {
+      _nearestStationsCache[cacheKey] = _TimedCacheEntry(items);
+      return items;
+    }).whenComplete(() {
+      _nearestStationsInFlight.remove(cacheKey);
+    });
+    _nearestStationsInFlight[cacheKey] = future;
+    return future;
+  }
+
+  Future<List<NearbyStationCrowdForecast>>
+      _fetchNearestStationsWithCrowdRemote({
+    required double latitude,
+    required double longitude,
+    required DateTime departureTime,
+    required int limit,
   }) async {
     final nearestByName = <String, _StationDistanceCandidate>{};
     final network = await _transitNetworkService.loadNetwork();
@@ -669,6 +941,71 @@ class CrowdReportsService {
 
   static bool _isWeekend(DateTime time) {
     return time.weekday == DateTime.saturday || time.weekday == DateTime.sunday;
+  }
+
+  static List<String> _normalizeStopIds(List<String> stopIds) {
+    return stopIds
+        .map((id) => id.trim().toUpperCase())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  static String _reportsCacheKey({
+    required List<String> stopIds,
+    required bool includeDelayReports,
+    String? sourceType,
+  }) {
+    final sourceSuffix = sourceType == null ? '' : '|source=$sourceType';
+    return '${stopIds.join(",")}|delay=${includeDelayReports ? 1 : 0}$sourceSuffix';
+  }
+
+  static String _forecastGridCacheKey({
+    required List<String> stopIds,
+    required List<DateTime> times,
+  }) {
+    final slots = times
+        .map((time) => '${time.hour}|${_isWeekend(time) ? 1 : 0}')
+        .toSet()
+        .toList()
+      ..sort();
+    return '${stopIds.join(",")}::${slots.join(",")}';
+  }
+
+  static String _nearestStationsCacheKey({
+    required double latitude,
+    required double longitude,
+    required DateTime departureTime,
+    required int limit,
+  }) {
+    final lat = latitude.toStringAsFixed(3);
+    final lon = longitude.toStringAsFixed(3);
+    final slot = '${departureTime.hour}|${_isWeekend(departureTime) ? 1 : 0}';
+    return '$lat|$lon|$slot|$limit';
+  }
+
+  static void _evictExpired<T>(
+    Map<String, _TimedCacheEntry<T>> cache,
+    Duration ttl,
+  ) {
+    final expiredKeys = <String>[];
+    cache.forEach((key, entry) {
+      if (entry.isExpired(ttl)) {
+        expiredKeys.add(key);
+      }
+    });
+    for (final key in expiredKeys) {
+      cache.remove(key);
+    }
+  }
+
+  static void _invalidateDynamicCaches() {
+    _latestReportsCache.clear();
+    _latestUserReportsCache.clear();
+    _forecastGridCache.clear();
+    _stationBoardCache.clear();
+    _nearestStationsCache.clear();
   }
 
   static bool _isSystemClosed(DateTime time) {
@@ -833,4 +1170,15 @@ class _StationBoardGroup {
   _StationBoardGroup({
     required this.stationName,
   });
+}
+
+class _TimedCacheEntry<T> {
+  final T value;
+  final DateTime storedAt;
+
+  _TimedCacheEntry(this.value) : storedAt = DateTime.now();
+
+  bool isExpired(Duration ttl) {
+    return DateTime.now().difference(storedAt) > ttl;
+  }
 }

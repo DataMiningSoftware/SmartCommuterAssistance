@@ -51,7 +51,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
           return TrainLoadingTransition(
             isLoading: isLoading,
             loadingLabel: 'Loading crowd forecast...',
-            arrivalLabel: 'Forecast ready',
+            arrivalLabel: 'Page ready',
             child: _buildScreenContent(snapshot),
           );
         },

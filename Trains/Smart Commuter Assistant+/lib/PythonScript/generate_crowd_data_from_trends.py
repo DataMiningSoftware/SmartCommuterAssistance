@@ -24,7 +24,6 @@ ROUTE_BY_COLUMN = {
 
 def infer_hour_profile(is_weekend: int) -> np.ndarray:
     # Hours 6..23. Weighted toward the weekday crush windows described by the user.
-    hours = np.arange(6, 24)
     if is_weekend:
         profile = np.array(
             [
@@ -101,7 +100,9 @@ def build_trend_tables(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     long_df["route_id"] = long_df["trend_column"].map(ROUTE_BY_COLUMN)
     long_df = long_df.dropna(subset=["route_id"])
 
-    route_dow_mean = long_df.groupby(["route_id", "dow"])["ridership"].mean().unstack(fill_value=0.0)
+    route_dow_mean = (
+        long_df.groupby(["route_id", "dow"])["ridership"].mean().unstack(fill_value=0.0)
+    )
     route_overall = long_df.groupby("route_id")["ridership"].mean()
     return route_dow_mean, route_overall
 
@@ -137,7 +138,9 @@ def simulate_from_trends(
     out_rows: list[dict[str, object]] = []
     for _ in range(rows):
         route_id = str(rng.choice(route_ids, p=route_weights))
-        stop = stops_by_route[route_id][int(rng.integers(0, len(stops_by_route[route_id])))]
+        stop = stops_by_route[route_id][
+            int(rng.integers(0, len(stops_by_route[route_id])))
+        ]
         is_weekend = int(rng.choice([0, 1], p=[5 / 7, 2 / 7]))
 
         if is_weekend == 1:
@@ -149,12 +152,12 @@ def simulate_from_trends(
         hour = int(rng.choice(np.arange(6, 24), p=hour_probs))
 
         minute = int(rng.choice(np.arange(0, 60)))
-        when = pd.Timestamp.now().normalize() - pd.Timedelta(days=int(rng.integers(0, 120)))
+        when = pd.Timestamp.now().normalize() - pd.Timedelta(
+            days=int(rng.integers(0, 120))
+        )
         when = when.to_pydatetime().replace(hour=hour, minute=minute)
 
-        is_raining = int(
-            rng.choice([0, 1], p=[1 - rain_probability, rain_probability])
-        )
+        is_raining = int(rng.choice([0, 1], p=[1 - rain_probability, rain_probability]))
         features = build_feature_row(
             stop,
             when,
@@ -200,7 +203,6 @@ def simulate_from_trends(
 
 
 def parse_args() -> argparse.Namespace:
-    script_dir = Path(__file__).resolve().parent
     return argparse.ArgumentParser(
         description="Generate synthetic crowd data using historical ridership trends."
     ).parse_args()
@@ -219,7 +221,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).resolve().parent / "simulated_crowd_data_from_trends.csv",
+        default=Path(__file__).resolve().parent
+        / "simulated_crowd_data_from_trends.csv",
         help="Output CSV path for simulated rows",
     )
     parser.add_argument(
@@ -228,8 +231,12 @@ if __name__ == "__main__":
         default=Path(__file__).resolve().parent / "train_stops_kl.csv",
         help="Path to train_stops_kl.csv",
     )
-    parser.add_argument("--rows", type=int, default=10000, help="Number of synthetic rows")
-    parser.add_argument("--rain-prob", type=float, default=0.28, help="Rain probability (0..1)")
+    parser.add_argument(
+        "--rows", type=int, default=10000, help="Number of synthetic rows"
+    )
+    parser.add_argument(
+        "--rain-prob", type=float, default=0.28, help="Rain probability (0..1)"
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
         "--event-level",

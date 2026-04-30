@@ -1,0 +1,9 @@
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.2.0
+pytest>=7.3.1
+mlflow>=2.4.0
+# dev deps for tuning and visualization
+optuna>=3.0.0
+lightgbm>=4.0.0
+xgboost>=2.0.0

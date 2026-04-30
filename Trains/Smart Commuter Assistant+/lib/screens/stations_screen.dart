@@ -10,6 +10,7 @@ import '../constants/route_colors.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/station_service.dart';
+import '../services/transit_network_service.dart';
 import '../widgets/train_loading_transition.dart';
 
 class StationsScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _StationsScreenState extends State<StationsScreen> {
   final CrowdReportsService _crowdReportsService = CrowdReportsService();
   final DatabaseService _databaseService = DatabaseService();
   final StationService _stationService = StationService();
+  final TransitNetworkService _transitNetworkService = TransitNetworkService();
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, dynamic>> _allStopsRaw = <Map<String, dynamic>>[];
   final List<Map<String, dynamic>> _allStations = <Map<String, dynamic>>[];
@@ -51,30 +53,33 @@ class _StationsScreenState extends State<StationsScreen> {
     super.dispose();
   }
 
-  Future<void> _loadStations() async {
-    try {
-      final rows =
-          await Supabase.instance.client.from('train_stops_kl').select();
-      final stations = rows
-          .whereType<Map>()
-          .map((row) => Map<String, dynamic>.from(row))
-          .toList();
-      await _databaseService.cacheTrainStops(stations);
-      await _syncUniqueStations();
-      await _syncRouteConnectionsCache();
-      _setStations(stations);
-      await _loadLatestCrowdReports();
-      return;
-    } catch (_) {
-      final cachedStations = await _databaseService.getCachedTrainStops();
-      if (cachedStations.isNotEmpty) {
-        _setStations(cachedStations);
-        await _loadLatestCrowdReports();
-        _showMessage('Using offline cached stations.');
-        return;
-      }
-      rethrow;
-    }
+  Future<void> _loadStations({bool forceRefresh = false}) async {
+    final network = await _transitNetworkService.loadNetwork(
+      forceRefresh: forceRefresh,
+    );
+    final stations = network.stopsById.values
+        .map((stop) => <String, dynamic>{
+              'stop_id': stop.stopId,
+              'stop_name': stop.stopName,
+              'stop_lat': stop.latitude,
+              'stop_lon': stop.longitude,
+              'route_id': stop.routeId,
+            })
+        .toList();
+    _routeEdgesCache = network.connections
+        .map(
+          (edge) => _RouteEdge(
+            fromStopId: edge.fromStopId,
+            toStopId: edge.toStopId,
+            routeId: edge.routeId,
+            travelMinutes: edge.travelMinutes,
+            connectionType: edge.connectionType,
+          ),
+        )
+        .toList();
+    await _syncUniqueStations();
+    _setStations(stations);
+    await _loadLatestCrowdReports();
   }
 
   Future<void> _loadLatestCrowdReports() async {
@@ -195,7 +200,7 @@ class _StationsScreenState extends State<StationsScreen> {
 
   void _refreshStations() {
     setState(() {
-      _stationsFuture = _loadStations();
+      _stationsFuture = _loadStations(forceRefresh: true);
     });
   }
 
@@ -1199,7 +1204,7 @@ class _StationsScreenState extends State<StationsScreen> {
           return TrainLoadingTransition(
             isLoading: isWaiting,
             loadingLabel: 'Loading train stations...',
-            arrivalLabel: 'Stations ready',
+            arrivalLabel: 'Page ready',
             child: _buildStationsContent(snapshot),
           );
         },

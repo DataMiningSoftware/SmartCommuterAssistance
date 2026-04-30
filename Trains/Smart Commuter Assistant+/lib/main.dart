@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'constants/app_shadows.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -19,18 +20,19 @@ import 'widgets/train_loading_transition.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const defaultSupabaseUrl = 'https://imrozxnhigihxcwlribr.supabase.co';
-  const defaultSupabaseAnonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltcm96eG5oaWdpaHhjd2xyaWJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mjg5MTgsImV4cCI6MjA4OTUwNDkxOH0.JEPPPrSFWZRgtYP4maS1iz-4MHOnY06ua4ZvwHKzZWk';
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: defaultSupabaseUrl,
-  );
-  const supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: defaultSupabaseAnonKey,
-  );
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    runApp(
+      const _ConfigurationErrorApp(
+        message: 'Missing Supabase configuration.\n\nBuild the app with '
+            '--dart-define=SUPABASE_URL=... and '
+            '--dart-define=SUPABASE_ANON_KEY=...',
+      ),
+    );
+    return;
+  }
 
   assert(() {
     debugPrint('SUPABASE_URL=$supabaseUrl');
@@ -45,12 +47,6 @@ Future<void> main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
-
-  await DatabaseService().initialize();
-  await AuthService().initialize();
-  await ActiveTripService.instance.initialize();
-  await NotificationService().initialize();
-  await ThemeController.initialize();
 
   runApp(const SmartCommuterApp());
 }
@@ -241,8 +237,51 @@ class SmartCommuterApp extends StatelessWidget {
           themeMode: mode,
           theme: lightTheme,
           darkTheme: darkTheme,
-          home: const AuthGate(),
+          home: const _BootstrapGate(),
         );
+      },
+    );
+  }
+}
+
+class _BootstrapGate extends StatefulWidget {
+  const _BootstrapGate();
+
+  @override
+  State<_BootstrapGate> createState() => _BootstrapGateState();
+}
+
+class _BootstrapGateState extends State<_BootstrapGate> {
+  late final Future<void> _bootstrapFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapFuture = _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    await DatabaseService().initialize();
+    await ThemeController.initialize();
+    await AuthService().initialize();
+    await ActiveTripService.instance.initialize();
+    await NotificationService().initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _bootstrapFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _ConfigurationErrorScreen(
+            message: 'Startup failed.\n\n${snapshot.error}',
+          );
+        }
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _StartupLoadingScreen();
+        }
+        return const AuthGate();
       },
     );
   }
@@ -262,6 +301,111 @@ class AuthGate extends StatelessWidget {
         }
         return const MainNavigation();
       },
+    );
+  }
+}
+
+class _ConfigurationErrorApp extends StatelessWidget {
+  final String message;
+
+  const _ConfigurationErrorApp({
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Smart Commuter Assistant+',
+      home: _ConfigurationErrorScreen(message: message),
+    );
+  }
+}
+
+class _ConfigurationErrorScreen extends StatelessWidget {
+  final String message;
+
+  const _ConfigurationErrorScreen({
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFDCE4F3)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    size: 40,
+                    color: Color(0xFFD7263D),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Configuration Required',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF667085),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StartupLoadingScreen extends StatelessWidget {
+  const _StartupLoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: const Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 18),
+                Text(
+                  'Preparing your commute data...',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -290,12 +434,15 @@ class _MainNavigationState extends State<MainNavigation> {
   final Connectivity connectivity = Connectivity();
   StreamSubscription<dynamic>? connectivitySubscription;
   Timer? bannerTimer;
-  Timer? tabSwitchTimer;
+
+  Timer? _tabSwitchTimer;
+  Timer? _tabLoaderRemovalTimer;
+  bool _isTabSwitching = false;
+  bool _showTabSwitchLoader = false;
 
   int currentIndex = 0;
   final List<int> screenGenerations = <int>[0, 0, 0, 0];
   bool isConnected = true;
-  bool isTabSwitching = false;
   _NetworkBannerType bannerType = _NetworkBannerType.hidden;
 
   @override
@@ -311,8 +458,9 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void dispose() {
     bannerTimer?.cancel();
-    tabSwitchTimer?.cancel();
     connectivitySubscription?.cancel();
+    _tabSwitchTimer?.cancel();
+    _tabLoaderRemovalTimer?.cancel();
     NavigationState.instance.selectedIndex
         .removeListener(_handleExternalNavigation);
     super.dispose();
@@ -393,47 +541,59 @@ class _MainNavigationState extends State<MainNavigation> {
     });
   }
 
-  Widget buildCurrentScreen() {
-    switch (currentIndex) {
-      case 0:
-        return HomeScreen(key: ValueKey('home_${screenGenerations[0]}'));
-      case 1:
-        return MapView(key: ValueKey('map_${screenGenerations[1]}'));
-      case 2:
-        return TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}'));
-      case 3:
-      default:
-        return ProfileScreen(key: ValueKey('profile_${screenGenerations[3]}'));
-    }
+  List<Widget> buildScreens() {
+    return <Widget>[
+      HomeScreen(key: ValueKey('home_${screenGenerations[0]}')),
+      MapView(key: ValueKey('map_${screenGenerations[1]}')),
+      TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}')),
+      ProfileScreen(key: ValueKey('profile_${screenGenerations[3]}')),
+    ];
   }
 
   void handleTabSwitch(int index) {
     if (index == currentIndex) return;
-    tabSwitchTimer?.cancel();
+    _tabSwitchTimer?.cancel();
+    _tabLoaderRemovalTimer?.cancel();
     setState(() {
+      if (index == 2) {
+        screenGenerations[index] = screenGenerations[index] + 1;
+      }
+      _isTabSwitching = true;
+      _showTabSwitchLoader = true;
       currentIndex = index;
-      isTabSwitching = true;
     });
     NavigationState.instance.selectedIndex.value = index;
-    tabSwitchTimer = Timer(const Duration(milliseconds: 650), () {
+    _tabSwitchTimer = Timer(const Duration(seconds: 1), () {
       if (!mounted) return;
-      setState(() => isTabSwitching = false);
+      setState(() => _isTabSwitching = false);
+      _tabLoaderRemovalTimer = Timer(const Duration(milliseconds: 1700), () {
+        if (!mounted) return;
+        setState(() => _showTabSwitchLoader = false);
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screens = buildScreens();
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Scaffold(
       body: Stack(
         children: [
-          TrainLoadingTransition(
-            isLoading: isTabSwitching,
-            loadingLabel: 'Loading page...',
-            arrivalLabel: 'Page ready',
-            child: buildCurrentScreen(),
+          IndexedStack(
+            index: currentIndex,
+            children: screens,
           ),
+          if (_showTabSwitchLoader)
+            Positioned.fill(
+              child: TrainLoadingTransition(
+                isLoading: _isTabSwitching,
+                loadingLabel: 'Switching tabs...',
+                arrivalLabel: 'Page ready',
+                child: const SizedBox.shrink(),
+              ),
+            ),
           _NetworkStatusBanner(type: bannerType),
         ],
       ),

@@ -73,12 +73,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.text,
-                      decoration:
-                          const InputDecoration(labelText: 'Email or username'),
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(labelText: 'Email'),
                       validator: (value) {
                         final v = value?.trim() ?? '';
-                        if (v.isEmpty) return 'Email or username is required';
+                        if (v.isEmpty) return 'Email is required';
+                        if (!v.contains('@')) return 'Enter a valid email';
                         return null;
                       },
                     ),

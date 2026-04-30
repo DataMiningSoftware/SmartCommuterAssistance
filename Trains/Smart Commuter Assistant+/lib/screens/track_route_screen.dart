@@ -2346,10 +2346,11 @@ class _TrackStopTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
-                        'Change to ${stop.routeId}',
+                        'Change to ${secondaryStop.routeId}',
                         style: TextStyle(
-                          color:
-                              isPassed ? const Color(0xFF98A2B3) : routeColor,
+                          color: isPassed
+                              ? const Color(0xFF98A2B3)
+                              : secondaryRouteColor,
                           fontWeight: FontWeight.w800,
                         ),
                       ),

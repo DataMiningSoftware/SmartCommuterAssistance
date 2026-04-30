@@ -1,9 +1,8 @@
-import 'dart:convert';
+import 'dart:async';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/app_user.dart';
 import 'database_service.dart';
@@ -13,17 +12,26 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  static const String _sessionUserIdKey = 'session_user_id';
   final ValueNotifier<AppUser?> currentUser = ValueNotifier<AppUser?>(null);
   final DatabaseService _databaseService = DatabaseService();
 
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _isInitialized = false;
+
+  @visibleForTesting
+  bool get hasAuthSubscription => _authSubscription != null;
+
   Future<void> initialize() async {
-    await _ensureAdminAccount();
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(_sessionUserIdKey);
-    if (userId == null) return;
-    final user = await _databaseService.getUserById(userId);
-    currentUser.value = user;
+    if (_isInitialized) return;
+    await _databaseService.initialize();
+    await _syncCurrentUserFromSession(
+        Supabase.instance.client.auth.currentSession);
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      (data) {
+        unawaited(_syncCurrentUserFromSession(data.session));
+      },
+    );
+    _isInitialized = true;
   }
 
   Future<void> signUp({
@@ -32,86 +40,88 @@ class AuthService {
     required String password,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
-    final exists = await _databaseService.emailExists(cleanEmail);
-    if (exists) {
-      throw Exception('An account with this email already exists.');
+    final cleanName = name.trim();
+    final response = await Supabase.instance.client.auth.signUp(
+      email: cleanEmail,
+      password: password,
+      data: <String, dynamic>{
+        'name': cleanName,
+      },
+    );
+
+    if (response.user != null) {
+      await _databaseService.upsertUserProfile(
+        name: cleanName,
+        email: cleanEmail,
+      );
     }
 
-    final userId = await _databaseService.createUser(
-      name: name.trim(),
-      email: cleanEmail,
-      passwordHash: _hashPassword(password),
-    );
-    await _databaseService.upsertDefaultPreferences(userId);
-    await _setSession(userId);
-    currentUser.value = await _databaseService.getUserById(userId);
+    await _syncCurrentUserFromSession(response.session);
   }
 
   Future<void> login({
     required String email,
     required String password,
   }) async {
-    final identifier = email.trim().toLowerCase();
-    Map<String, dynamic>? row;
-
-    // Allow quick local admin login using username: admin / password: admin
-    if (identifier == 'admin') {
-      await _ensureAdminAccount();
-      row = await _databaseService.getUserWithHashByEmail('admin@smart.local');
-    } else {
-      row = await _databaseService.getUserWithHashByEmail(identifier);
-    }
-    if (row == null) {
-      throw Exception('Account not found.');
-    }
-
-    final storedHash = row['password_hash'] as String;
-    final providedHash = _hashPassword(password);
-    if (storedHash != providedHash) {
-      throw Exception('Invalid email or password.');
-    }
-
-    final userId = row['id'] as int;
-    await _setSession(userId);
-    currentUser.value = await _databaseService.getUserById(userId);
+    final cleanEmail = email.trim().toLowerCase();
+    final response = await Supabase.instance.client.auth.signInWithPassword(
+      email: cleanEmail,
+      password: password,
+    );
+    await _syncCurrentUserFromSession(response.session);
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_sessionUserIdKey);
+    await Supabase.instance.client.auth.signOut();
     currentUser.value = null;
   }
 
-  Future<void> _setSession(int userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_sessionUserIdKey, userId);
-  }
+  Future<void> _syncCurrentUserFromSession(Session? session) async {
+    final authUser = session?.user;
+    if (authUser == null) {
+      currentUser.value = null;
+      return;
+    }
 
-  String _hashPassword(String password) {
-    // Note: secure for demo/local app usage. For production, use server-side auth.
-    final bytes = utf8.encode(password);
-    return sha256.convert(bytes).toString();
-  }
+    final email = authUser.email?.trim().toLowerCase();
+    if (email == null || email.isEmpty) {
+      currentUser.value = null;
+      return;
+    }
 
-  Future<void> _ensureAdminAccount() async {
-    const adminEmail = 'admin@smart.local';
-    final exists = await _databaseService.emailExists(adminEmail);
-    if (exists) return;
-    final adminId = await _databaseService.createUser(
-      name: 'admin',
-      email: adminEmail,
-      passwordHash: _hashPassword('admin'),
+    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
+    final name = _extractDisplayName(metadata, email);
+    final localUser = await _databaseService.upsertUserProfile(
+      name: name,
+      email: email,
     );
-    await _databaseService.upsertDefaultPreferences(adminId);
+    currentUser.value = localUser;
   }
-}
 
-class AuthException implements Exception {
-  final String message;
-  const AuthException(this.message);
+  String _extractDisplayName(Map<String, dynamic> metadata, String email) {
+    const candidates = <String>[
+      'name',
+      'full_name',
+      'display_name',
+      'username',
+    ];
+    for (final key in candidates) {
+      final value = metadata[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+    return email.split('@').first;
+  }
 }
 
 String formatDatabaseException(Object error) {
+  if (error is AuthException) {
+    return error.message;
+  }
+  if (error is AuthApiException) {
+    return error.message;
+  }
   if (error is DatabaseException) {
     return 'Database error: ${error.toString()}';
   }

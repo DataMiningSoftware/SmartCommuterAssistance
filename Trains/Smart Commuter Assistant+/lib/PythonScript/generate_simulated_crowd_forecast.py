@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 FIRST_TRAIN = "06:00"
 LAST_TRAIN = "00:00"
 CLOSED_HEADWAY = -1
@@ -101,7 +100,13 @@ def minutes_until_next_train(current_time: time) -> int | None:
     return frequency - remainder
 
 
-def in_window(current_time: time, start_hour: int, start_minute: int, end_hour: int, end_minute: int) -> bool:
+def in_window(
+    current_time: time,
+    start_hour: int,
+    start_minute: int,
+    end_hour: int,
+    end_minute: int,
+) -> bool:
     current_minutes = minutes_since_midnight(current_time)
     start_minutes = (start_hour * 60) + start_minute
     end_minutes = (end_hour * 60) + end_minute
@@ -205,7 +210,9 @@ def build_forecast_rows(profiles: list[StationProfile]) -> pd.DataFrame:
                             current_time,
                         ),
                         "minutes_until_next_train": (
-                            headway if operating and headway is not None else CLOSED_HEADWAY
+                            headway
+                            if operating and headway is not None
+                            else CLOSED_HEADWAY
                         ),
                         "is_operating": operating,
                     }

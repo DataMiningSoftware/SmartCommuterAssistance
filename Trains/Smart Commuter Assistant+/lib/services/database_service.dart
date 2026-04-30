@@ -186,6 +186,19 @@ class DatabaseService {
     return rows.first;
   }
 
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    final db = await database;
+    final rows = await db.query(
+      'users',
+      columns: ['id', 'name', 'email', 'created_at'],
+      where: 'email = ?',
+      whereArgs: [email],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
   Future<AppUser?> getUserById(int id) async {
     final db = await database;
     final rows = await db.query(
@@ -202,6 +215,42 @@ class DatabaseService {
   Future<bool> emailExists(String email) async {
     final row = await getUserWithHashByEmail(email);
     return row != null;
+  }
+
+  Future<AppUser> upsertUserProfile({
+    required String name,
+    required String email,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanName =
+        name.trim().isEmpty ? cleanEmail.split('@').first : name.trim();
+    final existing = await getUserByEmail(cleanEmail);
+    if (existing != null) {
+      final db = await database;
+      await db.update(
+        'users',
+        {'name': cleanName},
+        where: 'id = ?',
+        whereArgs: [existing['id']],
+      );
+      final updated = await getUserById(existing['id'] as int);
+      if (updated == null) {
+        throw StateError('Failed to load updated user profile for $cleanEmail');
+      }
+      return updated;
+    }
+
+    final id = await createUser(
+      name: cleanName,
+      email: cleanEmail,
+      passwordHash: 'supabase_auth',
+    );
+    await upsertDefaultPreferences(id);
+    final created = await getUserById(id);
+    if (created == null) {
+      throw StateError('Failed to create local user profile for $cleanEmail');
+    }
+    return created;
   }
 
   Future<void> upsertDefaultPreferences(int userId) async {

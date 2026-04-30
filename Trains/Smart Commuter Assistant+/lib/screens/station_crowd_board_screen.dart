@@ -187,6 +187,10 @@ class _CrowdBoardStationTile extends StatelessWidget {
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' | ');
     final stopSummary = item.stopIds.join(', ');
+    final statusTags = CrowdReportsService.statusTagsFor(
+      sourceType: item.sourceType,
+      fromCache: item.fromCache,
+    );
     const mutedText = Color(0xFF98A2B3);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -243,6 +247,38 @@ class _CrowdBoardStationTile extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
+                if (statusTags.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: statusTags
+                        .map(
+                          (tag) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF4F7FC),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: const Color(0xFFDCE4F3),
+                              ),
+                            ),
+                            child: Text(
+                              tag,
+                              style: const TextStyle(
+                                color: Color(0xFF344054),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
               ],
             ),
           ),
