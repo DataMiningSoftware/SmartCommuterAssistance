@@ -30,19 +30,20 @@ class AppLogo extends StatelessWidget {
             child: Image.asset(
               'assets/images/logo.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(Icons.train_rounded, color: Colors.white, size: 34),
+              errorBuilder: (_, __, ___) => Icon(Icons.train_rounded,
+                  color: Theme.of(context).colorScheme.onPrimary, size: 34),
             ),
           ),
         ),
         if (showText) ...[
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Smart Commuter+',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
-              color: Color(0xFF0E1C3B),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],

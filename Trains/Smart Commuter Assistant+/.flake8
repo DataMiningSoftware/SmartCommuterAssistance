@@ -1,0 +1,10 @@
+[flake8]
+exclude =
+    .git,
+    .dart_tool,
+    .pytest_cache,
+    build,
+    env,
+    backend/.venv
+extend-ignore = E203,E501
+max-line-length = 88

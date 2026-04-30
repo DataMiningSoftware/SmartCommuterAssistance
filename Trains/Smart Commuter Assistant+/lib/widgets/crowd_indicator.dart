@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../constants/crowd_levels.dart';
+
 class CrowdIndicator extends StatelessWidget {
   final String level;
 
@@ -10,43 +12,25 @@ class CrowdIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color;
-    IconData icon;
-    
-    switch (level.toLowerCase()) {
-      case 'low':
-        color = Colors.green;
-        icon = Icons.person;
-        break;
-      case 'medium':
-        color = Colors.orange;
-        icon = Icons.people;
-        break;
-      case 'high':
-        color = Colors.red;
-        icon = Icons.groups;
-        break;
-      default:
-        color = Colors.grey;
-        icon = Icons.help;
-    }
+    final crowd = crowdLevelStyleFromLabel(level);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: crowd.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.75), width: 1),
+        border:
+            Border.all(color: crowd.color.withValues(alpha: 0.75), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(crowd.icon, size: 16, color: crowd.color),
           const SizedBox(width: 4),
           Text(
-            level,
+            crowd.label,
             style: TextStyle(
-              color: color,
+              color: crowd.color,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -68,26 +52,7 @@ class CrowdIndicatorCircular extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double progress;
-    Color color;
-    
-    switch (level.toLowerCase()) {
-      case 'low':
-        progress = 0.3;
-        color = Colors.green;
-        break;
-      case 'medium':
-        progress = 0.6;
-        color = Colors.orange;
-        break;
-      case 'high':
-        progress = 0.9;
-        color = Colors.red;
-        break;
-      default:
-        progress = 0.0;
-        color = Colors.grey;
-    }
+    final crowd = crowdLevelStyleFromLabel(level);
 
     return SizedBox(
       width: 40,
@@ -96,15 +61,15 @@ class CrowdIndicatorCircular extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CircularProgressIndicator(
-            value: progress,
-            backgroundColor: color.withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
+            value: crowd.meterValue,
+            backgroundColor: crowd.color.withValues(alpha: 0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(crowd.color),
             strokeWidth: 4,
           ),
           Text(
-            level[0].toUpperCase(),
+            crowd.label[0],
             style: TextStyle(
-              color: color,
+              color: crowd.color,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),

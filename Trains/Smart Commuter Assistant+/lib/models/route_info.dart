@@ -28,11 +28,12 @@ class RouteInfo {
       origin: json['origin'] ?? '',
       destination: json['destination'] ?? '',
       steps: (json['steps'] as List<dynamic>?)
-          ?.map((step) => RouteStep.fromJson(step))
-          .toList() ?? [],
+              ?.map((step) => RouteStep.fromJson(step))
+              .toList() ??
+          [],
       totalDurationMinutes: json['totalDurationMinutes'] ?? 0,
       totalDistance: (json['totalDistance'] ?? 0.0).toDouble(),
-      crowdLevel: json['crowdLevel'] ?? 'Medium',
+      crowdLevel: json['crowdLevel'] ?? 'Moderate',
       fare: (json['fare'] ?? 0.0).toDouble(),
       isFavorite: json['isFavorite'] ?? false,
     );
@@ -72,7 +73,7 @@ class RouteInfo {
   // Get route summary
   String get routeSummary {
     if (steps.isEmpty) return '$origin → $destination';
-    
+
     final stationNames = [origin];
     for (final step in steps) {
       if (step.type == RouteStepType.transfer) {
@@ -80,7 +81,7 @@ class RouteInfo {
       }
     }
     stationNames.add(destination);
-    
+
     return stationNames.join(' → ');
   }
 

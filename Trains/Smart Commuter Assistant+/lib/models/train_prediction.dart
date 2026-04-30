@@ -1,3 +1,5 @@
+import '../constants/crowd_levels.dart';
+
 class TrainPrediction {
   final String trainId;
   final String line;
@@ -28,7 +30,7 @@ class TrainPrediction {
       destination: json['destination'] ?? '',
       arrivalTime: DateTime.parse(json['arrivalTime']),
       delayMinutes: json['delayMinutes'] ?? 0,
-      crowdLevel: json['crowdLevel'] ?? 'Medium',
+      crowdLevel: json['crowdLevel'] ?? 'Moderate',
       confidence: (json['confidence'] ?? 0.95).toDouble(),
     );
   }
@@ -51,7 +53,7 @@ class TrainPrediction {
   String get formattedArrivalTime {
     final now = DateTime.now();
     final difference = arrivalTime.difference(now);
-    
+
     if (difference.inMinutes <= 0) {
       return 'Arriving now';
     } else if (difference.inMinutes < 60) {
@@ -66,16 +68,8 @@ class TrainPrediction {
 
   // Get crowd level color
   String get crowdLevelColor {
-    switch (crowdLevel.toLowerCase()) {
-      case 'low':
-        return '#4CAF50'; // Green
-      case 'medium':
-        return '#FF9800'; // Orange
-      case 'high':
-        return '#F44336'; // Red
-      default:
-        return '#9E9E9E'; // Grey
-    }
+    final color = crowdLevelStyleFromLabel(crowdLevel).color;
+    return '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
   }
 
   @override
