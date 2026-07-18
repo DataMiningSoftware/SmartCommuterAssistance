@@ -5,9 +5,8 @@ services:
     runtime: python
     repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
     branch: main
-    rootDir: Trains/Smart Commuter Assistant+/backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r "Trains/Smart Commuter Assistant+/backend/requirements.txt"
+    startCommand: cd "Trains/Smart Commuter Assistant+/backend" && uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -23,9 +22,8 @@ services:
     runtime: python
     repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
     branch: main
-    rootDir: Trains/Smart Commuter Assistant+
-    buildCommand: pip install -r requirements.txt
-    startCommand: python lib/PythonScript/build_and_upsert_hourly_forecast.py
+    buildCommand: pip install -r "Trains/Smart Commuter Assistant+/requirements.txt"
+    startCommand: python "Trains/Smart Commuter Assistant+/lib/PythonScript/build_and_upsert_hourly_forecast.py"
     schedule: "0 */6 * * *"
     envVars:
       - key: SUPABASE_URL
@@ -39,9 +37,8 @@ services:
     runtime: python
     repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
     branch: main
-    rootDir: Trains/Smart Commuter Assistant+/backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: python snapshot_daily_blend.py
+    buildCommand: pip install -r "Trains/Smart Commuter Assistant+/backend/requirements.txt"
+    startCommand: cd "Trains/Smart Commuter Assistant+/backend" && python snapshot_daily_blend.py
     schedule: "0 0 * * *"
     envVars:
       - key: SUPABASE_URL
