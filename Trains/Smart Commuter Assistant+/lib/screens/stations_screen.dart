@@ -11,6 +11,7 @@ import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/station_service.dart';
 import '../services/transit_network_service.dart';
+import '../widgets/scheduled_arrivals_panel.dart';
 import '../widgets/train_loading_transition.dart';
 
 class StationsScreen extends StatefulWidget {
@@ -1312,7 +1313,33 @@ class _StationsScreenState extends State<StationsScreen> {
               ? null
               : _distanceMeters(station, _userPosition!),
           onTap: _isPlanningRoute ? () {} : () => _planRouteToStation(station),
+          onArrivalsTap: () => _showScheduledArrivals(station),
           onReportTap: () => _reportCrowdLevel(station),
+        );
+      },
+    );
+  }
+
+  Future<void> _showScheduledArrivals(Map<String, dynamic> station) async {
+    final stopIds = _destinationStopIdsForStation(station);
+    final stopId = stopIds.isEmpty ? _stationStopId(station) : stopIds.first;
+    if (stopId.isEmpty || stopId == 'N/A') {
+      _showMessage('Selected station is missing a GTFS stop id.');
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: ScheduledArrivalsPanel(
+              stopId: stopId,
+              stationName: _stationName(station),
+            ),
+          ),
         );
       },
     );
@@ -1475,6 +1502,18 @@ class _StationsScreenState extends State<StationsScreen> {
 
     var selectedCode = codes.first;
     var selectedLevel = 3;
+    var geoWarning = '';
+
+    final distance = _userPosition == null
+        ? null
+        : _distanceMeters(station, _userPosition!);
+    if (distance != null && distance > 500) {
+      geoWarning =
+          'You are ${distance.round()}m from this station. Please move within 500m for accurate reporting.';
+    } else if (distance == null) {
+      geoWarning =
+          'Enable location to verify proximity before reporting crowd levels.';
+    }
 
     final submitted = await showModalBottomSheet<bool>(
       context: context,
@@ -1483,6 +1522,7 @@ class _StationsScreenState extends State<StationsScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final tooFar = distance != null && distance > 500;
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -1499,6 +1539,50 @@ class _StationsScreenState extends State<StationsScreen> {
                       _stationName(station),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
+                    if (geoWarning.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: tooFar
+                              ? const Color(0xFFFEF3F2)
+                              : const Color(0xFFF0F5FF),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: tooFar
+                                ? const Color(0xFFFECDCA)
+                                : const Color(0xFFB2DDFF),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              tooFar
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.info_outline_rounded,
+                              size: 16,
+                              color: tooFar
+                                  ? const Color(0xFFB42318)
+                                  : const Color(0xFF0F6FFF),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                geoWarning,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: tooFar
+                                      ? const Color(0xFFB42318)
+                                      : const Color(0xFF344054),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       key: ValueKey(selectedCode),
@@ -1542,8 +1626,8 @@ class _StationsScreenState extends State<StationsScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Submit Report'),
+                        onPressed: tooFar ? null : () => Navigator.of(context).pop(true),
+                        child: Text(tooFar ? 'Move Closer to Submit' : 'Submit Report'),
                       ),
                     ),
                   ],
@@ -1595,6 +1679,7 @@ class _StationCard extends StatelessWidget {
   final _CrowdLevelUi? crowdLevelUi;
   final double? distanceMeters;
   final VoidCallback onTap;
+  final VoidCallback onArrivalsTap;
   final VoidCallback onReportTap;
 
   const _StationCard({
@@ -1604,6 +1689,7 @@ class _StationCard extends StatelessWidget {
     required this.crowdLevelUi,
     required this.distanceMeters,
     required this.onTap,
+    required this.onArrivalsTap,
     required this.onReportTap,
   });
 
@@ -1686,6 +1772,20 @@ class _StationCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 2),
+                TextButton.icon(
+                  onPressed: onArrivalsTap,
+                  style: TextButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.schedule_rounded, size: 14),
+                  label: const Text(
+                    'Arrivals',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                ),
                 TextButton.icon(
                   onPressed: onReportTap,
                   style: TextButton.styleFrom(

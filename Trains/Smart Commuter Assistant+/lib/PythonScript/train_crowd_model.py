@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import TimeSeriesSplit, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
@@ -84,19 +84,34 @@ def train(
 
     x = df[FEATURE_COLUMNS]
     y = pd.to_numeric(df["occupancy_level"], errors="coerce").fillna(0).astype(int)
-    # Use stratified split only when every class has at least 2 samples
-    try:
-        stratify_for_split = y if (y.value_counts().min() >= 2) else None
-    except Exception:
-        stratify_for_split = None
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        x,
-        y,
-        test_size=0.2,
-        random_state=42,
-        stratify=stratify_for_split,
-    )
+    # Use time-based split for realistic forecasting evaluation.
+    # Sorts rows by an inferred timestamp and takes the most recent 20% as test.
+    # If no timestamp column is available, falls back to random split.
+    time_cols = ["timestamp", "date", "datetime", "ds", "time"]
+    ts_col = next((c for c in time_cols if c in df.columns), None)
+    if ts_col is not None:
+        sorted_idx = df[ts_col].sort_values().index
+        split_idx = int(len(sorted_idx) * 0.8)
+        train_idx = sorted_idx[:split_idx]
+        test_idx = sorted_idx[split_idx:]
+        x_train, x_test = x.loc[train_idx], x.loc[test_idx]
+        y_train, y_test = y.loc[train_idx], y.loc[test_idx]
+        print(f"Time-based split: {len(x_train)} train, {len(x_test)} test rows")
+    else:
+        try:
+            stratify_for_split = y if (y.value_counts().min() >= 2) else None
+        except Exception:
+            stratify_for_split = None
+
+        x_train, x_test, y_train, y_test = train_test_split(
+            x,
+            y,
+            test_size=0.2,
+            random_state=42,
+            stratify=stratify_for_split,
+        )
+        print("No timestamp column found, fell back to random split")
 
     preprocessor = ColumnTransformer(
         transformers=[
@@ -218,13 +233,18 @@ def train(
 
     # If tuning is requested, split out a validation set from the training data
     if do_tune:
-        x_train_sub, x_val, y_train_sub, y_val = train_test_split(
-            x_train,
-            y_train,
-            test_size=0.2,
-            random_state=42,
-            stratify=y_train if y_train.nunique() > 1 else None,
-        )
+        if ts_col is not None:
+            val_split = int(len(train_idx) * 0.8)
+            x_train_sub, x_val = x_train.iloc[:val_split], x_train.iloc[val_split:]
+            y_train_sub, y_val = y_train.iloc[:val_split], y_train.iloc[val_split:]
+        else:
+            x_train_sub, x_val, y_train_sub, y_val = train_test_split(
+                x_train,
+                y_train,
+                test_size=0.2,
+                random_state=42,
+                stratify=y_train if y_train.nunique() > 1 else None,
+            )
         try:
             import optuna
 

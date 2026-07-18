@@ -708,6 +708,41 @@ That is far more defensible than trying to force one more complicated model into
 - `docker/python-worker/Dockerfile`
 - `tests/test_train_backends.py`
 
-## 20. Final technical conclusion
+## 20. Recent additions (July 2026)
+
+The following features were added after the initial April 2026 submission scope:
+
+### 20.1 Schematic Transit Map
+- `assets/data/map_stations.json` — percentage-based (x,y) coordinate data for 24 Klang Valley stations mapped to the static `klang_valley_map.png` asset
+- `lib/widgets/schematic_transit_map.dart` — InteractiveViewer-based map with tappable station circles, origin/destination selection, route line highlighting via CustomPainter, and bottom sheet actions
+- The schematic view replaces the previous geo-projected station overlay that did not align with the static image
+- Station markers use route-aware colors; when a route is selected, non-selected lines grey out
+
+### 20.2 FastAPI Backend Enhancements
+- **GTFS Static Feed Integration** (`backend/gtfs_service.py`): Downloads official Malaysia rapid-rail-kl GTFS zip from `api.data.gov.my` with 24-hour cache. Parses `stops.txt`, `routes.txt`, `trips.txt`, `stop_times.txt`, `calendar.txt`, and `frequencies.txt` to calculate scheduled arrivals
+- **`GET /arrivals/station/{stop_id}`**: Returns next N scheduled arrivals with minutes-until calculation
+- **`GET /arrivals/nearest`**: Nearest station lookup by GPS + arrivals
+- **`POST /crowd/report`**: Geo-fenced (500m), rate-limited (2h), consensus-checked report submission
+- **`GET /crowd/blend`**: Returns time-decay blended crowd level from the SQL function
+- **`backend/crowd_service.py`**: Validation service with Haversine distance, rate-limit checks against Supabase, consensus corroboration logic
+
+### 20.3 Time-Decay Crowd System (Supabase)
+- `supabase/migration_crowd_system.sql`:
+  - `historical_crowds` table — daily snapshots of blended crowd levels per stop/hour/weekday
+  - `get_blended_crowd_level()` SQL function — 40% ML forecast + 60% age-weighted user reports (2h window), fallback to 14-day historical moving average
+  - `submit_crowd_report()` updated with rate-limiting and consensus checks
+  - `snapshot_daily_blend()` — cron-ready function for midnight snapshots
+- `supabase/rls_policies.sql` hardened: crowd_reports INSERT requires `authenticated` role (anon removed)
+
+### 20.4 Geo-Fencing (Flutter)
+- `lib/screens/stations_screen.dart`: Report submission bottom sheet checks GPS distance to station. If >500m, warning displayed and submit button disabled with "Move Closer to Submit" label
+- `lib/services/crowd_reports_service.dart`: Tries FastAPI backend first (with lat/lng) for validated submission, falls back to Supabase RPC
+
+### 20.5 UI Polish
+- Flutter debug banner removed via `debugShowCheckedModeBanner: false`
+- WIP badge (hammer icon + "W.I.P") added to `AppPageTitle` widget, visible on every app page
+- Production backend URL added to `BackendConfigService` defaults
+
+## 21. Final technical conclusion
 
 The current repository is centered on a Random Forest crowd-classification pipeline trained on engineered synthetic data, supported by optional LightGBM / XGBoost experimentation and Optuna tuning. The deployed prediction path still points to the Random Forest artifact. The project does not use LSTM or Prophet, and neither is necessary to make the present submission coherent. The hourly forecast system is rule-based and trend-driven rather than sequence-model-driven. Docker is useful here as a reproducible container for the Python worker environment, not as the main runtime for the Flutter app. With focused prioritization over the remaining time before April 30, 2026, the project can be submitted in a defensible and technically consistent form.

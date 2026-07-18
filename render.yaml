@@ -1,0 +1,50 @@
+services:
+  # ── FastAPI Backend ───────────────────────────────────────────
+  - type: web
+    name: smart-commuter-backend
+    runtime: python
+    repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
+    branch: main
+    rootDir: Trains/Smart Commuter Assistant+/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+
+  # ── Crowd Forecast Worker (runs every 6h) ────────────────────
+  - type: cron
+    name: crowd-forecast-worker
+    runtime: python
+    repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
+    branch: main
+    rootDir: Trains/Smart Commuter Assistant+
+    buildCommand: pip install -r requirements.txt
+    startCommand: python lib/PythonScript/build_and_upsert_hourly_forecast.py
+    schedule: "0 */6 * * *"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+
+  # ── Daily Crowd Snapshot (runs at midnight) ──────────────────
+  - type: cron
+    name: snapshot-daily-blend
+    runtime: python
+    repo: https://github.com/MuhammadNawfal/SmartCommuterAssistance
+    branch: main
+    rootDir: Trains/Smart Commuter Assistant+/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python snapshot_daily_blend.py
+    schedule: "0 0 * * *"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false

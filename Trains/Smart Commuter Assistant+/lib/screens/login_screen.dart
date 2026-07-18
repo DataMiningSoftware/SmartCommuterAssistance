@@ -107,6 +107,42 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Text('Login'),
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _loading
+                          ? null
+                          : () async {
+                              final currentContext = context;
+                              setState(() => _loading = true);
+                              try {
+                                await _authService.initialize();
+                                if (!mounted) return;
+                                if (!currentContext.mounted) return;
+                                ScaffoldMessenger.of(currentContext)
+                                    .showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Guest mode enabled. You can continue without an account.',
+                                    ),
+                                  ),
+                                );
+                              } catch (_) {
+                                if (!mounted) return;
+                                if (!currentContext.mounted) return;
+                                ScaffoldMessenger.of(currentContext)
+                                    .showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Unable to enter guest mode right now. Please try again.',
+                                    ),
+                                  ),
+                                );
+                              } finally {
+                                if (mounted) setState(() => _loading = false);
+                              }
+                            },
+                      child: const Text('Continue as guest'),
+                    ),
+                    const SizedBox(height: 8),
                     TextButton(
                       onPressed: _loading
                           ? null

@@ -1,0 +1,36 @@
+# Supabase Keepalive
+#
+# Supabase free-tier projects auto-pause after 7 days of no database activity.
+# This workflow runs every 3 days (well within that window) to issue a real
+# SQL query against the `crowd_reports` table, resetting the inactivity timer.
+# A dashboard visit or cached request does NOT count — only an actual query
+# hitting the Postgres backend resets the clock.
+#
+# Without this, the project would pause roughly every week, requiring a manual
+# unpause from the Supabase dashboard and causing a ~30-second cold-start delay
+# on the first request after a pause.
+#
+# Do NOT delete this file — even if the project seems "working fine" without it,
+# the pause happens silently and only becomes noticeable when the first user
+# of the day hits a 30-second delay or an error.
+
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Every 3 days at 06:00 UTC
+    - cron: "0 6 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    name: Ping Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query crowd_reports to reset inactivity timer
+        run: |
+          curl --fail-with-body -sS \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/crowd_reports?select=id&limit=1"
+        shell: bash

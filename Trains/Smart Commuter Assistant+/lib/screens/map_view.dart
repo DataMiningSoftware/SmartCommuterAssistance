@@ -7,10 +7,13 @@ import 'package:latlong2/latlong.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../models/map_station.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
+import '../widgets/scheduled_arrivals_panel.dart';
+import '../widgets/schematic_transit_map.dart';
 
 class MapView extends StatefulWidget {
   final String? initialDestinationName;
@@ -42,6 +45,11 @@ class _MapViewState extends State<MapView> {
   Position? _userPosition;
   String? _selectedStopId;
   StopCrowdForecast? _selectedForecast;
+  _MapMode _mapMode = _MapMode.geographic;
+
+  List<MapStation> _mapStations = [];
+  String? _schematicOriginId;
+  String? _schematicDestId;
 
   @override
   void initState() {
@@ -58,11 +66,13 @@ class _MapViewState extends State<MapView> {
     try {
       final network = await _transitNetworkService.loadNetwork();
       final position = await _loadLocation();
+      final stations = await MapStationData.load();
       if (!mounted) return;
       setState(() {
         _stopsById = network.stopsById;
         _connections = network.connections;
         _userPosition = position;
+        _mapStations = stations;
         _isLoading = false;
       });
       _focusInitialContext();
@@ -229,14 +239,11 @@ class _MapViewState extends State<MapView> {
               width: size,
               height: size,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white
-                    : getRouteColor(stop.routeId),
+                color: isSelected ? Colors.white : getRouteColor(stop.routeId),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected
-                      ? getRouteColor(stop.routeId)
-                      : Colors.white,
+                  color:
+                      isSelected ? getRouteColor(stop.routeId) : Colors.white,
                   width: isSelected ? 3 : 2,
                 ),
                 boxShadow: const <BoxShadow>[
@@ -315,6 +322,33 @@ class _MapViewState extends State<MapView> {
     _mapController.move(LatLng(position.latitude, position.longitude), 12.8);
   }
 
+  Widget _buildModeSwitch() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SegmentedButton<_MapMode>(
+          segments: const [
+            ButtonSegment<_MapMode>(
+              value: _MapMode.geographic,
+              icon: Icon(Icons.public_rounded),
+              label: Text('Geographic'),
+            ),
+            ButtonSegment<_MapMode>(
+              value: _MapMode.schematic,
+              icon: Icon(Icons.schema_rounded),
+              label: Text('Transit map'),
+            ),
+          ],
+          selected: {_mapMode},
+          onSelectionChanged: (selection) {
+            setState(() => _mapMode = selection.first);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedStop =
@@ -331,7 +365,11 @@ class _MapViewState extends State<MapView> {
           leadingText: 'Rail',
           accentText: 'Map',
           badgeText: 'LIVE',
-          subtitle: 'Geographic network view',
+          subtitle: 'Geographic and schematic views',
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(58),
+          child: _buildModeSwitch(),
         ),
       ),
       body: _isLoading
@@ -346,170 +384,207 @@ class _MapViewState extends State<MapView> {
                     ),
                   ),
                 )
-              : Stack(
-                  children: [
-                    Positioned.fill(
-                      child: FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          initialCenter: _klCenter,
-                          initialZoom: _defaultZoom,
-                          minZoom: 9,
-                          maxZoom: 18,
-                          onTap: (_, __) => _clearSelection(),
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'smart_commuter_assistant',
-                          ),
-                          PolylineLayer(polylines: _buildNetworkPolylines()),
-                          ValueListenableBuilder<ActiveTrip?>(
-                            valueListenable: _activeTripService.activeTrip,
-                            builder: (context, _, __) {
-                              return PolylineLayer(
-                                polylines: _buildActiveTripPolylines(),
-                              );
-                            },
-                          ),
-                          MarkerLayer(
-                            markers: <Marker>[
-                              ..._buildStopMarkers(),
-                              if (_buildUserMarker() case final marker?) marker,
+              : _mapMode == _MapMode.schematic
+                  ? SchematicTransitMap(
+                      stations: _mapStations,
+                      selectedOriginId: _schematicOriginId,
+                      selectedDestinationId: _schematicDestId,
+                      onOriginSelected: (station) {
+                        setState(() {
+                          _schematicOriginId = station.stationId;
+                        });
+                      },
+                      onDestinationSelected: (station) {
+                        setState(() {
+                          _schematicDestId = station.stationId;
+                        });
+                      },
+                    )
+                  : Stack(
+                      children: [
+                        Positioned.fill(
+                          child: FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: _klCenter,
+                              initialZoom: _defaultZoom,
+                              minZoom: 9,
+                              maxZoom: 18,
+                              onTap: (_, __) => _clearSelection(),
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName:
+                                    'smart_commuter_assistant',
+                              ),
+                              PolylineLayer(
+                                  polylines: _buildNetworkPolylines()),
+                              ValueListenableBuilder<ActiveTrip?>(
+                                valueListenable: _activeTripService.activeTrip,
+                                builder: (context, _, __) {
+                                  return PolylineLayer(
+                                    polylines: _buildActiveTripPolylines(),
+                                  );
+                                },
+                              ),
+                              MarkerLayer(
+                                markers: <Marker>[
+                                  ..._buildStopMarkers(),
+                                  if (_buildUserMarker() case final marker?)
+                                    marker,
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    if ((widget.preferredRouteType?.trim().isNotEmpty ?? false))
-                      Positioned(
-                        top: 12,
-                        left: 16,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A).withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            'Route preference: ${widget.preferredRouteType}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                        ),
+                        if ((widget.preferredRouteType?.trim().isNotEmpty ??
+                            false))
+                          Positioned(
+                            top: 12,
+                            left: 16,
+                            right: 16,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A)
+                                    .withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'Route preference: ${widget.preferredRouteType}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
+                          ),
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: Column(
+                            children: [
+                              FloatingActionButton.small(
+                                heroTag: 'locate_me',
+                                onPressed: _centerOnUser,
+                                child: const Icon(Icons.my_location_rounded),
+                              ),
+                              const SizedBox(height: 10),
+                              FloatingActionButton.small(
+                                heroTag: 'reset_map',
+                                onPressed: () => _mapController.move(
+                                    _klCenter, _defaultZoom),
+                                child: const Icon(
+                                    Icons.center_focus_strong_rounded),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Column(
-                        children: [
-                          FloatingActionButton.small(
-                            heroTag: 'locate_me',
-                            onPressed: _centerOnUser,
-                            child: const Icon(Icons.my_location_rounded),
-                          ),
-                          const SizedBox(height: 10),
-                          FloatingActionButton.small(
-                            heroTag: 'reset_map',
-                            onPressed: () =>
-                                _mapController.move(_klCenter, _defaultZoom),
-                            child: const Icon(Icons.center_focus_strong_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (selectedStop != null)
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 16,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: const <BoxShadow>[
-                                BoxShadow(
-                                  color: Color(0x26101828),
-                                  blurRadius: 18,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: getRouteColor(selectedStop.routeId),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        selectedStop.stopName,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _clearSelection,
-                                      icon: const Icon(Icons.close_rounded),
+                        if (selectedStop != null)
+                          Positioned(
+                            left: 16,
+                            right: 16,
+                            bottom: 16,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: const <BoxShadow>[
+                                    BoxShadow(
+                                      color: Color(0x26101828),
+                                      blurRadius: 18,
+                                      offset: Offset(0, 10),
                                     ),
                                   ],
                                 ),
-                                Text(
-                                  '${selectedStop.stopId} • ${selectedStop.routeId}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF667085),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: crowdStyle.color.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    _selectedForecast == null
-                                        ? 'No backend forecast available'
-                                        : 'Crowd: ${crowdStyle.label}',
-                                    style: TextStyle(
-                                      color: crowdStyle.color,
-                                      fontWeight: FontWeight.w800,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: getRouteColor(
+                                                selectedStop.routeId),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            selectedStop.stopName,
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: _clearSelection,
+                                          icon:
+                                              const Icon(Icons.close_rounded),
+                                        ),
+                                      ],
                                     ),
-                                  ),
+                                    Text(
+                                      '${selectedStop.stopId} • ${selectedStop.routeId}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF667085),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: crowdStyle.color
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        _selectedForecast == null
+                                            ? 'No backend forecast available'
+                                            : 'Crowd: ${crowdStyle.label}',
+                                        style: TextStyle(
+                                          color: crowdStyle.color,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ScheduledArrivalsPanel(
+                                      stopId: selectedStop.stopId,
+                                      stationName: selectedStop.stopName,
+                                      compact: true,
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
     );
   }
+}
+
+enum _MapMode {
+  geographic,
+  schematic,
 }

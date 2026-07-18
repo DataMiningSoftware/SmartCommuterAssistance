@@ -109,6 +109,34 @@ class AppPageTitle extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4B400).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: const Color(0xFFF4B400).withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.build_rounded, size: 9, color: Color(0xFFB8860B)),
+                        SizedBox(width: 3),
+                        Text(
+                          'W.I.P',
+                          style: TextStyle(
+                            color: Color(0xFFB8860B),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (subtitle != null)
                     Text(
                       subtitle!,

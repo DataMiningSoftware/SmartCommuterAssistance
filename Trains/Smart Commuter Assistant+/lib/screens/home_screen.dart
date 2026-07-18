@@ -11,9 +11,11 @@ import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
+import '../services/location_privacy_service.dart';
 import '../services/navigation_state.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
+import '../widgets/scheduled_arrivals_panel.dart';
 import 'station_crowd_board_screen.dart';
 import 'stations_screen.dart';
 
@@ -296,6 +298,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<bool> _showLocationConsentDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Location Privacy'),
+        content: const Text(
+          'Your location is used to find nearby stations and '
+          'provide arrival estimates. Coordinates are rounded '
+          'to ~1 km precision before being sent to our servers. '
+          'Your exact location is never stored or shared.\n\n'
+          'You can change this later in Profile settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Skip'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+    if (result == true) {
+      await LocationPrivacyService.setConsent(true);
+    }
+    return result ?? false;
+  }
+
   void _showHomeMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -396,16 +428,26 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      final consented = await LocationPrivacyService.hasConsent();
+      if (!consented) {
+        final result = await _showLocationConsentDialog();
+        if (result != true || !mounted) return;
+      }
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       if (!mounted) return;
+      final redacted = LocationPrivacyService.redact(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
       setState(() {
         _position = position;
         _nearestCrowdFuture =
             _crowdReportsService.fetchNearestStationsWithCrowd(
-          latitude: position.latitude,
-          longitude: position.longitude,
+          latitude: redacted.latitude,
+          longitude: redacted.longitude,
           departureTime: DateTime.now(),
           limit: 5,
         );
@@ -418,10 +460,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshNearestCrowd() {
     final position = _position;
     if (position == null) return;
+    final redacted = LocationPrivacyService.redact(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
     setState(() {
       _nearestCrowdFuture = _crowdReportsService.fetchNearestStationsWithCrowd(
-        latitude: position.latitude,
-        longitude: position.longitude,
+        latitude: redacted.latitude,
+        longitude: redacted.longitude,
         departureTime: DateTime.now(),
         limit: 5,
       );
@@ -486,6 +532,42 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingMap = false;
       });
     }
+  }
+
+  Future<List<_HomeStationSearchOption>> _loadStationSearchOptions() async {
+    try {
+      final network = await _transitNetworkService.loadNetwork();
+      final options = network.stationOptions
+          .map(
+            (option) => _HomeStationSearchOption(
+              stationName: option.stationName,
+              stopCodes: option.stopIds,
+              routeIds: option.routeIds,
+            ),
+          )
+          .toList();
+      if (options.isNotEmpty) {
+        return options;
+      }
+    } catch (_) {}
+
+    return const <_HomeStationSearchOption>[
+      _HomeStationSearchOption(
+        stationName: 'KL Sentral',
+        stopCodes: <String>['KJ15'],
+        routeIds: <String>['KJ'],
+      ),
+      _HomeStationSearchOption(
+        stationName: 'Pasar Seni',
+        stopCodes: <String>['KJ14', 'KG16'],
+        routeIds: <String>['KJ', 'KG'],
+      ),
+      _HomeStationSearchOption(
+        stationName: 'Bukit Bintang',
+        stopCodes: <String>['KG18', 'MR6'],
+        routeIds: <String>['KG', 'MR'],
+      ),
+    ];
   }
 
   List<_HomeRouteConnection> _mapEdgeRows(List<Map<String, dynamic>> edgeRows) {
@@ -796,38 +878,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     return true;
-  }
-
-  Future<List<_HomeStationSearchOption>> _loadStationSearchOptions() async {
-    try {
-      final network = await _transitNetworkService.loadNetwork();
-      return network.stationOptions
-          .map(
-            (option) => _HomeStationSearchOption(
-              stationName: option.stationName,
-              stopCodes: option.stopIds,
-              routeIds: option.routeIds,
-            ),
-          )
-          .toList();
-    } catch (_) {
-      // Fallback below.
-    }
-
-    final groupedRows = <String, List<Map<String, dynamic>>>{};
-    final fallbackOptions = await _crowdReportsService.fetchStationOptions();
-    for (final option in fallbackOptions) {
-      final station = option.stationName.trim();
-      if (station.isEmpty) continue;
-      groupedRows.putIfAbsent(station, () => <Map<String, dynamic>>[]).add(
-        <String, dynamic>{
-          'station_name': station,
-          'stop_id': option.stopId,
-          'route_id': _inferRouteIdFromStopId(option.stopId),
-        },
-      );
-    }
-    return _buildSearchOptions(groupedRows);
   }
 
   Future<Map<String, bool>> _loadStationClosedByStop(
@@ -1546,9 +1596,12 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                 final stationOptions =
                     snapshot.data ?? const <_HomeStationSearchOption>[];
                 if (stationOptions.isEmpty) {
-                  return const Text(
-                    'No station names available yet.',
-                    style: TextStyle(color: Color(0xFF667085)),
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'No station names available yet. Showing a local sample list instead.',
+                      style: TextStyle(color: Color(0xFF667085)),
+                    ),
                   );
                 }
 
@@ -2555,6 +2608,13 @@ class _NearestStationCrowdCard extends StatelessWidget {
             const SizedBox(height: 10),
             _StatusTagWrap(tags: statusTags),
           ],
+          const SizedBox(height: 12),
+          ScheduledArrivalsPanel(
+            stopId: item.stopId,
+            stationName: item.stationName,
+            limit: 2,
+            compact: true,
+          ),
         ],
       ),
     );

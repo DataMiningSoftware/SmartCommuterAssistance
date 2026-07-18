@@ -6,11 +6,14 @@ from datetime import datetime
 from functools import lru_cache
 from math import atan2, cos, radians, sin, sqrt
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from crowd_service import CrowdService
+from gtfs_service import GtfsScheduleService, parse_query_datetime
 
 
 class RouteStepModel(BaseModel):
@@ -36,6 +39,35 @@ class RouteModel(BaseModel):
 class PlanResponse(BaseModel):
     routes: List[RouteModel]
     generatedAt: str
+
+
+class ArrivalModel(BaseModel):
+    stopId: str
+    stopName: str
+    routeId: str
+    routeShortName: str
+    routeLongName: str
+    destination: str
+    directionId: str
+    arrivalTime: str
+    minutesUntil: int
+    source: str
+
+
+class StationArrivalResponse(BaseModel):
+    stopId: str
+    stopName: str
+    generatedAt: str
+    arrivals: List[ArrivalModel]
+
+
+class NearestStationArrivalResponse(BaseModel):
+    stopId: str
+    stopName: str
+    routeId: str
+    distanceMeters: float
+    generatedAt: str
+    arrivals: List[ArrivalModel]
 
 
 @dataclass(frozen=True)
@@ -77,7 +109,39 @@ class _RouteProfile:
         self.crowd_penalty = crowd_penalty
 
 
-app = FastAPI(title="Smart Commuter Backend", version="0.2.0")
+class CrowdReportRequest(BaseModel):
+    stop_id: str
+    occupancy_level: int = 3
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    session_id: Optional[str] = None
+
+
+class CrowdReportResponse(BaseModel):
+    accepted: bool
+    message: str
+    stop_id: str = ""
+    occupancy_level: int = 0
+
+
+class CrowdBlendRequest(BaseModel):
+    stop_id: str
+    hour: Optional[int] = None
+    is_weekend: Optional[bool] = None
+
+
+class CrowdBlendResponse(BaseModel):
+    stop_id: str
+    forecast_hour: int
+    is_weekend: bool
+    occupancy_level: int
+    source_type: str
+    user_reports_count: int
+
+
+app = FastAPI(title="Smart Commuter Backend", version="0.3.0")
+gtfs_service = GtfsScheduleService()
+crowd_service = CrowdService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -91,11 +155,137 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict:
     network = load_network()
+    gtfs = gtfs_service.feed_metadata()
     return {
         "status": "ok",
         "stops": len(network["stops_by_id"]),
         "edges": len(network["adjacency"]),
+        "gtfs": gtfs,
     }
+
+
+@app.post("/crowd/report", response_model=CrowdReportResponse)
+def submit_crowd_report(
+    body: CrowdReportRequest,
+    x_user_id: str = Header(None),
+) -> CrowdReportResponse:
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="x-user-id header required")
+    result = crowd_service.submit_report(
+        stop_id=body.stop_id,
+        occupancy_level=body.occupancy_level,
+        user_id=x_user_id,
+        latitude=body.latitude,
+        longitude=body.longitude,
+        session_id=body.session_id,
+    )
+    if not result.accepted:
+        raise HTTPException(status_code=400, detail=result.message)
+    return CrowdReportResponse(
+        accepted=True,
+        message=result.message,
+        stop_id=result.stop_id,
+        occupancy_level=result.occupancy_level,
+    )
+
+
+@app.get("/crowd/blend", response_model=CrowdBlendResponse)
+def crowd_blend(
+    stop_id: str = Query(...),
+    hour: Optional[int] = Query(None, ge=0, le=23),
+    is_weekend: Optional[bool] = Query(None),
+) -> CrowdBlendResponse:
+    import math
+
+    v_hour = hour if hour is not None else datetime.now().hour
+    v_is_weekend = is_weekend if is_weekend is not None else datetime.now().weekday() >= 5
+
+    try:
+        result = crowd_service._get_supabase().rpc(
+            "get_blended_crowd_level",
+            params={
+                "p_stop_id": stop_id.upper(),
+                "p_hour": v_hour,
+                "p_is_weekend": v_is_weekend,
+            },
+        ).execute()
+        if result.data and len(result.data) > 0:
+            row = result.data[0]
+            return CrowdBlendResponse(
+                stop_id=row["stop_id"],
+                forecast_hour=row["forecast_hour"],
+                is_weekend=row["is_weekend"],
+                occupancy_level=row["occupancy_level"],
+                source_type=row["source_type"],
+                user_reports_count=row.get("user_reports_count", 0),
+            )
+    except Exception:
+        pass
+
+    return CrowdBlendResponse(
+        stop_id=stop_id.upper(),
+        forecast_hour=v_hour,
+        is_weekend=v_is_weekend,
+        occupancy_level=2,
+        source_type="fallback",
+        user_reports_count=0,
+    )
+
+
+@app.get("/arrivals/station/{stop_id}", response_model=StationArrivalResponse)
+def station_arrivals(
+    stop_id: str,
+    at: str | None = Query(
+        None,
+        description="Optional ISO datetime. Defaults to current Malaysia time.",
+    ),
+    limit: int = Query(4, ge=1, le=10),
+) -> StationArrivalResponse:
+    query_time = parse_query_datetime(at)
+    arrivals = gtfs_service.arrivals_for_stop(stop_id, at=query_time, limit=limit)
+    if not arrivals:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No scheduled arrivals found for stop: {stop_id}",
+        )
+    first = arrivals[0]
+    return StationArrivalResponse(
+        stopId=first.stop_id,
+        stopName=first.stop_name,
+        generatedAt=datetime.utcnow().isoformat() + "Z",
+        arrivals=[to_arrival_model(arrival) for arrival in arrivals],
+    )
+
+
+@app.get("/arrivals/nearest", response_model=NearestStationArrivalResponse)
+def nearest_station_arrivals(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    at: str | None = Query(
+        None,
+        description="Optional ISO datetime. Defaults to current Malaysia time.",
+    ),
+    limit: int = Query(4, ge=1, le=10),
+) -> NearestStationArrivalResponse:
+    nearest = gtfs_service.nearest_stops(latitude=lat, longitude=lon, limit=1)
+    if not nearest:
+        raise HTTPException(status_code=404, detail="No station data available")
+
+    stop, distance_meters = nearest[0]
+    query_time = parse_query_datetime(at)
+    arrivals = gtfs_service.arrivals_for_stop(
+        stop.stop_id,
+        at=query_time,
+        limit=limit,
+    )
+    return NearestStationArrivalResponse(
+        stopId=stop.stop_id,
+        stopName=stop.stop_name,
+        routeId=stop.route_id,
+        distanceMeters=round(distance_meters, 1),
+        generatedAt=datetime.utcnow().isoformat() + "Z",
+        arrivals=[to_arrival_model(arrival) for arrival in arrivals],
+    )
 
 
 @app.get("/plan-trip", response_model=PlanResponse)
@@ -249,6 +439,21 @@ def load_network() -> dict:
         "stops_by_id": stops_by_id,
         "adjacency": adjacency,
     }
+
+
+def to_arrival_model(arrival) -> ArrivalModel:
+    return ArrivalModel(
+        stopId=arrival.stop_id,
+        stopName=arrival.stop_name,
+        routeId=arrival.route_id,
+        routeShortName=arrival.route_short_name,
+        routeLongName=arrival.route_long_name,
+        destination=arrival.destination,
+        directionId=arrival.direction_id,
+        arrivalTime=arrival.arrival_time.isoformat(),
+        minutesUntil=arrival.minutes_until,
+        source=arrival.source,
+    )
 
 
 def normalize_route_id(route_id: str) -> str:

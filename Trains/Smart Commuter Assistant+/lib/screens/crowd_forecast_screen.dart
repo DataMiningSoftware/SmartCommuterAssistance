@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
 import '../services/crowd_reports_service.dart';
+import '../widgets/data_source_badge.dart';
 import '../widgets/train_loading_transition.dart';
 
 class CrowdForecastScreen extends StatefulWidget {
@@ -344,9 +345,15 @@ class _CrowdLevelCard extends StatelessWidget {
             style: TextStyle(color: secondaryTextColor),
           ),
           const SizedBox(height: 12),
-          Text(
-            'Forecast source: ${CrowdReportsService.displaySourceType(sourceType)}',
-            style: TextStyle(color: secondaryTextColor),
+          Row(
+            children: [
+              DataSourceBadge(source: sourceType),
+              const SizedBox(width: 8),
+              Text(
+                CrowdReportsService.displaySourceType(sourceType),
+                style: TextStyle(color: secondaryTextColor, fontSize: 12),
+              ),
+            ],
           ),
           if (createdAt != null)
             Text(

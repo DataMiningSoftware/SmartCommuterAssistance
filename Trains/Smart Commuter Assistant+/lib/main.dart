@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'constants/app_shadows.dart';
@@ -20,35 +21,35 @@ import 'widgets/train_loading_transition.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    runApp(
-      const _ConfigurationErrorApp(
-        message: 'Missing Supabase configuration.\n\nBuild the app with '
-            '--dart-define=SUPABASE_URL=... and '
-            '--dart-define=SUPABASE_ANON_KEY=...',
-      ),
-    );
-    return;
-  }
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = const String.fromEnvironment(
+        'SENTRY_DSN',
+        defaultValue: '',
+      );
+      options.tracesSampleRate = 0.2;
+    },
+    appRunner: () async {
+      const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+      const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  assert(() {
-    debugPrint('SUPABASE_URL=$supabaseUrl');
-    final keyPreview = supabaseAnonKey.length >= 10
-        ? supabaseAnonKey.substring(0, 10)
-        : supabaseAnonKey;
-    debugPrint('SUPABASE_ANON_KEY prefix=$keyPreview');
-    return true;
-  }());
+      if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+        try {
+          await Supabase.initialize(
+            url: supabaseUrl,
+            anonKey: supabaseAnonKey,
+          );
+        } catch (error) {
+          debugPrint('Supabase init skipped, using local guest mode: $error');
+        }
+      } else {
+        debugPrint('Supabase config missing, starting in local guest mode.');
+      }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+      runApp(const SmartCommuterApp());
+    },
   );
-
-  runApp(const SmartCommuterApp());
 }
 
 class SmartCommuterApp extends StatelessWidget {
@@ -234,6 +235,7 @@ class SmartCommuterApp extends StatelessWidget {
       builder: (context, mode, _) {
         return MaterialApp(
           title: 'Smart Commuter Assistant+',
+          debugShowCheckedModeBanner: false,
           themeMode: mode,
           theme: lightTheme,
           darkTheme: darkTheme,
@@ -301,22 +303,6 @@ class AuthGate extends StatelessWidget {
         }
         return const MainNavigation();
       },
-    );
-  }
-}
-
-class _ConfigurationErrorApp extends StatelessWidget {
-  final String message;
-
-  const _ConfigurationErrorApp({
-    required this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Smart Commuter Assistant+',
-      home: _ConfigurationErrorScreen(message: message),
     );
   }
 }

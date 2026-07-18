@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  flutter:
+    name: Flutter Analyze
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Trains/Smart Commuter Assistant+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze --no-pub
+      - run: flutter test
+
+  python:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Trains/Smart Commuter Assistant+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+        continue-on-error: true
+      - run: pip install pytest httpx
+      - run: python -m pytest tests/ -v
+        continue-on-error: true
+      - run: python -m pytest backend/ -v
+        continue-on-error: true

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/route_colors.dart';
@@ -77,8 +80,15 @@ class TransitNetworkService {
 
   TransitNetworkService._internal();
 
-  final SupabaseClient _client = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService();
+
+  SupabaseClient? get _client {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
 
   TransitNetworkData? _cachedNetwork;
   Future<TransitNetworkData>? _inFlightLoad;
@@ -107,8 +117,9 @@ class TransitNetworkService {
 
   Future<TransitNetworkData> _fetchNetwork() async {
     final rows = <Map<String, dynamic>>[];
+    final client = _client;
     try {
-      final remoteRows = await _client
+      final remoteRows = await client!
           .from('train_stops_kl')
           .select('stop_id,stop_name,stop_lat,stop_lon,route_id');
       final maps = remoteRows
@@ -128,6 +139,10 @@ class TransitNetworkService {
       rows.addAll(
         cachedRows.map((row) => Map<String, dynamic>.from(row)),
       );
+    }
+
+    if (rows.isEmpty) {
+      return loadOfflineFallbackFromAsset();
     }
 
     final stopsById = <String, TransitStop>{};
@@ -164,7 +179,7 @@ class TransitNetworkService {
 
     final edgeRows = <Map<String, dynamic>>[];
     try {
-      final remoteEdges = await _client.from('route_connections').select(
+      final remoteEdges = await client!.from('route_connections').select(
             'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
           );
       final maps = remoteEdges
@@ -194,6 +209,43 @@ class TransitNetworkService {
       connections.addAll(_buildFallbackConnections(stopsById.values.toList()));
     }
 
+    return TransitNetworkData(
+      stopsById: stopsById,
+      connections: connections,
+      stationOptions: _buildStationOptions(stopsById.values),
+    );
+  }
+
+  Future<TransitNetworkData> loadOfflineFallbackFromAsset() async {
+    final raw = await rootBundle.loadString('assets/train_stops_kl.csv');
+    final rows = const LineSplitter().convert(raw).skip(1).where((line) => line.trim().isNotEmpty).toList();
+
+    final stopsById = <String, TransitStop>{};
+    for (final line in rows) {
+      final columns = line.split(',');
+      if (columns.length < 5) continue;
+      final stopId = columns[0].trim().toUpperCase();
+      final stopName = columns[1].trim();
+      final routeId = normalizeRouteId(columns[2].trim().toUpperCase());
+      final latitude = double.tryParse(columns[3].trim());
+      final longitude = double.tryParse(columns[4].trim());
+      if (stopId.isEmpty || stopName.isEmpty || latitude == null || longitude == null) {
+        continue;
+      }
+      stopsById[stopId] = TransitStop(
+        stopId: stopId,
+        stopName: stopName,
+        routeId: routeId,
+        latitude: latitude,
+        longitude: longitude,
+      );
+    }
+
+    if (stopsById.isEmpty) {
+      throw StateError('No local station data is available.');
+    }
+
+    final connections = _buildFallbackConnections(stopsById.values.toList());
     return TransitNetworkData(
       stopsById: stopsById,
       connections: connections,

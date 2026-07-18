@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/location_privacy_service.dart';
 import '../services/theme_controller.dart';
 import '../widgets/app_page_title.dart';
 
@@ -14,7 +15,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
   bool _offlineModeEnabled = false;
   bool _accessibilityEnabled = false;
+  bool _locationConsent = false;
   final AuthService _authService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrivacyConsent();
+  }
+
+  Future<void> _loadPrivacyConsent() async {
+    final consented = await LocationPrivacyService.hasConsent();
+    if (mounted) setState(() => _locationConsent = consented);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +135,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (v) => setState(() => _offlineModeEnabled = v),
                 title: const Text('Offline Mode'),
                 subtitle: const Text('Cache schedules for weak coverage'),
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                value: _locationConsent,
+                onChanged: (v) async {
+                  await LocationPrivacyService.setConsent(v);
+                  setState(() => _locationConsent = v);
+                },
+                title: const Text('Location Sharing'),
+                subtitle: const Text(
+                  'Coordinates rounded to ~1 km before sending',
+                ),
               ),
               const Divider(height: 1),
               SwitchListTile(

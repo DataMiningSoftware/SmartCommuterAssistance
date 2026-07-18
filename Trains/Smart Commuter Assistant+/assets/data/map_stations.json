@@ -1,0 +1,170 @@
+[
+  {
+    "station_id": "KJ1",
+    "name": "Gombak",
+    "x": 0.545,
+    "y": 0.155,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ3",
+    "name": "Wangsa Maju",
+    "x": 0.595,
+    "y": 0.220,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ10",
+    "name": "KLCC",
+    "x": 0.680,
+    "y": 0.350,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ11",
+    "name": "Ampang Park",
+    "x": 0.640,
+    "y": 0.375,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ13",
+    "name": "Masjid Jamek",
+    "x": 0.585,
+    "y": 0.440,
+    "lines": ["Kelana Jaya", "Ampang"]
+  },
+  {
+    "station_id": "KJ14",
+    "name": "Pasar Seni",
+    "x": 0.555,
+    "y": 0.510,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ15",
+    "name": "KL Sentral",
+    "x": 0.500,
+    "y": 0.525,
+    "lines": ["Kelana Jaya", "KTM"]
+  },
+  {
+    "station_id": "KJ24",
+    "name": "Universiti",
+    "x": 0.395,
+    "y": 0.590,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KJ29",
+    "name": "SS15",
+    "x": 0.280,
+    "y": 0.680,
+    "lines": ["Kelana Jaya"]
+  },
+  {
+    "station_id": "KG04",
+    "name": "Kwasa Damansara",
+    "x": 0.315,
+    "y": 0.240,
+    "lines": ["Kajang", "Putrajaya"]
+  },
+  {
+    "station_id": "KG09",
+    "name": "Bandar Utama",
+    "x": 0.380,
+    "y": 0.367,
+    "lines": ["Kajang"]
+  },
+  {
+    "station_id": "KG16",
+    "name": "Pasar Seni",
+    "x": 0.555,
+    "y": 0.510,
+    "lines": ["Kajang"]
+  },
+  {
+    "station_id": "KG18",
+    "name": "Bukit Bintang",
+    "x": 0.650,
+    "y": 0.410,
+    "lines": ["Kajang", "Monorail"]
+  },
+  {
+    "station_id": "KG20",
+    "name": "Tun Razak Exchange (TRX)",
+    "x": 0.720,
+    "y": 0.445,
+    "lines": ["Kajang", "Putrajaya"]
+  },
+  {
+    "station_id": "KG34",
+    "name": "Stadium Kajang",
+    "x": 0.850,
+    "y": 0.720,
+    "lines": ["Kajang"]
+  },
+  {
+    "station_id": "PY01",
+    "name": "Kwasa Damansara",
+    "x": 0.315,
+    "y": 0.240,
+    "lines": ["Putrajaya", "Kajang"]
+  },
+  {
+    "station_id": "PY17",
+    "name": "Titiwangsa",
+    "x": 0.572,
+    "y": 0.340,
+    "lines": ["Putrajaya", "Sri Petaling", "Monorail"]
+  },
+  {
+    "station_id": "PY23",
+    "name": "Tun Razak Exchange (TRX)",
+    "x": 0.720,
+    "y": 0.445,
+    "lines": ["Putrajaya", "Kajang"]
+  },
+  {
+    "station_id": "AG7",
+    "name": "Masjid Jamek",
+    "x": 0.585,
+    "y": 0.440,
+    "lines": ["Ampang", "Kelana Jaya"]
+  },
+  {
+    "station_id": "SP3",
+    "name": "Titiwangsa",
+    "x": 0.572,
+    "y": 0.340,
+    "lines": ["Sri Petaling", "Putrajaya", "Monorail"]
+  },
+  {
+    "station_id": "SP15",
+    "name": "Bandar Tasik Selatan",
+    "x": 0.420,
+    "y": 0.620,
+    "lines": ["Sri Petaling"]
+  },
+  {
+    "station_id": "SP17",
+    "name": "Bukit Jalil",
+    "x": 0.320,
+    "y": 0.680,
+    "lines": ["Sri Petaling"]
+  },
+  {
+    "station_id": "MR6",
+    "name": "Bukit Bintang",
+    "x": 0.650,
+    "y": 0.410,
+    "lines": ["Monorail", "Kajang"]
+  },
+  {
+    "station_id": "MR11",
+    "name": "Titiwangsa",
+    "x": 0.572,
+    "y": 0.340,
+    "lines": ["Monorail", "Putrajaya", "Sri Petaling"]
+  }
+]

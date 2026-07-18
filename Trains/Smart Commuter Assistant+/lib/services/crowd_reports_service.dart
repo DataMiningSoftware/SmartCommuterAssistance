@@ -1,7 +1,10 @@
+import 'dart:convert' as convert;
 import 'dart:math' as math;
 
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'backend_config_service.dart';
 import 'transit_network_service.dart';
 
 class StationOption {
@@ -350,7 +353,39 @@ class CrowdReportsService {
   Future<void> insertUserCrowdReport({
     required String stopId,
     required int occupancyLevel,
+    double? latitude,
+    double? longitude,
   }) async {
+    try {
+      final baseUrl = BackendConfigService().baseUrl.value.replaceAll(
+        RegExp(r'/+$'),
+        '',
+      );
+      if (baseUrl.isNotEmpty && !baseUrl.contains('127.0.0.1') && !baseUrl.contains('10.0.2.2')) {
+        final user = _client.auth.currentUser;
+        final userId = user?.id ?? '';
+        final response = await http.Client()
+            .post(
+              Uri.parse('$baseUrl/crowd/report'),
+              headers: {
+                'Content-Type': 'application/json',
+                if (userId.isNotEmpty) 'x-user-id': userId,
+              },
+              body: convert.jsonEncode({
+                'stop_id': stopId.trim().toUpperCase(),
+                'occupancy_level': occupancyLevel.clamp(1, 5),
+                if (latitude != null) 'latitude': latitude,
+                if (longitude != null) 'longitude': longitude,
+              }),
+            )
+            .timeout(const Duration(seconds: 5));
+        if (response.statusCode == 200) {
+          _invalidateDynamicCaches();
+          return;
+        }
+      }
+    } catch (_) {
+    }
     await _client.rpc(
       'submit_crowd_report',
       params: {
