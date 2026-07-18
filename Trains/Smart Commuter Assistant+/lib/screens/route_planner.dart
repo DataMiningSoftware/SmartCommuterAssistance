@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import '../constants/app_shadows.dart';
 import '../constants/route_colors.dart';
 import '../models/route_info.dart';
+import '../models/transit_graph.dart';
 import '../services/backend_config_service.dart';
 import '../services/commuter_ml_service.dart';
-import '../services/transit_network_service.dart';
 import '../services/transit_planner_service.dart';
 import '../widgets/crowd_indicator.dart';
-import '../widgets/data_source_badge.dart';
 
 class RoutePlanner extends StatefulWidget {
   const RoutePlanner({super.key});
@@ -20,7 +19,6 @@ class RoutePlanner extends StatefulWidget {
 class _RoutePlannerState extends State<RoutePlanner> {
   final TextEditingController _originCtrl = TextEditingController();
   final TextEditingController _destCtrl = TextEditingController();
-  final TransitNetworkService _networkService = TransitNetworkService();
   final BackendConfigService _backendConfig = BackendConfigService();
 
   TransitPlannerService? _planner;
@@ -249,7 +247,6 @@ class _RouteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final route = rec.route;
-    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),

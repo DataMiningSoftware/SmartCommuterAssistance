@@ -1,0 +1,1726 @@
+{
+  "version": 1,
+  "sourceImage": "klang_valley_map.jpeg",
+  "extractionNote": "First-pass draft extracted by reading the official RapidKL map directly. Coordinates are on a 0-100 (x) x 0-140 (y) schematic grid approximating relative layout/topology, NOT pixel-measured. Needs visual calibration (overlay against source image, adjust misaligned stations) before treating as final.",
+  "gridColumns": 100,
+  "gridRows": 140,
+  "lines": {
+    "1": {
+      "label": "KTM Batu Caves - Pulau Sebang Line",
+      "color": "#1B3A6B"
+    },
+    "2": {
+      "label": "KTM Tanjung Malim - Pelabuhan Klang Line",
+      "color": "#E4032E"
+    },
+    "3": {
+      "label": "LRT Ampang Line",
+      "color": "#F7941D"
+    },
+    "4": {
+      "label": "LRT Sri Petaling Line",
+      "color": "#7A1F3D"
+    },
+    "5": {
+      "label": "LRT Kelana Jaya Line",
+      "color": "#ED1C24"
+    },
+    "6": {
+      "label": "ERL KLIA Ekspres Line",
+      "color": "#00A19A"
+    },
+    "7": {
+      "label": "ERL KLIA Transit Line",
+      "color": "#8DC63F"
+    },
+    "8": {
+      "label": "KL Monorail Line",
+      "color": "#8CC63F"
+    },
+    "9": {
+      "label": "MRT Kajang Line",
+      "color": "#00723A"
+    },
+    "10": {
+      "label": "KTM KL Sentral - Skypark Terminal Line",
+      "color": "#7A7A3D"
+    },
+    "11": {
+      "label": "LRT Johan Setia Line (Coming Soon)",
+      "color": "#29ABE2"
+    },
+    "12": {
+      "label": "MRT Putrajaya Line",
+      "color": "#F2C500"
+    },
+    "B1": {
+      "label": "BRT Sunway Line",
+      "color": "#2E7D32"
+    }
+  },
+  "stations": {
+    "tanjung_malim": {
+      "name": "Tanjung Malim",
+      "x": 6,
+      "y": 44,
+      "lines": [
+        "2"
+      ]
+    },
+    "kuala_kubu_bharu": {
+      "name": "Kuala Kubu Bharu",
+      "x": 4,
+      "y": 48,
+      "lines": [
+        "2"
+      ]
+    },
+    "rasa": {
+      "name": "Rasa",
+      "x": 5,
+      "y": 52,
+      "lines": [
+        "2"
+      ]
+    },
+    "batang_kali": {
+      "name": "Batang Kali",
+      "x": 5,
+      "y": 56,
+      "lines": [
+        "2"
+      ]
+    },
+    "serendah": {
+      "name": "Serendah",
+      "x": 4,
+      "y": 60,
+      "lines": [
+        "2"
+      ]
+    },
+    "rawang": {
+      "name": "Rawang",
+      "x": 4,
+      "y": 64,
+      "lines": [
+        "2"
+      ]
+    },
+    "kuang": {
+      "name": "Kuang",
+      "x": 13,
+      "y": 64,
+      "lines": [
+        "2"
+      ]
+    },
+    "sungai_buloh": {
+      "name": "Sungai Buloh",
+      "x": 21,
+      "y": 67,
+      "lines": [
+        "2",
+        "9"
+      ]
+    },
+    "kampung_selamat": {
+      "name": "Kampung Selamat",
+      "x": 23,
+      "y": 71,
+      "lines": [
+        "2"
+      ]
+    },
+    "kepong_sentral": {
+      "name": "Kepong Sentral",
+      "x": 35,
+      "y": 45,
+      "lines": [
+        "2"
+      ]
+    },
+    "sri_damansara_sentral": {
+      "name": "Sri Damansara Sentral",
+      "x": 27,
+      "y": 48,
+      "lines": [
+        "2"
+      ]
+    },
+    "sri_damansara_barat": {
+      "name": "Sri Damansara Barat",
+      "x": 27,
+      "y": 52,
+      "lines": [
+        "2"
+      ]
+    },
+    "damansara_damai": {
+      "name": "Damansara Damai",
+      "x": 27,
+      "y": 56,
+      "lines": [
+        "2"
+      ]
+    },
+    "metro_prima": {
+      "name": "Metro Prima",
+      "x": 39,
+      "y": 48,
+      "lines": [
+        "2"
+      ]
+    },
+    "kepong_baru": {
+      "name": "Kepong Baru",
+      "x": 42,
+      "y": 48,
+      "lines": [
+        "2"
+      ]
+    },
+    "jinjang": {
+      "name": "Jinjang",
+      "x": 44,
+      "y": 48,
+      "lines": [
+        "2"
+      ]
+    },
+    "sri_delima": {
+      "name": "Sri Delima",
+      "x": 42,
+      "y": 53,
+      "lines": [
+        "2"
+      ]
+    },
+    "kepong": {
+      "name": "Kepong",
+      "x": 35,
+      "y": 57,
+      "lines": [
+        "2"
+      ]
+    },
+    "segambut": {
+      "name": "Segambut",
+      "x": 35,
+      "y": 61,
+      "lines": [
+        "2"
+      ]
+    },
+    "kwasa_damansara": {
+      "name": "Kwasa Damansara",
+      "x": 27,
+      "y": 76,
+      "lines": [
+        "9",
+        "12"
+      ]
+    },
+    "kwasa_sentral": {
+      "name": "Kwasa Sentral",
+      "x": 28,
+      "y": 80,
+      "lines": [
+        "9"
+      ]
+    },
+    "kota_damansara": {
+      "name": "Kota Damansara",
+      "x": 27,
+      "y": 84,
+      "lines": [
+        "9"
+      ]
+    },
+    "surian": {
+      "name": "Surian",
+      "x": 27,
+      "y": 88,
+      "lines": [
+        "9"
+      ]
+    },
+    "mutiara_damansara": {
+      "name": "Mutiara Damansara",
+      "x": 27,
+      "y": 92,
+      "lines": [
+        "9"
+      ]
+    },
+    "bandar_utama": {
+      "name": "Bandar Utama",
+      "x": 27,
+      "y": 96,
+      "lines": [
+        "9",
+        "11"
+      ]
+    },
+    "taman_tun_dr_ismail": {
+      "name": "Taman Tun Dr Ismail",
+      "x": 27,
+      "y": 100,
+      "lines": [
+        "9"
+      ]
+    },
+    "phileo_damansara": {
+      "name": "Phileo Damansara",
+      "x": 27,
+      "y": 104,
+      "lines": [
+        "9"
+      ]
+    },
+    "pusat_bandar_damansara": {
+      "name": "Pusat Bandar Damansara",
+      "x": 31,
+      "y": 108,
+      "lines": [
+        "9"
+      ]
+    },
+    "semantan": {
+      "name": "Semantan",
+      "x": 36,
+      "y": 108,
+      "lines": [
+        "9"
+      ]
+    },
+    "batu_caves": {
+      "name": "Batu Caves",
+      "x": 49,
+      "y": 26,
+      "lines": [
+        "1"
+      ]
+    },
+    "taman_wahyu": {
+      "name": "Taman Wahyu",
+      "x": 49,
+      "y": 31,
+      "lines": [
+        "1"
+      ]
+    },
+    "kampung_batu": {
+      "name": "Kampung Batu",
+      "x": 49,
+      "y": 36,
+      "lines": [
+        "1",
+        "4"
+      ]
+    },
+    "kentonmen": {
+      "name": "Kentonmen",
+      "x": 49,
+      "y": 40,
+      "lines": [
+        "1"
+      ]
+    },
+    "sentul": {
+      "name": "Sentul",
+      "x": 49,
+      "y": 43,
+      "lines": [
+        "1",
+        "4"
+      ]
+    },
+    "sentul_barat": {
+      "name": "Sentul Barat",
+      "x": 45,
+      "y": 45,
+      "lines": [
+        "1"
+      ]
+    },
+    "jalan_ipoh": {
+      "name": "Jalan Ipoh",
+      "x": 45,
+      "y": 42,
+      "lines": [
+        "1"
+      ]
+    },
+    "sentul_timur": {
+      "name": "Sentul Timur",
+      "x": 57,
+      "y": 34,
+      "lines": [
+        "3",
+        "4"
+      ]
+    },
+    "batu_kentonmen_lrt": {
+      "name": "Batu Kentonmen",
+      "x": 57,
+      "y": 40,
+      "lines": [
+        "4"
+      ]
+    },
+    "gombak": {
+      "name": "Gombak",
+      "x": 73,
+      "y": 26,
+      "lines": [
+        "3"
+      ]
+    },
+    "taman_melati": {
+      "name": "Taman Melati",
+      "x": 73,
+      "y": 30,
+      "lines": [
+        "3"
+      ]
+    },
+    "wangsa_maju": {
+      "name": "Wangsa Maju",
+      "x": 73,
+      "y": 34,
+      "lines": [
+        "3"
+      ]
+    },
+    "sri_rampai": {
+      "name": "Sri Rampai",
+      "x": 73,
+      "y": 38,
+      "lines": [
+        "3"
+      ]
+    },
+    "setiawangsa": {
+      "name": "Setiawangsa",
+      "x": 73,
+      "y": 42,
+      "lines": [
+        "3"
+      ]
+    },
+    "jelatek": {
+      "name": "Jelatek",
+      "x": 73,
+      "y": 46,
+      "lines": [
+        "3"
+      ]
+    },
+    "dato_keramat": {
+      "name": "Dato' Keramat",
+      "x": 73,
+      "y": 49,
+      "lines": [
+        "3"
+      ]
+    },
+    "damai": {
+      "name": "Damai",
+      "x": 73,
+      "y": 52,
+      "lines": [
+        "3"
+      ]
+    },
+    "ampang_park": {
+      "name": "Ampang Park",
+      "x": 73,
+      "y": 55,
+      "lines": [
+        "3"
+      ]
+    },
+    "ampang": {
+      "name": "Ampang",
+      "x": 91,
+      "y": 26,
+      "lines": [
+        "3"
+      ]
+    },
+    "cahaya": {
+      "name": "Cahaya",
+      "x": 91,
+      "y": 31,
+      "lines": [
+        "3"
+      ]
+    },
+    "cempaka": {
+      "name": "Cempaka",
+      "x": 91,
+      "y": 38,
+      "lines": [
+        "3"
+      ]
+    },
+    "pandan_indah": {
+      "name": "Pandan Indah",
+      "x": 91,
+      "y": 45,
+      "lines": [
+        "3"
+      ]
+    },
+    "pandan_jaya": {
+      "name": "Pandan Jaya",
+      "x": 91,
+      "y": 51,
+      "lines": [
+        "3"
+      ]
+    },
+    "persiaran_klcc": {
+      "name": "Persiaran KLCC",
+      "x": 85,
+      "y": 55,
+      "lines": [
+        "3"
+      ]
+    },
+    "conlay": {
+      "name": "Conlay",
+      "x": 85,
+      "y": 58,
+      "lines": [
+        "3"
+      ]
+    },
+    "trx": {
+      "name": "Tun Razak Exchange (TRX)",
+      "x": 79,
+      "y": 61,
+      "lines": [
+        "3",
+        "9"
+      ]
+    },
+    "cochrane": {
+      "name": "Cochrane",
+      "x": 85,
+      "y": 63,
+      "lines": [
+        "3"
+      ]
+    },
+    "miharja": {
+      "name": "Miharja",
+      "x": 87,
+      "y": 65,
+      "lines": [
+        "3"
+      ]
+    },
+    "maluri": {
+      "name": "Maluri",
+      "x": 91,
+      "y": 61,
+      "lines": [
+        "3",
+        "4"
+      ]
+    },
+    "taman_pertama": {
+      "name": "Taman Pertama",
+      "x": 93,
+      "y": 64,
+      "lines": [
+        "3"
+      ]
+    },
+    "taman_midah": {
+      "name": "Taman Midah",
+      "x": 93,
+      "y": 67,
+      "lines": [
+        "3"
+      ]
+    },
+    "taman_mutiara": {
+      "name": "Taman Mutiara",
+      "x": 93,
+      "y": 70,
+      "lines": [
+        "3"
+      ]
+    },
+    "taman_connaught": {
+      "name": "Taman Connaught",
+      "x": 93,
+      "y": 73,
+      "lines": [
+        "3"
+      ]
+    },
+    "taman_suntex": {
+      "name": "Taman Suntex",
+      "x": 93,
+      "y": 76,
+      "lines": [
+        "3"
+      ]
+    },
+    "sri_raya": {
+      "name": "Sri Raya",
+      "x": 93,
+      "y": 79,
+      "lines": [
+        "3"
+      ]
+    },
+    "bandar_tun_hussein_onn": {
+      "name": "Bandar Tun Hussein Onn",
+      "x": 93,
+      "y": 82,
+      "lines": [
+        "3"
+      ]
+    },
+    "batu_11_cheras": {
+      "name": "Batu 11 Cheras",
+      "x": 93,
+      "y": 85,
+      "lines": [
+        "3"
+      ]
+    },
+    "bukit_dukung": {
+      "name": "Bukit Dukung",
+      "x": 93,
+      "y": 88,
+      "lines": [
+        "3"
+      ]
+    },
+    "sungai_jernih": {
+      "name": "Sungai Jernih",
+      "x": 93,
+      "y": 91,
+      "lines": [
+        "3"
+      ]
+    },
+    "stadium_kajang": {
+      "name": "Stadium Kajang",
+      "x": 93,
+      "y": 94,
+      "lines": [
+        "3"
+      ]
+    },
+    "cheras": {
+      "name": "Cheras",
+      "x": 85,
+      "y": 76,
+      "lines": [
+        "4"
+      ]
+    },
+    "salak_selatan": {
+      "name": "Salak Selatan",
+      "x": 85,
+      "y": 79,
+      "lines": [
+        "1",
+        "4"
+      ]
+    },
+    "bandar_tun_razak": {
+      "name": "Bandar Tun Razak",
+      "x": 85,
+      "y": 82,
+      "lines": [
+        "4"
+      ]
+    },
+    "bandar_tasik_selatan": {
+      "name": "Bandar Tasik Selatan",
+      "x": 79,
+      "y": 85,
+      "lines": [
+        "1",
+        "4"
+      ]
+    },
+    "titiwangsa": {
+      "name": "Titiwangsa",
+      "x": 57,
+      "y": 52,
+      "lines": [
+        "3",
+        "8"
+      ]
+    },
+    "chow_kit": {
+      "name": "Chow Kit",
+      "x": 61,
+      "y": 54,
+      "lines": [
+        "8"
+      ]
+    },
+    "medan_tuanku": {
+      "name": "Medan Tuanku",
+      "x": 63,
+      "y": 54,
+      "lines": [
+        "8"
+      ]
+    },
+    "pwtc": {
+      "name": "PWTC",
+      "x": 57,
+      "y": 56,
+      "lines": [
+        "3",
+        "9"
+      ]
+    },
+    "sultan_ismail": {
+      "name": "Sultan Ismail",
+      "x": 57,
+      "y": 58,
+      "lines": [
+        "8"
+      ]
+    },
+    "dang_wangi": {
+      "name": "Dang Wangi",
+      "x": 65,
+      "y": 57,
+      "lines": [
+        "3"
+      ]
+    },
+    "bukit_nanas": {
+      "name": "Bukit Nanas",
+      "x": 68,
+      "y": 58,
+      "lines": [
+        "8"
+      ]
+    },
+    "hospital_kl": {
+      "name": "Hospital Kuala Lumpur",
+      "x": 63,
+      "y": 51,
+      "lines": [
+        "3"
+      ]
+    },
+    "raja_uda": {
+      "name": "Raja Uda",
+      "x": 66,
+      "y": 52,
+      "lines": [
+        "3"
+      ]
+    },
+    "klcc": {
+      "name": "KLCC",
+      "x": 68,
+      "y": 55,
+      "lines": [
+        "3"
+      ]
+    },
+    "kampung_baru": {
+      "name": "Kampung Baru",
+      "x": 68,
+      "y": 58,
+      "lines": [
+        "3"
+      ]
+    },
+    "bandaraya": {
+      "name": "Bandaraya",
+      "x": 57,
+      "y": 61,
+      "lines": [
+        "3"
+      ]
+    },
+    "masjid_jamek": {
+      "name": "Masjid Jamek",
+      "x": 54,
+      "y": 64,
+      "lines": [
+        "3",
+        "4"
+      ]
+    },
+    "bukit_bintang": {
+      "name": "Bukit Bintang",
+      "x": 66,
+      "y": 63,
+      "lines": [
+        "9"
+      ]
+    },
+    "raja_chulan": {
+      "name": "Raja Chulan",
+      "x": 68,
+      "y": 60,
+      "lines": [
+        "8"
+      ]
+    },
+    "imbi": {
+      "name": "Imbi",
+      "x": 68,
+      "y": 66,
+      "lines": [
+        "8"
+      ]
+    },
+    "pudu": {
+      "name": "Pudu",
+      "x": 71,
+      "y": 66,
+      "lines": [
+        "9"
+      ]
+    },
+    "chan_sow_lin": {
+      "name": "Chan Sow Lin",
+      "x": 76,
+      "y": 66,
+      "lines": [
+        "3",
+        "4"
+      ]
+    },
+    "plaza_rakyat": {
+      "name": "Plaza Rakyat",
+      "x": 57,
+      "y": 67,
+      "lines": [
+        "4"
+      ]
+    },
+    "merdeka": {
+      "name": "Merdeka",
+      "x": 57,
+      "y": 71,
+      "lines": [
+        "9"
+      ]
+    },
+    "hang_tuah": {
+      "name": "Hang Tuah",
+      "x": 71,
+      "y": 71,
+      "lines": [
+        "3",
+        "8"
+      ]
+    },
+    "bank_negara": {
+      "name": "Bank Negara",
+      "x": 49,
+      "y": 58,
+      "lines": [
+        "1"
+      ]
+    },
+    "putra": {
+      "name": "Putra",
+      "x": 47,
+      "y": 53,
+      "lines": [
+        "1"
+      ]
+    },
+    "kuala_lumpur": {
+      "name": "Kuala Lumpur",
+      "x": 42,
+      "y": 73,
+      "lines": [
+        "2"
+      ]
+    },
+    "muzium_negara": {
+      "name": "Muzium Negara",
+      "x": 42,
+      "y": 76,
+      "lines": [
+        "2",
+        "9"
+      ]
+    },
+    "pasar_seni": {
+      "name": "Pasar Seni",
+      "x": 57,
+      "y": 73,
+      "lines": [
+        "4",
+        "9"
+      ]
+    },
+    "kl_sentral": {
+      "name": "KL Sentral",
+      "x": 47,
+      "y": 79,
+      "lines": [
+        "1",
+        "2",
+        "6",
+        "7",
+        "8",
+        "9",
+        "5"
+      ]
+    },
+    "bangsar": {
+      "name": "Bangsar",
+      "x": 44,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "mid_valley": {
+      "name": "Mid Valley",
+      "x": 54,
+      "y": 82,
+      "lines": [
+        "1"
+      ]
+    },
+    "seputeh": {
+      "name": "Seputeh",
+      "x": 57,
+      "y": 82,
+      "lines": [
+        "1"
+      ]
+    },
+    "maharajalela": {
+      "name": "Maharajalela",
+      "x": 59,
+      "y": 73,
+      "lines": [
+        "8"
+      ]
+    },
+    "tun_sambanthan": {
+      "name": "Tun Sambanthan",
+      "x": 59,
+      "y": 76,
+      "lines": [
+        "8"
+      ]
+    },
+    "kelana_jaya": {
+      "name": "Kelana Jaya",
+      "x": 32,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "taman_bahagia": {
+      "name": "Taman Bahagia",
+      "x": 35,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "taman_paramount": {
+      "name": "Taman Paramount",
+      "x": 38,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "asia_jaya": {
+      "name": "Asia Jaya",
+      "x": 40,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "taman_jaya": {
+      "name": "Taman Jaya",
+      "x": 42,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "universiti": {
+      "name": "Universiti",
+      "x": 44,
+      "y": 84,
+      "lines": [
+        "5"
+      ]
+    },
+    "kerinchi": {
+      "name": "Kerinchi",
+      "x": 44,
+      "y": 89,
+      "lines": [
+        "5"
+      ]
+    },
+    "abdullah_hukum": {
+      "name": "Abdullah Hukum",
+      "x": 47,
+      "y": 89,
+      "lines": [
+        "5"
+      ]
+    },
+    "angkasapuri": {
+      "name": "Angkasapuri",
+      "x": 47,
+      "y": 93,
+      "lines": [
+        "5"
+      ]
+    },
+    "pantai_dalam": {
+      "name": "Pantai Dalam",
+      "x": 47,
+      "y": 97,
+      "lines": [
+        "5"
+      ]
+    },
+    "lembah_subang": {
+      "name": "Lembah Subang",
+      "x": 22,
+      "y": 87,
+      "lines": [
+        "5"
+      ]
+    },
+    "ara_damansara": {
+      "name": "Ara Damansara",
+      "x": 22,
+      "y": 91,
+      "lines": [
+        "5"
+      ]
+    },
+    "glenmarie": {
+      "name": "Glenmarie",
+      "x": 22,
+      "y": 94,
+      "lines": [
+        "5"
+      ]
+    },
+    "glenmarie2": {
+      "name": "Glenmarie 2",
+      "x": 15,
+      "y": 91,
+      "lines": [
+        "10"
+      ]
+    },
+    "subang_jaya": {
+      "name": "Subang Jaya",
+      "x": 22,
+      "y": 98,
+      "lines": [
+        "1",
+        "5"
+      ]
+    },
+    "seri_setia": {
+      "name": "Seri Setia",
+      "x": 27,
+      "y": 91,
+      "lines": [
+        "5"
+      ]
+    },
+    "kampung_dato_harun": {
+      "name": "Kampung Dato Harun",
+      "x": 30,
+      "y": 91,
+      "lines": [
+        "5"
+      ]
+    },
+    "jalan_templer": {
+      "name": "Jalan Templer",
+      "x": 34,
+      "y": 91,
+      "lines": [
+        "5"
+      ]
+    },
+    "petaling": {
+      "name": "Petaling",
+      "x": 38,
+      "y": 91,
+      "lines": [
+        "5"
+      ]
+    },
+    "setia_jaya": {
+      "name": "Setia Jaya",
+      "x": 26,
+      "y": 98,
+      "lines": [
+        "1",
+        "B1"
+      ]
+    },
+    "sunway_setia_jaya": {
+      "name": "Sunway - Setia Jaya",
+      "x": 27,
+      "y": 101,
+      "lines": [
+        "B1"
+      ]
+    },
+    "mentari": {
+      "name": "Mentari",
+      "x": 25,
+      "y": 104,
+      "lines": [
+        "B1"
+      ]
+    },
+    "sunway_lagoon": {
+      "name": "Sunway Lagoon",
+      "x": 30,
+      "y": 104,
+      "lines": [
+        "B1"
+      ]
+    },
+    "sunmed": {
+      "name": "SunMed",
+      "x": 36,
+      "y": 104,
+      "lines": [
+        "B1"
+      ]
+    },
+    "south_quay_usj1": {
+      "name": "South Quay - USJ 1",
+      "x": 25,
+      "y": 108,
+      "lines": [
+        "B1"
+      ]
+    },
+    "sunu_monash": {
+      "name": "SunU-Monash",
+      "x": 32,
+      "y": 108,
+      "lines": [
+        "B1"
+      ]
+    },
+    "usj7": {
+      "name": "USJ 7",
+      "x": 22,
+      "y": 108,
+      "lines": [
+        "B1"
+      ]
+    },
+    "batu_tiga": {
+      "name": "Batu Tiga",
+      "x": 14,
+      "y": 98,
+      "lines": [
+        "2"
+      ]
+    },
+    "shah_alam": {
+      "name": "Shah Alam",
+      "x": 14,
+      "y": 101,
+      "lines": [
+        "2"
+      ]
+    },
+    "padang_jawa": {
+      "name": "Padang Jawa",
+      "x": 14,
+      "y": 104,
+      "lines": [
+        "2"
+      ]
+    },
+    "bukit_badak": {
+      "name": "Bukit Badak",
+      "x": 17,
+      "y": 107,
+      "lines": [
+        "2"
+      ]
+    },
+    "klang": {
+      "name": "Klang",
+      "x": 14,
+      "y": 111,
+      "lines": [
+        "2"
+      ]
+    },
+    "taman_selatan": {
+      "name": "Taman Selatan",
+      "x": 17,
+      "y": 111,
+      "lines": [
+        "2"
+      ]
+    },
+    "klang_jaya": {
+      "name": "Klang Jaya",
+      "x": 17,
+      "y": 114,
+      "lines": [
+        "2"
+      ]
+    },
+    "sri_andalas": {
+      "name": "Sri Andalas",
+      "x": 17,
+      "y": 117,
+      "lines": [
+        "2"
+      ]
+    },
+    "bandar_bukit_tinggi": {
+      "name": "Bandar Bukit Tinggi",
+      "x": 17,
+      "y": 121,
+      "lines": [
+        "2"
+      ]
+    },
+    "taipan": {
+      "name": "Taipan",
+      "x": 22,
+      "y": 114,
+      "lines": [
+        "B1"
+      ]
+    },
+    "wawasan": {
+      "name": "Wawasan",
+      "x": 22,
+      "y": 117,
+      "lines": [
+        "B1"
+      ]
+    },
+    "usj21": {
+      "name": "USJ 21",
+      "x": 22,
+      "y": 121,
+      "lines": [
+        "B1"
+      ]
+    },
+    "teluk_pulai": {
+      "name": "Teluk Pulai",
+      "x": 9,
+      "y": 115,
+      "lines": [
+        "2"
+      ]
+    },
+    "teluk_gadong": {
+      "name": "Teluk Gadong",
+      "x": 9,
+      "y": 118,
+      "lines": [
+        "2"
+      ]
+    },
+    "kampung_raja_uda": {
+      "name": "Kampung Raja Uda",
+      "x": 9,
+      "y": 121,
+      "lines": [
+        "2"
+      ]
+    },
+    "jalan_kastam": {
+      "name": "Jalan Kastam",
+      "x": 9,
+      "y": 124,
+      "lines": [
+        "2"
+      ]
+    },
+    "pelabuhan_klang": {
+      "name": "Pelabuhan Klang",
+      "x": 9,
+      "y": 127,
+      "lines": [
+        "2"
+      ]
+    },
+    "johan_setia": {
+      "name": "Johan Setia",
+      "x": 17,
+      "y": 127,
+      "lines": [
+        "11"
+      ]
+    },
+    "dato_menteri": {
+      "name": "Dato Menteri",
+      "x": 9,
+      "y": 101,
+      "lines": [
+        "10"
+      ]
+    },
+    "uitm_shah_alam": {
+      "name": "UiTM Shah Alam",
+      "x": 9,
+      "y": 104,
+      "lines": [
+        "10"
+      ]
+    },
+    "seksyen7_shah_alam": {
+      "name": "Seksyen 7 Shah Alam",
+      "x": 9,
+      "y": 107,
+      "lines": [
+        "10"
+      ]
+    },
+    "bandar_baru_klang": {
+      "name": "Bandar Baru Klang",
+      "x": 9,
+      "y": 111,
+      "lines": [
+        "10"
+      ]
+    },
+    "pasar_besar_klang": {
+      "name": "Pasar Besar Klang",
+      "x": 9,
+      "y": 113,
+      "lines": [
+        "10"
+      ]
+    },
+    "jalan_meru": {
+      "name": "Jalan Meru",
+      "x": 9,
+      "y": 116,
+      "lines": [
+        "10"
+      ]
+    },
+    "stadium_shah_alam": {
+      "name": "Stadium Shah Alam",
+      "x": 9,
+      "y": 98,
+      "lines": [
+        "10"
+      ]
+    },
+    "skypark_terminal": {
+      "name": "Skypark Terminal",
+      "x": 6,
+      "y": 95,
+      "lines": [
+        "10"
+      ]
+    },
+    "alam_megah": {
+      "name": "Alam Megah",
+      "x": 26,
+      "y": 124,
+      "lines": [
+        "5"
+      ]
+    },
+    "subang_alam": {
+      "name": "Subang Alam",
+      "x": 30,
+      "y": 124,
+      "lines": [
+        "5"
+      ]
+    },
+    "putra_heights": {
+      "name": "Putra Heights",
+      "x": 34,
+      "y": 124,
+      "lines": [
+        "4",
+        "5"
+      ]
+    },
+    "puchong_prima": {
+      "name": "Puchong Prima",
+      "x": 39,
+      "y": 124,
+      "lines": [
+        "4"
+      ]
+    },
+    "puchong_perdana": {
+      "name": "Puchong Perdana",
+      "x": 43,
+      "y": 124,
+      "lines": [
+        "4"
+      ]
+    },
+    "bandar_puteri": {
+      "name": "Bandar Puteri",
+      "x": 47,
+      "y": 121,
+      "lines": [
+        "4"
+      ]
+    },
+    "taman_perindustrian_puchong": {
+      "name": "Taman Perindustrian Puchong",
+      "x": 47,
+      "y": 118,
+      "lines": [
+        "4"
+      ]
+    },
+    "pusat_bandar_puchong": {
+      "name": "Pusat Bandar Puchong",
+      "x": 47,
+      "y": 115,
+      "lines": [
+        "4"
+      ]
+    },
+    "puchong_jaya": {
+      "name": "Puchong Jaya",
+      "x": 47,
+      "y": 112,
+      "lines": [
+        "4"
+      ]
+    },
+    "ioi_puchong_jaya": {
+      "name": "IOI Puchong Jaya",
+      "x": 47,
+      "y": 109,
+      "lines": [
+        "4"
+      ]
+    },
+    "kinrara_bk5": {
+      "name": "Kinrara BK5",
+      "x": 47,
+      "y": 106,
+      "lines": [
+        "4"
+      ]
+    },
+    "alam_sutera": {
+      "name": "Alam Sutera",
+      "x": 47,
+      "y": 103,
+      "lines": [
+        "4"
+      ]
+    },
+    "muhibbah": {
+      "name": "Muhibbah",
+      "x": 47,
+      "y": 100,
+      "lines": [
+        "4"
+      ]
+    },
+    "bukit_jalil": {
+      "name": "Bukit Jalil",
+      "x": 57,
+      "y": 100,
+      "lines": [
+        "4"
+      ]
+    },
+    "sri_petaling": {
+      "name": "Sri Petaling",
+      "x": 54,
+      "y": 100,
+      "lines": [
+        "4"
+      ]
+    },
+    "awan_besar": {
+      "name": "Awan Besar",
+      "x": 51,
+      "y": 100,
+      "lines": [
+        "4"
+      ]
+    },
+    "sungai_besi": {
+      "name": "Sungai Besi",
+      "x": 63,
+      "y": 103,
+      "lines": [
+        "9",
+        "12"
+      ]
+    },
+    "serdang_raya_utara": {
+      "name": "Serdang Raya Utara",
+      "x": 63,
+      "y": 106,
+      "lines": [
+        "12"
+      ]
+    },
+    "serdang_raya_selatan": {
+      "name": "Serdang Raya Selatan",
+      "x": 63,
+      "y": 109,
+      "lines": [
+        "12"
+      ]
+    },
+    "serdang_jaya": {
+      "name": "Serdang Jaya",
+      "x": 63,
+      "y": 112,
+      "lines": [
+        "12"
+      ]
+    },
+    "upm": {
+      "name": "UPM",
+      "x": 63,
+      "y": 115,
+      "lines": [
+        "12"
+      ]
+    },
+    "taman_equine": {
+      "name": "Taman Equine",
+      "x": 63,
+      "y": 118,
+      "lines": [
+        "12"
+      ]
+    },
+    "putra_permai": {
+      "name": "Putra Permai",
+      "x": 63,
+      "y": 121,
+      "lines": [
+        "12"
+      ]
+    },
+    "16sierra": {
+      "name": "16 Sierra",
+      "x": 63,
+      "y": 124,
+      "lines": [
+        "12"
+      ]
+    },
+    "cyberjaya_utara": {
+      "name": "Cyberjaya Utara",
+      "x": 63,
+      "y": 127,
+      "lines": [
+        "12"
+      ]
+    },
+    "cyberjaya_city_centre": {
+      "name": "Cyberjaya City Centre",
+      "x": 63,
+      "y": 130,
+      "lines": [
+        "12"
+      ]
+    },
+    "putrajaya_sentral": {
+      "name": "Putrajaya Sentral",
+      "x": 68,
+      "y": 133,
+      "lines": [
+        "12"
+      ]
+    },
+    "salak_tinggi": {
+      "name": "Salak Tinggi",
+      "x": 68,
+      "y": 136,
+      "lines": [
+        "6",
+        "7"
+      ]
+    },
+    "klia": {
+      "name": "KLIA",
+      "x": 76,
+      "y": 138,
+      "lines": [
+        "6",
+        "7"
+      ]
+    },
+    "klia2": {
+      "name": "KLIA2",
+      "x": 68,
+      "y": 138,
+      "lines": [
+        "6",
+        "7"
+      ]
+    },
+    "taman_naga_emas": {
+      "name": "Taman Naga Emas",
+      "x": 59,
+      "y": 100,
+      "lines": [
+        "12"
+      ]
+    },
+    "kuchai": {
+      "name": "Kuchai",
+      "x": 57,
+      "y": 97,
+      "lines": [
+        "12"
+      ]
+    },
+    "serdang": {
+      "name": "Serdang",
+      "x": 79,
+      "y": 91,
+      "lines": [
+        "9"
+      ]
+    },
+    "kajang": {
+      "name": "Kajang",
+      "x": 79,
+      "y": 95,
+      "lines": [
+        "1",
+        "9"
+      ]
+    },
+    "kajang2": {
+      "name": "Kajang 2",
+      "x": 79,
+      "y": 98,
+      "lines": [
+        "9"
+      ]
+    },
+    "ukm": {
+      "name": "UKM",
+      "x": 79,
+      "y": 101,
+      "lines": [
+        "9"
+      ]
+    },
+    "bangi": {
+      "name": "Bangi",
+      "x": 79,
+      "y": 104,
+      "lines": [
+        "9"
+      ]
+    },
+    "batang_benar": {
+      "name": "Batang Benar",
+      "x": 79,
+      "y": 107,
+      "lines": [
+        "9"
+      ]
+    },
+    "nilai": {
+      "name": "Nilai",
+      "x": 79,
+      "y": 110,
+      "lines": [
+        "1"
+      ]
+    },
+    "labu": {
+      "name": "Labu",
+      "x": 79,
+      "y": 113,
+      "lines": [
+        "1"
+      ]
+    },
+    "tiroi": {
+      "name": "Tiroi",
+      "x": 79,
+      "y": 116,
+      "lines": [
+        "1"
+      ]
+    },
+    "seremban": {
+      "name": "Seremban",
+      "x": 79,
+      "y": 119,
+      "lines": [
+        "1"
+      ]
+    },
+    "senawang": {
+      "name": "Senawang",
+      "x": 79,
+      "y": 122,
+      "lines": [
+        "1"
+      ]
+    },
+    "sungai_gadut": {
+      "name": "Sungai Gadut",
+      "x": 79,
+      "y": 125,
+      "lines": [
+        "1"
+      ]
+    },
+    "rembau": {
+      "name": "Rembau",
+      "x": 79,
+      "y": 128,
+      "lines": [
+        "1"
+      ]
+    },
+    "pulau_sebang": {
+      "name": "Pulau Sebang",
+      "x": 88,
+      "y": 131,
+      "lines": [
+        "1"
+      ]
+    }
+  }
+}

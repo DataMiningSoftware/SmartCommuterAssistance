@@ -68,6 +68,7 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
       originId,
       destinationId,
       maxPaths: maxRoutes,
+      departureTime: departureTime,
     );
     return paths.asMap().entries.map((entry) {
       final index = entry.key;

@@ -111,14 +111,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _loading
                           ? null
                           : () async {
-                              final currentContext = context;
                               setState(() => _loading = true);
                               try {
-                                await _authService.initialize();
-                                if (!mounted) return;
-                                if (!currentContext.mounted) return;
-                                ScaffoldMessenger.of(currentContext)
-                                    .showSnackBar(
+                                if (_authService.currentUser.value == null) {
+                                  await _authService.logout();
+                                }
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
                                       'Guest mode enabled. You can continue without an account.',
@@ -126,10 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 );
                               } catch (_) {
-                                if (!mounted) return;
-                                if (!currentContext.mounted) return;
-                                ScaffoldMessenger.of(currentContext)
-                                    .showSnackBar(
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
                                       'Unable to enter guest mode right now. Please try again.',
@@ -137,7 +134,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 );
                               } finally {
-                                if (mounted) setState(() => _loading = false);
+                                if (context.mounted) {
+                                  setState(() => _loading = false);
+                                }
                               }
                             },
                       child: const Text('Continue as guest'),

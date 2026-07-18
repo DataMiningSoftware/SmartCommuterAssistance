@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "google": {
+      "options": {
+        "apiKey": "AQ.Ab8RN6JgPTZGPQKTsj_9eEpG3neabzfqbSOVHIV3Y3X8_UXR2g"
+      }
+    }
+  },
+  "agent": {
+    "coder": {
+      "description": "Primary orchestrator agent",
+      "mode": "primary",
+      "tools": { "write": true, "edit": true, "bash": true }
+    },
+    "vision_agent": {
+      "description": "Extracts station coordinates from the transit map reference image — the only agent that can see images",
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "tools": { "write": true, "edit": true, "bash": false }
+    },
+    "schema_agent": {
+      "description": "Database schema specialist for lines, stations, and connections",
+      "mode": "subagent"
+    },
+    "pathfinding_agent": {
+      "description": "Pathfinding algorithm specialist (Dijkstra with line-transfer penalties)",
+      "mode": "subagent"
+    },
+    "widget_agent": {
+      "description": "Flutter map widget specialist (Geographic + Transit views)",
+      "mode": "subagent"
+    }
+  }
+}

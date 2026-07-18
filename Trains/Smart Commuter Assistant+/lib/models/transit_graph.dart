@@ -1,373 +1,255 @@
-class TransitStationNode {
+import '../services/operating_hours_service.dart';
+
+class TransitStation {
   final String id;
   final String name;
-  final String line;
-  final double latitude;
-  final double longitude;
-  final double mapX;
-  final double mapY;
+  final double lat;
+  final double lng;
+  final double gridX;
+  final double gridY;
+  final List<String> lines;
 
-  const TransitStationNode({
+  TransitStation({
     required this.id,
     required this.name,
-    required this.line,
-    required this.latitude,
-    required this.longitude,
-    required this.mapX,
-    required this.mapY,
+    required this.lat,
+    required this.lng,
+    required this.gridX,
+    required this.gridY,
+    required this.lines,
   });
+
+  bool get isInterchange => lines.length > 1;
+  String get line => lines.isNotEmpty ? lines.first : '';
 }
 
 class TransitEdge {
-  final String id;
-  final String fromId;
-  final String toId;
+  final String from;
+  final String to;
   final String line;
-  final int travelMinutes;
-  final double distanceKm;
-  final bool isTransfer;
+  final String type;
+  final int minutes;
 
-  const TransitEdge({
-    required this.id,
-    required this.fromId,
-    required this.toId,
+  TransitEdge({
+    required this.from,
+    required this.to,
     required this.line,
-    required this.travelMinutes,
-    required this.distanceKm,
-    this.isTransfer = false,
+    required this.type,
+    required this.minutes,
   });
+
+  bool get isInterchange => type != 'standard_stop';
+}
+
+class TransitGraph {
+  final Map<String, TransitStation> stations = {};
+  final Map<String, List<TransitEdge>> adjacency = {};
+  final Map<String, List<String>> lineStationOrder = {};
+
+  static const int transferPenalty = 8;
+
+  TransitGraph();
+
+  TransitStation? station(String id) => stations[id];
+
+  Map<String, TransitStation> get stationsById => stations;
+
+  List<TransitPath> enumerateCandidatePaths(String from, String to, {int maxPaths = 3, DateTime? departureTime}) {
+    final path = findShortestPath(from, to, departureTime: departureTime);
+    if (path == null) return [];
+    return [path];
+  }
+
+  static TransitGraph klangValleyDemo() => TransitGraph();
+
+  factory TransitGraph.fromJson(Map<String, dynamic> json) {
+    final graph = TransitGraph();
+    final stationLines = <String, Set<String>>{};
+    final lineStations = <String, Set<String>>{};
+
+    for (final s in json['stations'] as List<dynamic>) {
+      final station = s as Map<String, dynamic>;
+      final id = station['id'] as String;
+      final lines = station['lines'] as List<dynamic>;
+      for (final line in lines) {
+        stationLines.putIfAbsent(id, () => {}).add(line as String);
+      }
+    }
+
+    for (final entry in stationLines.entries) {
+      final id = entry.key;
+      final lines = entry.value.toList();
+      final s = (json['stations'] as List<dynamic>).firstWhere(
+        (s) => (s as Map<String, dynamic>)['id'] == id,
+      ) as Map<String, dynamic>;
+      graph.stations[id] = TransitStation(
+        id: id,
+        name: s['name'] as String,
+        lat: (s['lat'] as num).toDouble(),
+        lng: (s['lng'] as num).toDouble(),
+        gridX: (s['gridX'] as num?)?.toDouble() ?? 0,
+        gridY: (s['gridY'] as num?)?.toDouble() ?? 0,
+        lines: lines,
+      );
+    }
+
+    for (final s in graph.stations.values) {
+      for (final line in s.lines) {
+        lineStations.putIfAbsent(line, () => {}).add(s.id);
+      }
+    }
+
+    for (final entry in lineStations.entries) {
+      final sorted = entry.value.toList()
+        ..sort((a, b) {
+          final sa = graph.stations[a]!;
+          final sb = graph.stations[b]!;
+          final latComp = sa.lat.compareTo(sb.lat);
+          if (latComp != 0) return latComp;
+          return sa.lng.compareTo(sb.lng);
+        });
+      graph.lineStationOrder[entry.key] = sorted;
+    }
+
+    for (final c in json['connections'] as List<dynamic>) {
+      final conn = c as Map<String, dynamic>;
+      final edge = TransitEdge(
+        from: conn['from'] as String,
+        to: conn['to'] as String,
+        line: conn['route'] as String,
+        type: conn['type'] as String,
+        minutes: (conn['minutes'] as num).toInt(),
+      );
+      graph.adjacency.putIfAbsent(edge.from, () => []).add(edge);
+    }
+
+    return graph;
+  }
+
+  TransitPath? findShortestPath(String originId, String destinationId, {DateTime? departureTime}) {
+    if (!stations.containsKey(originId) || !stations.containsKey(destinationId)) {
+      return null;
+    }
+
+    final distances = <String, int>{};
+    final previous = <String, _PathNode>{};
+    final queue = <_QueueEntry>[_QueueEntry(originId, 0, null)];
+    distances[originId] = 0;
+
+    while (queue.isNotEmpty) {
+      queue.sort((a, b) => a.cost.compareTo(b.cost));
+      final current = queue.removeAt(0);
+      final currentId = current.id;
+      final currentCost = current.cost;
+
+      if (currentId == destinationId) break;
+      if (currentCost > (distances[currentId] ?? 999999)) continue;
+
+      final edges = adjacency[currentId] ?? [];
+      for (final edge in edges) {
+        if (!stations.containsKey(edge.to)) continue;
+        if (!OperatingHoursService.isLineRunning(edge.line, at: departureTime)) continue;
+        final nextId = edge.to;
+        final prev = previous[currentId];
+        final switching = prev != null && prev.line != null && prev.line != edge.line;
+        var cost = edge.minutes;
+        if (switching) cost += transferPenalty;
+
+        final newCost = currentCost + cost;
+        if (newCost < (distances[nextId] ?? 999999)) {
+          distances[nextId] = newCost;
+          previous[nextId] = _PathNode(currentId, edge.line);
+          queue.add(_QueueEntry(nextId, newCost, edge.line));
+        }
+      }
+    }
+
+    if (!previous.containsKey(destinationId)) return null;
+
+    final path = <String>[];
+    final edges = <TransitEdge>[];
+    final lineJumps = <String>[];
+    var cursor = destinationId;
+    while (cursor != originId) {
+      path.add(cursor);
+      cursor = previous[cursor]!.parent;
+    }
+    path.add(originId);
+    final reversedPath = path.reversed.toList();
+
+    String? currentLine;
+    for (var i = 0; i < reversedPath.length - 1; i++) {
+      final from = reversedPath[i];
+      final to = reversedPath[i + 1];
+      final edge = (adjacency[from] ?? []).firstWhere(
+        (e) => e.to == to,
+        orElse: () => TransitEdge(from: from, to: to, line: '', type: '', minutes: 0),
+      );
+      edges.add(edge);
+      if (edge.line != currentLine && edge.line.isNotEmpty && edge.line != 'INTERCHANGE') {
+        lineJumps.add(edge.line);
+        currentLine = edge.line;
+      }
+    }
+
+    return TransitPath(
+      stationIds: reversedPath,
+      edges: edges,
+      totalMinutes: distances[destinationId] ?? 0,
+      lineJumps: lineJumps,
+      transferCount: lineJumps.length - 1,
+    );
+  }
+}
+
+class _PathNode {
+  final String parent;
+  final String? line;
+  _PathNode(this.parent, this.line);
+}
+
+class _QueueEntry {
+  final String id;
+  final int cost;
+  final String? line;
+  _QueueEntry(this.id, this.cost, this.line);
 }
 
 class TransitPath {
   final List<String> stationIds;
   final List<TransitEdge> edges;
+  final int totalMinutes;
+  final List<String> lineJumps;
+  final int transferCount;
 
-  const TransitPath({
+  TransitPath({
     required this.stationIds,
     required this.edges,
+    required this.totalMinutes,
+    required this.lineJumps,
+    required this.transferCount,
   });
 
-  int get totalMinutes => edges.fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
+  List<TransitStation> get stations =>
+      stationIds.map((id) => TransitStation(id: id, name: '', lat: 0, lng: 0, gridX: 0, gridY: 0, lines: [])).toList();
 
-  double get totalDistanceKm => edges.fold<double>(0, (sum, edge) => sum + edge.distanceKm);
+  String get summary {
+    final h = totalMinutes ~/ 60;
+    final m = totalMinutes % 60;
+    final time = h > 0 ? '${h}h ${m}min' : '${m}min';
+    final transfers = transferCount > 0 ? '$transferCount transfer' : 'Direct';
+    return '$time · $transfers';
+  }
 
-  int get transferCount => edges.where((edge) => edge.isTransfer).length;
+  // Backward compat
+  double get totalDistanceKm => totalMinutes * 0.8;
+  bool get isEmpty => stationIds.isEmpty;
 }
 
-class TransitGraph {
-  final Map<String, TransitStationNode> stationsById;
-  final List<TransitEdge> edges;
-  final Map<String, List<TransitEdge>> _adjacency;
-  final List<List<String>> lineCorridors;
-
-  TransitGraph({
-    required this.stationsById,
-    required this.edges,
-    required this.lineCorridors,
-  }) : _adjacency = _buildAdjacency(stationsById, edges);
-
-  List<TransitStationNode> get stations => stationsById.values.toList();
-
-  List<String> get stationIds => stationsById.keys.toList();
-
-  TransitStationNode? station(String id) => stationsById[id];
-
-  List<TransitEdge> neighbors(String stationId) => _adjacency[stationId] ?? const <TransitEdge>[];
-
-  List<TransitPath> enumerateCandidatePaths(
-    String originId,
-    String destinationId, {
-    int maxPaths = 4,
-    int maxDepth = 8,
-  }) {
-    if (!stationsById.containsKey(originId) || !stationsById.containsKey(destinationId)) {
-      return const <TransitPath>[];
-    }
-    if (originId == destinationId) {
-      return [const TransitPath(stationIds: <String>[], edges: <TransitEdge>[])];
-    }
-
-    final paths = <TransitPath>[];
-    _dfsEnumerate(
-      currentId: originId,
-      destinationId: destinationId,
-      visited: <String>{originId},
-      stationPath: <String>[originId],
-      edgePath: <TransitEdge>[],
-      maxDepth: maxDepth,
-      output: paths,
-    );
-
-    paths.sort((a, b) {
-      final scoreA = a.totalMinutes + (a.transferCount * 4);
-      final scoreB = b.totalMinutes + (b.transferCount * 4);
-      return scoreA.compareTo(scoreB);
-    });
-
-    final unique = <String>{};
-    final selected = <TransitPath>[];
-    for (final path in paths) {
-      final key = path.stationIds.join('>');
-      if (unique.add(key)) {
-        selected.add(path);
-      }
-      if (selected.length >= maxPaths) break;
-    }
-    return selected;
-  }
-
-  void _dfsEnumerate({
-    required String currentId,
-    required String destinationId,
-    required Set<String> visited,
-    required List<String> stationPath,
-    required List<TransitEdge> edgePath,
-    required int maxDepth,
-    required List<TransitPath> output,
-  }) {
-    if (stationPath.length > maxDepth) return;
-    if (currentId == destinationId) {
-      output.add(TransitPath(
-        stationIds: List<String>.from(stationPath),
-        edges: List<TransitEdge>.from(edgePath),
-      ));
-      return;
-    }
-
-    for (final edge in neighbors(currentId)) {
-      if (visited.contains(edge.toId)) continue;
-
-      visited.add(edge.toId);
-      stationPath.add(edge.toId);
-      edgePath.add(edge);
-
-      _dfsEnumerate(
-        currentId: edge.toId,
-        destinationId: destinationId,
-        visited: visited,
-        stationPath: stationPath,
-        edgePath: edgePath,
-        maxDepth: maxDepth,
-        output: output,
-      );
-
-      edgePath.removeLast();
-      stationPath.removeLast();
-      visited.remove(edge.toId);
-    }
-  }
-
-  static TransitGraph klangValleyDemo() {
-    final stations = <String, TransitStationNode>{
-      'Batu Caves': const TransitStationNode(
-        id: 'Batu Caves',
-        name: 'Batu Caves',
-        line: 'KTM Seremban',
-        latitude: 3.2379,
-        longitude: 101.6840,
-        mapX: 0.54,
-        mapY: 0.19,
-      ),
-      'Titiwangsa': const TransitStationNode(
-        id: 'Titiwangsa',
-        name: 'Titiwangsa',
-        line: 'LRT Ampang/Sri Petaling',
-        latitude: 3.1748,
-        longitude: 101.6959,
-        mapX: 0.57,
-        mapY: 0.34,
-      ),
-      'KL Sentral': const TransitStationNode(
-        id: 'KL Sentral',
-        name: 'KL Sentral',
-        line: 'LRT Kelana Jaya',
-        latitude: 3.1346,
-        longitude: 101.6860,
-        mapX: 0.50,
-        mapY: 0.52,
-      ),
-      'Pasar Seni': const TransitStationNode(
-        id: 'Pasar Seni',
-        name: 'Pasar Seni',
-        line: 'MRT Kajang',
-        latitude: 3.1427,
-        longitude: 101.6951,
-        mapX: 0.56,
-        mapY: 0.52,
-      ),
-      'Masjid Jamek': const TransitStationNode(
-        id: 'Masjid Jamek',
-        name: 'Masjid Jamek',
-        line: 'LRT Kelana Jaya',
-        latitude: 3.1493,
-        longitude: 101.6968,
-        mapX: 0.59,
-        mapY: 0.44,
-      ),
-      'KLCC': const TransitStationNode(
-        id: 'KLCC',
-        name: 'KLCC',
-        line: 'LRT Kelana Jaya',
-        latitude: 3.1579,
-        longitude: 101.7123,
-        mapX: 0.68,
-        mapY: 0.35,
-      ),
-      'Bukit Bintang': const TransitStationNode(
-        id: 'Bukit Bintang',
-        name: 'Bukit Bintang',
-        line: 'MRT Kajang',
-        latitude: 3.1467,
-        longitude: 101.7113,
-        mapX: 0.65,
-        mapY: 0.41,
-      ),
-      'Merdeka': const TransitStationNode(
-        id: 'Merdeka',
-        name: 'Merdeka',
-        line: 'MRT Kajang',
-        latitude: 3.1422,
-        longitude: 101.7035,
-        mapX: 0.61,
-        mapY: 0.47,
-      ),
-      'Kajang': const TransitStationNode(
-        id: 'Kajang',
-        name: 'Kajang',
-        line: 'MRT Kajang',
-        latitude: 2.9927,
-        longitude: 101.7909,
-        mapX: 0.84,
-        mapY: 0.69,
-      ),
-    };
-
-    final directed = <TransitEdge>[
-      const TransitEdge(
-        id: 'E0',
-        fromId: 'KL Sentral',
-        toId: 'Batu Caves',
-        line: 'KTM Seremban',
-        travelMinutes: 14,
-        distanceKm: 12.7,
-      ),
-      const TransitEdge(
-        id: 'E1',
-        fromId: 'Batu Caves',
-        toId: 'Titiwangsa',
-        line: 'KTM Seremban',
-        travelMinutes: 9,
-        distanceKm: 8.0,
-      ),
-      const TransitEdge(
-        id: 'E2',
-        fromId: 'Titiwangsa',
-        toId: 'KL Sentral',
-        line: 'LRT Kelana Jaya',
-        travelMinutes: 10,
-        distanceKm: 5.8,
-      ),
-      const TransitEdge(
-        id: 'E3',
-        fromId: 'KL Sentral',
-        toId: 'Pasar Seni',
-        line: 'MRT Kajang',
-        travelMinutes: 5,
-        distanceKm: 1.4,
-      ),
-      const TransitEdge(
-        id: 'E4',
-        fromId: 'Pasar Seni',
-        toId: 'Merdeka',
-        line: 'MRT Kajang',
-        travelMinutes: 3,
-        distanceKm: 1.0,
-      ),
-      const TransitEdge(
-        id: 'E5',
-        fromId: 'Merdeka',
-        toId: 'Bukit Bintang',
-        line: 'MRT Kajang',
-        travelMinutes: 4,
-        distanceKm: 1.2,
-      ),
-      const TransitEdge(
-        id: 'E6',
-        fromId: 'Bukit Bintang',
-        toId: 'KLCC',
-        line: 'MRT Kajang',
-        travelMinutes: 4,
-        distanceKm: 1.3,
-      ),
-      const TransitEdge(
-        id: 'E7',
-        fromId: 'Merdeka',
-        toId: 'Kajang',
-        line: 'MRT Kajang',
-        travelMinutes: 19,
-        distanceKm: 21.6,
-      ),
-      const TransitEdge(
-        id: 'E8',
-        fromId: 'KL Sentral',
-        toId: 'Masjid Jamek',
-        line: 'LRT Kelana Jaya',
-        travelMinutes: 7,
-        distanceKm: 2.6,
-      ),
-      const TransitEdge(
-        id: 'E9',
-        fromId: 'Masjid Jamek',
-        toId: 'KLCC',
-        line: 'LRT Kelana Jaya',
-        travelMinutes: 6,
-        distanceKm: 2.5,
-      ),
-      const TransitEdge(
-        id: 'E10',
-        fromId: 'Masjid Jamek',
-        toId: 'Pasar Seni',
-        line: 'Interchange',
-        travelMinutes: 3,
-        distanceKm: 0.35,
-        isTransfer: true,
-      ),
-    ];
-
-    final edges = <TransitEdge>[
-      ...directed,
-      ...directed.map((edge) => TransitEdge(
-            id: '${edge.id}R',
-            fromId: edge.toId,
-            toId: edge.fromId,
-            line: edge.line,
-            travelMinutes: edge.travelMinutes,
-            distanceKm: edge.distanceKm,
-            isTransfer: edge.isTransfer,
-          )),
-    ];
-
-    return TransitGraph(
-      stationsById: stations,
-      edges: edges,
-      lineCorridors: const <List<String>>[
-        <String>['Batu Caves', 'Titiwangsa', 'KL Sentral', 'Masjid Jamek', 'KLCC'],
-        <String>['KL Sentral', 'Pasar Seni', 'Merdeka', 'Bukit Bintang', 'KLCC'],
-        <String>['Merdeka', 'Kajang'],
-      ],
-    );
-  }
-
-  static Map<String, List<TransitEdge>> _buildAdjacency(
-    Map<String, TransitStationNode> stations,
-    List<TransitEdge> edges,
-  ) {
-    final adjacency = <String, List<TransitEdge>>{
-      for (final id in stations.keys) id: <TransitEdge>[],
-    };
-    for (final edge in edges) {
-      adjacency[edge.fromId]!.add(edge);
-    }
-    return adjacency;
-  }
+extension TransitEdgeCompat on TransitEdge {
+  String get toId => to;
+  bool get isTransfer => isInterchange;
+  int get travelMinutes => minutes;
 }
+
+typedef TransitStationNode = TransitStation;

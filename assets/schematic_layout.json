@@ -1,0 +1,2236 @@
+{
+  "version": 1,
+  "sourceImage": "klang_valley_map.jpeg",
+  "extractionNote": "Merged from lib/PythonScript/train_stops_kl.csv (Source A: 7 LRT/MRT/Monorail/BRT lines) and assets/schematic_layout.json (Source B: all 13 lines with schematic positions from the official map). Source A provides official station IDs and names as ground truth for the 7 covered lines; Source B provides (x,y) schematic positions. Lines KTM 1/2, ERL 6/7, Skypark 10, Johan Setia 11 come from Source B alone. Coordinates normalized to 0.0–1.0 floats from Source B's 100×140 grid.",
+  "gridColumns": 100,
+  "gridRows": 140,
+  "lines": {
+    "KJ": {
+      "color": "#ED1C24",
+      "label": "LRT Kelana Jaya Line"
+    },
+    "AG": {
+      "color": "#F7941D",
+      "label": "LRT Ampang Line"
+    },
+    "SP": {
+      "color": "#7A1F3D",
+      "label": "LRT Sri Petaling Line"
+    },
+    "KG": {
+      "color": "#00723A",
+      "label": "MRT Kajang Line"
+    },
+    "PY": {
+      "color": "#F2C500",
+      "label": "MRT Putrajaya Line"
+    },
+    "MR": {
+      "color": "#8CC63F",
+      "label": "KL Monorail Line"
+    },
+    "BRT": {
+      "color": "#2E7D32",
+      "label": "BRT Sunway Line"
+    },
+    "KT1": {
+      "color": "#1B3A6B",
+      "label": "KTM Batu Caves - Pulau Sebang Line"
+    },
+    "KT2": {
+      "color": "#E4032E",
+      "label": "KTM Tanjung Malim - Pelabuhan Klang Line"
+    },
+    "ER6": {
+      "color": "#00A19A",
+      "label": "ERL KLIA Ekspres Line"
+    },
+    "ER7": {
+      "color": "#8DC63F",
+      "label": "ERL KLIA Transit Line"
+    },
+    "KS": {
+      "color": "#7A7A3D",
+      "label": "KTM KL Sentral - Skypark Terminal Line"
+    },
+    "JS": {
+      "color": "#29ABE2",
+      "label": "LRT Johan Setia Line (Coming Soon)"
+    }
+  },
+  "stations": {
+    "AG1": {
+      "name": "SENTUL TIMUR",
+      "x": 0.57,
+      "y": 0.2429,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG10": {
+      "name": "PUDU",
+      "x": 0.71,
+      "y": 0.4714,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG11": {
+      "name": "CHAN SOW LIN",
+      "x": 0.76,
+      "y": 0.4714,
+      "lines": [
+        "AG",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG12": {
+      "name": "MIHARJA",
+      "x": 0.87,
+      "y": 0.4643,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG13": {
+      "name": "MALURI",
+      "x": 0.91,
+      "y": 0.4357,
+      "lines": [
+        "AG",
+        "KG"
+      ],
+      "is_interchange": true
+    },
+    "AG14": {
+      "name": "PANDAN JAYA",
+      "x": 0.91,
+      "y": 0.3643,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG15": {
+      "name": "PANDAN INDAH",
+      "x": 0.91,
+      "y": 0.3214,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG16": {
+      "name": "CEMPAKA",
+      "x": 0.91,
+      "y": 0.2714,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG17": {
+      "name": "CAHAYA",
+      "x": 0.91,
+      "y": 0.2214,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG18": {
+      "name": "AMPANG",
+      "x": 0.91,
+      "y": 0.1857,
+      "lines": [
+        "AG"
+      ],
+      "is_interchange": false
+    },
+    "AG2": {
+      "name": "SENTUL",
+      "x": 0.49,
+      "y": 0.3071,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG3": {
+      "name": "TITIWANGSA",
+      "x": 0.57,
+      "y": 0.3714,
+      "lines": [
+        "AG",
+        "MR",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG4": {
+      "name": "PWTC",
+      "x": 0.57,
+      "y": 0.4,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG5": {
+      "name": "SULTAN ISMAIL",
+      "x": 0.57,
+      "y": 0.4143,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG6": {
+      "name": "BANDARAYA - UOB",
+      "x": 0.57,
+      "y": 0.4357,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG7": {
+      "name": "MASJID JAMEK",
+      "x": 0.54,
+      "y": 0.4571,
+      "lines": [
+        "AG",
+        "KJ",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG8": {
+      "name": "PLAZA RAKYAT",
+      "x": 0.57,
+      "y": 0.4786,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "AG9": {
+      "name": "HANG TUAH",
+      "x": 0.71,
+      "y": 0.5071,
+      "lines": [
+        "AG",
+        "MR",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "ANGKASAPURI": {
+      "name": "Angkasapuri",
+      "x": 0.47,
+      "y": 0.6643,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "BANDAR_BARU_KLANG": {
+      "name": "Bandar Baru Klang",
+      "x": 0.09,
+      "y": 0.7929,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "BANDAR_BUKIT_TINGGI": {
+      "name": "Bandar Bukit Tinggi",
+      "x": 0.17,
+      "y": 0.8643,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "BANGI": {
+      "name": "Bangi",
+      "x": 0.79,
+      "y": 0.7429,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "BANK_NEGARA": {
+      "name": "Bank Negara",
+      "x": 0.49,
+      "y": 0.4143,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "BATANG_BENAR": {
+      "name": "Batang Benar",
+      "x": 0.79,
+      "y": 0.7643,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "BATANG_KALI": {
+      "name": "Batang Kali",
+      "x": 0.05,
+      "y": 0.4,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "BATU_CAVES": {
+      "name": "Batu Caves",
+      "x": 0.49,
+      "y": 0.1857,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "BATU_KENTONMEN_LRT": {
+      "name": "Batu Kentonmen",
+      "x": 0.57,
+      "y": 0.2857,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "BATU_TIGA": {
+      "name": "Batu Tiga",
+      "x": 0.14,
+      "y": 0.7,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "BRT1": {
+      "name": "SUNWAY-SETIA JAYA",
+      "x": 0.27,
+      "y": 0.7214,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT2": {
+      "name": "MENTARI",
+      "x": 0.25,
+      "y": 0.7429,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT3": {
+      "name": "SUNWAY LAGOON",
+      "x": 0.3,
+      "y": 0.7429,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT4": {
+      "name": "SUNMED",
+      "x": 0.36,
+      "y": 0.7429,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT5": {
+      "name": "SunU-Monash",
+      "x": 0.32,
+      "y": 0.7714,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT6": {
+      "name": "SOUTH QUAY-USJ 1",
+      "x": 0.25,
+      "y": 0.7714,
+      "lines": [
+        "BRT"
+      ],
+      "is_interchange": false
+    },
+    "BRT7": {
+      "name": "USJ7",
+      "x": 0.22,
+      "y": 0.7714,
+      "lines": [
+        "BRT",
+        "KJ"
+      ],
+      "is_interchange": true
+    },
+    "BUKIT_BADAK": {
+      "name": "Bukit Badak",
+      "x": 0.17,
+      "y": 0.7643,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "DATO_MENTERI": {
+      "name": "Dato Menteri",
+      "x": 0.09,
+      "y": 0.7214,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "GLENMARIE2": {
+      "name": "Glenmarie 2",
+      "x": 0.15,
+      "y": 0.65,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "JALAN_KASTAM": {
+      "name": "Jalan Kastam",
+      "x": 0.09,
+      "y": 0.8857,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "JALAN_MERU": {
+      "name": "Jalan Meru",
+      "x": 0.09,
+      "y": 0.8286,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "JALAN_TEMPLER": {
+      "name": "Jalan Templer",
+      "x": 0.34,
+      "y": 0.65,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "JOHAN_SETIA": {
+      "name": "Johan Setia",
+      "x": 0.17,
+      "y": 0.9071,
+      "lines": [
+        "JS"
+      ],
+      "is_interchange": false
+    },
+    "KAJANG2": {
+      "name": "Kajang 2",
+      "x": 0.79,
+      "y": 0.7,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "KAMPUNG_DATO_HARUN": {
+      "name": "Kampung Dato Harun",
+      "x": 0.3,
+      "y": 0.65,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KAMPUNG_RAJA_UDA": {
+      "name": "Kampung Raja Uda",
+      "x": 0.09,
+      "y": 0.8643,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KEPONG": {
+      "name": "Kepong",
+      "x": 0.35,
+      "y": 0.4071,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KEPONG_SENTRAL": {
+      "name": "Kepong Sentral",
+      "x": 0.35,
+      "y": 0.3214,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KG04": {
+      "name": "KWASA DAMANSARA",
+      "x": 0.27,
+      "y": 0.5429,
+      "lines": [
+        "KG",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "KG05": {
+      "name": "KWASA SENTRAL",
+      "x": 0.28,
+      "y": 0.5714,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG06": {
+      "name": "KOTA DAMANSARA",
+      "x": 0.27,
+      "y": 0.6,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG07": {
+      "name": "SURIAN",
+      "x": 0.27,
+      "y": 0.6286,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG08": {
+      "name": "MUTIARA DAMANSARA",
+      "x": 0.27,
+      "y": 0.6571,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG09": {
+      "name": "BANDAR UTAMA",
+      "x": 0.27,
+      "y": 0.6857,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG10": {
+      "name": "TAMAN TUN DR ISMAIL",
+      "x": 0.27,
+      "y": 0.7143,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG12": {
+      "name": "PHILEO DAMANSARA",
+      "x": 0.27,
+      "y": 0.7429,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG13": {
+      "name": "PUSAT BANDAR DAMANSARA",
+      "x": 0.31,
+      "y": 0.7714,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG14": {
+      "name": "SEMANTAN",
+      "x": 0.36,
+      "y": 0.7714,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG15": {
+      "name": "MUZIUM NEGARA",
+      "x": 0.42,
+      "y": 0.5429,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG16": {
+      "name": "PASAR SENI",
+      "x": 0.57,
+      "y": 0.5214,
+      "lines": [
+        "KG",
+        "KJ"
+      ],
+      "is_interchange": true
+    },
+    "KG17": {
+      "name": "MERDEKA",
+      "x": 0.57,
+      "y": 0.5071,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG18A": {
+      "name": "BUKIT BINTANG",
+      "x": 0.66,
+      "y": 0.45,
+      "lines": [
+        "KG",
+        "MR"
+      ],
+      "is_interchange": true
+    },
+    "KG20": {
+      "name": "TUN RAZAK EXCHANGE",
+      "x": 0.79,
+      "y": 0.4357,
+      "lines": [
+        "KG",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "KG21": {
+      "name": "COCHRANE",
+      "x": 0.85,
+      "y": 0.45,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG22": {
+      "name": "MALURI",
+      "x": 0.91,
+      "y": 0.4357,
+      "lines": [
+        "AG",
+        "KG"
+      ],
+      "is_interchange": true
+    },
+    "KG23": {
+      "name": "TAMAN PERTAMA",
+      "x": 0.93,
+      "y": 0.4571,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG24": {
+      "name": "TAMAN MIDAH",
+      "x": 0.93,
+      "y": 0.4786,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG25": {
+      "name": "TAMAN MUTIARA",
+      "x": 0.93,
+      "y": 0.5,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG26": {
+      "name": "TAMAN CONNAUGHT",
+      "x": 0.93,
+      "y": 0.5214,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG27": {
+      "name": "TAMAN SUNTEX",
+      "x": 0.93,
+      "y": 0.5429,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG28": {
+      "name": "SRI RAYA",
+      "x": 0.93,
+      "y": 0.5643,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG29": {
+      "name": "BANDAR TUN HUSSEIN ONN",
+      "x": 0.93,
+      "y": 0.5857,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG30": {
+      "name": "BATU 11 CHERAS",
+      "x": 0.93,
+      "y": 0.6071,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG31": {
+      "name": "BUKIT DUKUNG",
+      "x": 0.93,
+      "y": 0.6286,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG33": {
+      "name": "SUNGAI JERNIH",
+      "x": 0.93,
+      "y": 0.65,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG34": {
+      "name": "STADIUM KAJANG",
+      "x": 0.93,
+      "y": 0.6714,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KG35": {
+      "name": "KAJANG",
+      "x": 0.79,
+      "y": 0.6786,
+      "lines": [
+        "KG"
+      ],
+      "is_interchange": false
+    },
+    "KJ1": {
+      "name": "GOMBAK",
+      "x": 0.73,
+      "y": 0.1857,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ10": {
+      "name": "KLCC",
+      "x": 0.68,
+      "y": 0.3929,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ11": {
+      "name": "KAMPUNG BARU - CBP COOPBANK PERTAMA",
+      "x": 0.68,
+      "y": 0.4143,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ12": {
+      "name": "DANG WANGI",
+      "x": 0.65,
+      "y": 0.4071,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ13": {
+      "name": "MASJID JAMEK",
+      "x": 0.54,
+      "y": 0.4571,
+      "lines": [
+        "AG",
+        "KJ",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "KJ14": {
+      "name": "PASAR SENI",
+      "x": 0.57,
+      "y": 0.5214,
+      "lines": [
+        "KG",
+        "KJ"
+      ],
+      "is_interchange": true
+    },
+    "KJ15": {
+      "name": "KL SENTRAL - REDONE",
+      "x": 0.47,
+      "y": 0.5643,
+      "lines": [
+        "ER6",
+        "ER7",
+        "KJ",
+        "KT1",
+        "KT2",
+        "MR"
+      ],
+      "is_interchange": true
+    },
+    "KJ16": {
+      "name": "BANK RAKYAT BANGSAR",
+      "x": 0.44,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ17": {
+      "name": "ABDULLAH HUKUM",
+      "x": 0.47,
+      "y": 0.6357,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ18": {
+      "name": "KERINCHI",
+      "x": 0.44,
+      "y": 0.6357,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ19": {
+      "name": "UNIVERSITI",
+      "x": 0.44,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ2": {
+      "name": "TAMAN MELATI",
+      "x": 0.73,
+      "y": 0.2143,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ20": {
+      "name": "TAMAN JAYA",
+      "x": 0.42,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ21": {
+      "name": "ASIA JAYA",
+      "x": 0.4,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ22": {
+      "name": "TAMAN PARAMOUNT",
+      "x": 0.38,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ23": {
+      "name": "TAMAN BAHAGIA",
+      "x": 0.35,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ24": {
+      "name": "KELANA JAYA",
+      "x": 0.32,
+      "y": 0.6,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ25": {
+      "name": "LEMBAH SUBANG",
+      "x": 0.22,
+      "y": 0.6214,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ26": {
+      "name": "ARA DAMANSARA",
+      "x": 0.22,
+      "y": 0.65,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ27": {
+      "name": "CGC GLENMARIE",
+      "x": 0.22,
+      "y": 0.6714,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ28": {
+      "name": "SUBANG JAYA",
+      "x": 0.22,
+      "y": 0.7,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ29": {
+      "name": "SS 15",
+      "x": 0.22,
+      "y": 0.7214,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ3": {
+      "name": "WANGSA MAJU",
+      "x": 0.73,
+      "y": 0.2429,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ30": {
+      "name": "SS 18",
+      "x": 0.22,
+      "y": 0.7429,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ31": {
+      "name": "USJ7",
+      "x": 0.22,
+      "y": 0.7714,
+      "lines": [
+        "BRT",
+        "KJ"
+      ],
+      "is_interchange": true
+    },
+    "KJ32": {
+      "name": "TAIPAN",
+      "x": 0.22,
+      "y": 0.8143,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ33": {
+      "name": "WAWASAN",
+      "x": 0.22,
+      "y": 0.8357,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ34": {
+      "name": "USJ 21",
+      "x": 0.22,
+      "y": 0.8643,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ35": {
+      "name": "ALAM MEGAH",
+      "x": 0.26,
+      "y": 0.8857,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ36": {
+      "name": "SUBANG ALAM",
+      "x": 0.3,
+      "y": 0.8857,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ37": {
+      "name": "PUTRA HEIGHTS",
+      "x": 0.34,
+      "y": 0.8857,
+      "lines": [
+        "KJ",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "KJ4": {
+      "name": "SRI RAMPAI",
+      "x": 0.73,
+      "y": 0.2714,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ5": {
+      "name": "SETIAWANGSA",
+      "x": 0.73,
+      "y": 0.3,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ6": {
+      "name": "JELATEK",
+      "x": 0.73,
+      "y": 0.3286,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ7": {
+      "name": "DATO' KERAMAT",
+      "x": 0.73,
+      "y": 0.35,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ8": {
+      "name": "DAMAI",
+      "x": 0.73,
+      "y": 0.3714,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "KJ9": {
+      "name": "AMPANG PARK",
+      "x": 0.73,
+      "y": 0.3929,
+      "lines": [
+        "KJ",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "KLANG": {
+      "name": "Klang",
+      "x": 0.14,
+      "y": 0.7929,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KLANG_JAYA": {
+      "name": "Klang Jaya",
+      "x": 0.17,
+      "y": 0.8143,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KLIA": {
+      "name": "KLIA",
+      "x": 0.76,
+      "y": 0.9857,
+      "lines": [
+        "ER6",
+        "ER7"
+      ],
+      "is_interchange": true
+    },
+    "KLIA2": {
+      "name": "KLIA2",
+      "x": 0.68,
+      "y": 0.9857,
+      "lines": [
+        "ER6",
+        "ER7"
+      ],
+      "is_interchange": true
+    },
+    "KUALA_KUBU_BHARU": {
+      "name": "Kuala Kubu Bharu",
+      "x": 0.04,
+      "y": 0.3429,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KUALA_LUMPUR": {
+      "name": "Kuala Lumpur",
+      "x": 0.42,
+      "y": 0.5214,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "KUANG": {
+      "name": "Kuang",
+      "x": 0.13,
+      "y": 0.4571,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "LABU": {
+      "name": "Labu",
+      "x": 0.79,
+      "y": 0.8071,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "MID_VALLEY": {
+      "name": "Mid Valley",
+      "x": 0.54,
+      "y": 0.5857,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "MR1": {
+      "name": "KL SENTRAL - REDONE",
+      "x": 0.47,
+      "y": 0.5643,
+      "lines": [
+        "ER6",
+        "ER7",
+        "KJ",
+        "KT1",
+        "KT2",
+        "MR"
+      ],
+      "is_interchange": true
+    },
+    "MR10": {
+      "name": "CHOW KIT",
+      "x": 0.61,
+      "y": 0.3857,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR11": {
+      "name": "TITIWANGSA",
+      "x": 0.57,
+      "y": 0.3714,
+      "lines": [
+        "AG",
+        "MR",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "MR2": {
+      "name": "TUN SAMBANTHAN",
+      "x": 0.59,
+      "y": 0.5429,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR3": {
+      "name": "MAHARAJALELA",
+      "x": 0.59,
+      "y": 0.5214,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR4": {
+      "name": "HANG TUAH",
+      "x": 0.71,
+      "y": 0.5071,
+      "lines": [
+        "AG",
+        "MR",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "MR5": {
+      "name": "IMBI",
+      "x": 0.68,
+      "y": 0.4714,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR6": {
+      "name": "BUKIT BINTANG",
+      "x": 0.66,
+      "y": 0.45,
+      "lines": [
+        "KG",
+        "MR"
+      ],
+      "is_interchange": true
+    },
+    "MR7": {
+      "name": "RAJA CHULAN",
+      "x": 0.68,
+      "y": 0.4286,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR8": {
+      "name": "BUKIT NANAS",
+      "x": 0.68,
+      "y": 0.4143,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "MR9": {
+      "name": "MEDAN TUANKU",
+      "x": 0.63,
+      "y": 0.3857,
+      "lines": [
+        "MR"
+      ],
+      "is_interchange": false
+    },
+    "NILAI": {
+      "name": "Nilai",
+      "x": 0.79,
+      "y": 0.7857,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "PADANG_JAWA": {
+      "name": "Padang Jawa",
+      "x": 0.14,
+      "y": 0.7429,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "PANTAI_DALAM": {
+      "name": "Pantai Dalam",
+      "x": 0.47,
+      "y": 0.6929,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "PASAR_BESAR_KLANG": {
+      "name": "Pasar Besar Klang",
+      "x": 0.09,
+      "y": 0.8071,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "PELABUHAN_KLANG": {
+      "name": "Pelabuhan Klang",
+      "x": 0.09,
+      "y": 0.9071,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "PETALING": {
+      "name": "Petaling",
+      "x": 0.38,
+      "y": 0.65,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "PUCHONG_JAYA": {
+      "name": "Puchong Jaya",
+      "x": 0.47,
+      "y": 0.8,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "PULAU_SEBANG": {
+      "name": "Pulau Sebang",
+      "x": 0.88,
+      "y": 0.9357,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "PUTRA": {
+      "name": "Putra",
+      "x": 0.47,
+      "y": 0.3786,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "PY01": {
+      "name": "KWASA DAMANSARA",
+      "x": 0.27,
+      "y": 0.5429,
+      "lines": [
+        "KG",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "PY03": {
+      "name": "KAMPUNG SELAMAT",
+      "x": 0.23,
+      "y": 0.5071,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY04": {
+      "name": "SUNGAI BULOH",
+      "x": 0.21,
+      "y": 0.4786,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY05": {
+      "name": "DAMANSARA DAMAI",
+      "x": 0.27,
+      "y": 0.4,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY06": {
+      "name": "SRI DAMANSARA BARAT",
+      "x": 0.27,
+      "y": 0.3714,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY07": {
+      "name": "SRI DAMANSARA SENTRAL",
+      "x": 0.27,
+      "y": 0.3429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY08": {
+      "name": "SRI DAMANSARA TIMUR",
+      "x": 0.33,
+      "y": 0.3429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY09": {
+      "name": "METRO PRIMA",
+      "x": 0.39,
+      "y": 0.3429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY10": {
+      "name": "KEPONG BARU",
+      "x": 0.42,
+      "y": 0.3429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY11": {
+      "name": "JINJANG",
+      "x": 0.44,
+      "y": 0.3429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY12": {
+      "name": "SRI DELIMA",
+      "x": 0.42,
+      "y": 0.3786,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY13": {
+      "name": "KAMPUNG BATU",
+      "x": 0.49,
+      "y": 0.2571,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY14": {
+      "name": "KENTOMEN",
+      "x": 0.49,
+      "y": 0.2857,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY15": {
+      "name": "JALAN IPOH",
+      "x": 0.45,
+      "y": 0.3,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY16": {
+      "name": "SENTUL BARAT",
+      "x": 0.45,
+      "y": 0.3214,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY17": {
+      "name": "TITIWANGSA",
+      "x": 0.57,
+      "y": 0.3714,
+      "lines": [
+        "AG",
+        "MR",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "PY18": {
+      "name": "HOSPITAL KUALA LUMPUR",
+      "x": 0.63,
+      "y": 0.3643,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY19": {
+      "name": "RAJA UDA",
+      "x": 0.66,
+      "y": 0.3714,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY20": {
+      "name": "AMPANG PARK",
+      "x": 0.73,
+      "y": 0.3929,
+      "lines": [
+        "KJ",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "PY21": {
+      "name": "PERSIARAN KLCC",
+      "x": 0.85,
+      "y": 0.3929,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY22": {
+      "name": "CONLAY",
+      "x": 0.85,
+      "y": 0.4143,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY23": {
+      "name": "TUN RAZAK EXCHANGE",
+      "x": 0.79,
+      "y": 0.4357,
+      "lines": [
+        "KG",
+        "PY"
+      ],
+      "is_interchange": true
+    },
+    "PY24": {
+      "name": "CHAN SOW LIN",
+      "x": 0.76,
+      "y": 0.4714,
+      "lines": [
+        "AG",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "PY27": {
+      "name": "KUCHAI",
+      "x": 0.57,
+      "y": 0.6929,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY28": {
+      "name": "TAMAN NAGA EMAS",
+      "x": 0.59,
+      "y": 0.7143,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY29": {
+      "name": "SUNGAI BESI",
+      "x": 0.63,
+      "y": 0.7357,
+      "lines": [
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "PY31": {
+      "name": "SERDANG RAYA UTARA",
+      "x": 0.63,
+      "y": 0.7571,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY32": {
+      "name": "SERDANG RAYA SELATAN",
+      "x": 0.63,
+      "y": 0.7786,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY33": {
+      "name": "SERDANG JAYA",
+      "x": 0.63,
+      "y": 0.8,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY34": {
+      "name": "UPM",
+      "x": 0.63,
+      "y": 0.8214,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY36": {
+      "name": "TAMAN EQUINE",
+      "x": 0.63,
+      "y": 0.8429,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY37": {
+      "name": "PUTRA PERMAI",
+      "x": 0.63,
+      "y": 0.8643,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY38": {
+      "name": "16 SIERRA",
+      "x": 0.63,
+      "y": 0.8857,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY39": {
+      "name": "CYBERJAYA UTARA",
+      "x": 0.63,
+      "y": 0.9071,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY40": {
+      "name": "CYBERJAYA CITY CENTRE",
+      "x": 0.63,
+      "y": 0.9286,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "PY41": {
+      "name": "PUTRAJAYA SENTRAL",
+      "x": 0.68,
+      "y": 0.95,
+      "lines": [
+        "PY"
+      ],
+      "is_interchange": false
+    },
+    "RASA": {
+      "name": "Rasa",
+      "x": 0.05,
+      "y": 0.3714,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "RAWANG": {
+      "name": "Rawang",
+      "x": 0.04,
+      "y": 0.4571,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "REMBAU": {
+      "name": "Rembau",
+      "x": 0.79,
+      "y": 0.9143,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "SALAK_TINGGI": {
+      "name": "Salak Tinggi",
+      "x": 0.68,
+      "y": 0.9714,
+      "lines": [
+        "ER6",
+        "ER7"
+      ],
+      "is_interchange": true
+    },
+    "SEGAMBUT": {
+      "name": "Segambut",
+      "x": 0.35,
+      "y": 0.4357,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "SEKSYEN7_SHAH_ALAM": {
+      "name": "Seksyen 7 Shah Alam",
+      "x": 0.09,
+      "y": 0.7643,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "SENAWANG": {
+      "name": "Senawang",
+      "x": 0.79,
+      "y": 0.8714,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "SEPUTEH": {
+      "name": "Seputeh",
+      "x": 0.57,
+      "y": 0.5857,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "SERDANG": {
+      "name": "Serdang",
+      "x": 0.79,
+      "y": 0.65,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "SEREMBAN": {
+      "name": "Seremban",
+      "x": 0.79,
+      "y": 0.85,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "SERENDAH": {
+      "name": "Serendah",
+      "x": 0.04,
+      "y": 0.4286,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "SERI_SETIA": {
+      "name": "Seri Setia",
+      "x": 0.27,
+      "y": 0.65,
+      "lines": [
+        "KJ"
+      ],
+      "is_interchange": false
+    },
+    "SETIA_JAYA": {
+      "name": "Setia Jaya",
+      "x": 0.26,
+      "y": 0.7,
+      "lines": [
+        "BRT",
+        "KT1"
+      ],
+      "is_interchange": true
+    },
+    "SHAH_ALAM": {
+      "name": "Shah Alam",
+      "x": 0.14,
+      "y": 0.7214,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "SKYPARK_TERMINAL": {
+      "name": "Skypark Terminal",
+      "x": 0.06,
+      "y": 0.6786,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "SP1": {
+      "name": "SENTUL TIMUR",
+      "x": 0.57,
+      "y": 0.2429,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP10": {
+      "name": "PUDU",
+      "x": 0.71,
+      "y": 0.4714,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP11": {
+      "name": "CHAN SOW LIN",
+      "x": 0.76,
+      "y": 0.4714,
+      "lines": [
+        "AG",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP12": {
+      "name": "CHERAS",
+      "x": 0.85,
+      "y": 0.5429,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP13": {
+      "name": "SALAK SELATAN",
+      "x": 0.85,
+      "y": 0.5643,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP14": {
+      "name": "BANDAR TUN RAZAK",
+      "x": 0.85,
+      "y": 0.5857,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP15": {
+      "name": "BANDAR TASIK SELATAN",
+      "x": 0.79,
+      "y": 0.6071,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP16": {
+      "name": "SUNGAI BESI",
+      "x": 0.63,
+      "y": 0.7357,
+      "lines": [
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP17": {
+      "name": "BUKIT JALIL",
+      "x": 0.57,
+      "y": 0.7143,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP18": {
+      "name": "SRI PETALING",
+      "x": 0.54,
+      "y": 0.7143,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP19": {
+      "name": "AWAN BESAR",
+      "x": 0.51,
+      "y": 0.7143,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP2": {
+      "name": "SENTUL",
+      "x": 0.49,
+      "y": 0.3071,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP20": {
+      "name": "MUHIBBAH",
+      "x": 0.47,
+      "y": 0.7143,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP21": {
+      "name": "ALAM SUTERA",
+      "x": 0.47,
+      "y": 0.7357,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP22": {
+      "name": "KINRARA",
+      "x": 0.47,
+      "y": 0.7571,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP24": {
+      "name": "IOI PUCHONG JAYA",
+      "x": 0.47,
+      "y": 0.7786,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP25": {
+      "name": "PUSAT BANDAR PUCHONG",
+      "x": 0.47,
+      "y": 0.8214,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP26": {
+      "name": "TAMAN PERINDUSTRIAN PUCHONG",
+      "x": 0.47,
+      "y": 0.8429,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP27": {
+      "name": "BANDAR PUTERI",
+      "x": 0.47,
+      "y": 0.8643,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP28": {
+      "name": "PUCHONG PERDANA",
+      "x": 0.43,
+      "y": 0.8857,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP29": {
+      "name": "PUCHONG PRIMA",
+      "x": 0.39,
+      "y": 0.8857,
+      "lines": [
+        "SP"
+      ],
+      "is_interchange": false
+    },
+    "SP3": {
+      "name": "TITIWANGSA",
+      "x": 0.57,
+      "y": 0.3714,
+      "lines": [
+        "AG",
+        "MR",
+        "PY",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP31": {
+      "name": "PUTRA HEIGHTS",
+      "x": 0.34,
+      "y": 0.8857,
+      "lines": [
+        "KJ",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP4": {
+      "name": "PWTC",
+      "x": 0.57,
+      "y": 0.4,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP5": {
+      "name": "SULTAN ISMAIL",
+      "x": 0.57,
+      "y": 0.4143,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP6": {
+      "name": "BANDARAYA - UOB",
+      "x": 0.57,
+      "y": 0.4357,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP7": {
+      "name": "MASJID JAMEK",
+      "x": 0.54,
+      "y": 0.4571,
+      "lines": [
+        "AG",
+        "KJ",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP8": {
+      "name": "PLAZA RAKYAT",
+      "x": 0.57,
+      "y": 0.4786,
+      "lines": [
+        "AG",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SP9": {
+      "name": "HANG TUAH",
+      "x": 0.71,
+      "y": 0.5071,
+      "lines": [
+        "AG",
+        "MR",
+        "SP"
+      ],
+      "is_interchange": true
+    },
+    "SRI_ANDALAS": {
+      "name": "Sri Andalas",
+      "x": 0.17,
+      "y": 0.8357,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "STADIUM_SHAH_ALAM": {
+      "name": "Stadium Shah Alam",
+      "x": 0.09,
+      "y": 0.7,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "SUNGAI_GADUT": {
+      "name": "Sungai Gadut",
+      "x": 0.79,
+      "y": 0.8929,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "TAMAN_SELATAN": {
+      "name": "Taman Selatan",
+      "x": 0.17,
+      "y": 0.7929,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "TAMAN_WAHYU": {
+      "name": "Taman Wahyu",
+      "x": 0.49,
+      "y": 0.2214,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "TANJUNG_MALIM": {
+      "name": "Tanjung Malim",
+      "x": 0.06,
+      "y": 0.3143,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "TELUK_GADONG": {
+      "name": "Teluk Gadong",
+      "x": 0.09,
+      "y": 0.8429,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "TELUK_PULAI": {
+      "name": "Teluk Pulai",
+      "x": 0.09,
+      "y": 0.8214,
+      "lines": [
+        "KT2"
+      ],
+      "is_interchange": false
+    },
+    "TIROI": {
+      "name": "Tiroi",
+      "x": 0.79,
+      "y": 0.8286,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    },
+    "UITM_SHAH_ALAM": {
+      "name": "UiTM Shah Alam",
+      "x": 0.09,
+      "y": 0.7429,
+      "lines": [
+        "KS"
+      ],
+      "is_interchange": false
+    },
+    "UKM": {
+      "name": "UKM",
+      "x": 0.79,
+      "y": 0.7214,
+      "lines": [
+        "KT1"
+      ],
+      "is_interchange": false
+    }
+  }
+}

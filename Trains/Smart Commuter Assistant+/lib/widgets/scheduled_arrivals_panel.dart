@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/route_colors.dart';
+import '../services/gtfs_local_service.dart';
 import '../services/train_arrival_service.dart';
 import 'data_source_badge.dart';
 
@@ -40,11 +41,18 @@ class _ScheduledArrivalsPanelState extends State<ScheduledArrivalsPanel> {
     }
   }
 
-  Future<StationArrivalResult> _load() {
-    return _arrivalService.fetchStationArrivals(
-      widget.stopId,
-      limit: widget.limit,
-    );
+  Future<StationArrivalResult> _load() async {
+    try {
+      return await _arrivalService.fetchStationArrivals(
+        widget.stopId,
+        limit: widget.limit,
+      );
+    } catch (_) {
+      return GtfsLocalService.getArrivals(
+        widget.stopId,
+        limit: widget.limit,
+      );
+    }
   }
 
   void _refresh() {
@@ -119,7 +127,7 @@ class _ScheduledArrivalsPanelState extends State<ScheduledArrivalsPanel> {
             if (!widget.compact) ...[
               const SizedBox(height: 2),
               Text(
-                '${result?.stopId ?? widget.stopId}',
+                result?.stopId ?? widget.stopId,
                 style: const TextStyle(
                   color: Color(0xFF667085),
                   fontSize: 12,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/crowd_reports_service.dart';
-import '../services/train_arrival_service.dart';
 import '../widgets/crowd_indicator.dart';
 import '../widgets/data_source_badge.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
@@ -131,7 +130,7 @@ class StationInfoCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                DataSourceBadge(source: 'gtfs_static_schedule'),
+                const DataSourceBadge(source: 'gtfs_static_schedule'),
               ],
             ),
             const SizedBox(height: 16),

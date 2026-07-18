@@ -14,6 +14,8 @@ import 'screens/track_route_screen.dart';
 import 'services/active_trip_service.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'services/closing_time_service.dart';
+import 'services/database_health_service.dart';
 import 'services/navigation_state.dart';
 import 'services/notification_service.dart';
 import 'services/theme_controller.dart';
@@ -252,12 +254,17 @@ class _BootstrapGate extends StatefulWidget {
 }
 
 class _BootstrapGateState extends State<_BootstrapGate> {
-  late final Future<void> _bootstrapFuture;
+  Future<void>? _bootstrapFuture;
 
   @override
   void initState() {
     super.initState();
+    _runBootstrap();
+  }
+
+  void _runBootstrap() {
     _bootstrapFuture = _bootstrap();
+    setState(() {});
   }
 
   Future<void> _bootstrap() async {
@@ -266,6 +273,8 @@ class _BootstrapGateState extends State<_BootstrapGate> {
     await AuthService().initialize();
     await ActiveTripService.instance.initialize();
     await NotificationService().initialize();
+    await DatabaseHealthService.instance.initialize();
+    ClosingTimeService.instance.initialize();
   }
 
   @override
@@ -276,6 +285,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
         if (snapshot.hasError) {
           return _ConfigurationErrorScreen(
             message: 'Startup failed.\n\n${snapshot.error}',
+            onRetry: _runBootstrap,
           );
         }
         if (snapshot.connectionState != ConnectionState.done) {
@@ -307,9 +317,11 @@ class AuthGate extends StatelessWidget {
 
 class _ConfigurationErrorScreen extends StatelessWidget {
   final String message;
+  final VoidCallback? onRetry;
 
   const _ConfigurationErrorScreen({
     required this.message,
+    this.onRetry,
   });
 
   @override
@@ -352,6 +364,14 @@ class _ConfigurationErrorScreen extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (onRetry != null) ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -579,104 +599,204 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ),
           _NetworkStatusBanner(type: bannerType),
+          ValueListenableBuilder<bool>(
+            valueListenable: ClosingTimeService.instance.isClosingSoon,
+            builder: (context, closingSoon, _) {
+              if (!closingSoon) return const SizedBox.shrink();
+              final remaining = ClosingTimeService.instance.minutesUntilCloseFormatted;
+              return IgnorePointer(
+                ignoring: true,
+                child: SafeArea(
+                  minimum: const EdgeInsets.only(top: 44, left: 12, right: 12),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: appCardShadows(context),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 16, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Trains closing in $remaining',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.fromLTRB(
-          _bottomToolbarHorizontalMargin,
-          10,
-          _bottomToolbarHorizontalMargin,
-          _bottomToolbarBottomMargin,
-        ),
-        child: Container(
-          height: _bottomToolbarHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                scheme.surface,
-                Color.lerp(scheme.surface, scheme.primary, 0.03) ??
+      bottomNavigationBar: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(
+              _bottomToolbarHorizontalMargin,
+              10,
+              _bottomToolbarHorizontalMargin,
+              _bottomToolbarBottomMargin,
+            ),
+            child: Container(
+              height: _bottomToolbarHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
                     scheme.surface,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(_bottomToolbarRadius),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.10),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                    Color.lerp(scheme.surface, scheme.primary, 0.03) ??
+                        scheme.surface,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(_bottomToolbarRadius),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.10),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                  const BoxShadow(
+                    color: Color(0x14101828),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              const BoxShadow(
-                color: Color(0x14101828),
-                blurRadius: 10,
-                offset: Offset(0, 4),
+              child: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  height: _bottomToolbarNavigationHeight,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  surfaceTintColor: Colors.transparent,
+                  labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                    final selected = states.contains(WidgetState.selected);
+                    return TextStyle(
+                      fontSize: 12,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurface.withValues(alpha: 0.62),
+                    );
+                  }),
+                  iconTheme: WidgetStateProperty.resolveWith((states) {
+                    final selected = states.contains(WidgetState.selected);
+                    return IconThemeData(
+                      size: selected ? 25 : 22,
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurface.withValues(alpha: 0.62),
+                    );
+                  }),
+                  indicatorColor: scheme.primary.withValues(alpha: 0.12),
+                  indicatorShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: currentIndex,
+                  onDestinationSelected: handleTabSwitch,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home_rounded),
+                      label: 'Home',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.map_outlined),
+                      selectedIcon: Icon(Icons.map_rounded),
+                      label: 'Map',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.route_outlined),
+                      selectedIcon: Icon(Icons.route_rounded),
+                      label: 'Track',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline_rounded),
+                      selectedIcon: Icon(Icons.person_rounded),
+                      label: 'Profile',
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-          child: NavigationBarTheme(
-            data: NavigationBarThemeData(
-              height: _bottomToolbarNavigationHeight,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              surfaceTintColor: Colors.transparent,
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-                  color: selected
-                      ? scheme.primary
-                      : scheme.onSurface.withValues(alpha: 0.62),
+          Positioned(
+            right: 18,
+            bottom: 10,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: DatabaseHealthService.instance.isConnected,
+              builder: (context, connected, _) {
+                return _DataModeIndicator(
+                  isLive: connected,
                 );
-              }),
-              iconTheme: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return IconThemeData(
-                  size: selected ? 25 : 22,
-                  color: selected
-                      ? scheme.primary
-                      : scheme.onSurface.withValues(alpha: 0.62),
-                );
-              }),
-              indicatorColor: scheme.primary.withValues(alpha: 0.12),
-              indicatorShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-            ),
-            child: NavigationBar(
-              selectedIndex: currentIndex,
-              onDestinationSelected: handleTabSwitch,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.map_outlined),
-                  selectedIcon: Icon(Icons.map_rounded),
-                  label: 'Map',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.route_outlined),
-                  selectedIcon: Icon(Icons.route_rounded),
-                  label: 'Track',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profile',
-                ),
-              ],
+              },
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataModeIndicator extends StatelessWidget {
+  final bool isLive;
+
+  const _DataModeIndicator({required this.isLive});
+
+  @override
+  Widget build(BuildContext context) {
+    final dotColor = isLive ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+    final label = isLive ? 'LIVE' : 'OFFLINE';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: dotColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: dotColor.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: dotColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
       ),
     );
   }

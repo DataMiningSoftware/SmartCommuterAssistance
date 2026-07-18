@@ -7,10 +7,12 @@ import 'package:latlong2/latlong.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
-import '../models/map_station.dart';
+import '../models/transit_graph.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
+import '../services/transit_data_service.dart';
 import '../services/transit_network_service.dart';
+import '../services/route_selection_service.dart';
 import '../widgets/app_page_title.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
 import '../widgets/schematic_transit_map.dart';
@@ -47,15 +49,34 @@ class _MapViewState extends State<MapView> {
   StopCrowdForecast? _selectedForecast;
   _MapMode _mapMode = _MapMode.geographic;
 
-  List<MapStation> _mapStations = [];
-  String? _schematicOriginId;
-  String? _schematicDestId;
+  TransitGraph? _graph;
+  TransitPath? _activeRoute;
   bool _debugCoordsMode = false;
 
   @override
   void initState() {
     super.initState();
+    RouteSelectionService.instance.originStationId.addListener(_onRouteSelectionChanged);
+    RouteSelectionService.instance.destinationStationId.addListener(_onRouteSelectionChanged);
     unawaited(_bootstrap());
+  }
+
+  @override
+  void dispose() {
+    RouteSelectionService.instance.originStationId.removeListener(_onRouteSelectionChanged);
+    RouteSelectionService.instance.destinationStationId.removeListener(_onRouteSelectionChanged);
+    super.dispose();
+  }
+
+  void _onRouteSelectionChanged() {
+    final originId = RouteSelectionService.instance.originStationId.value;
+    final destId = RouteSelectionService.instance.destinationStationId.value;
+    if (originId == null || destId == null || _graph == null) {
+      setState(() => _activeRoute = null);
+      return;
+    }
+    final path = _graph!.findShortestPath(originId, destId);
+    setState(() => _activeRoute = path);
   }
 
   Future<void> _bootstrap() async {
@@ -67,13 +88,13 @@ class _MapViewState extends State<MapView> {
     try {
       final network = await _transitNetworkService.loadNetwork();
       final position = await _loadLocation();
-      final stations = await MapStationData.load();
+      final graph = await TransitDataService.instance.load();
       if (!mounted) return;
       setState(() {
         _stopsById = network.stopsById;
         _connections = network.connections;
         _userPosition = position;
-        _mapStations = stations;
+        _graph = graph;
         _isLoading = false;
       });
       _focusInitialContext();
@@ -323,125 +344,6 @@ class _MapViewState extends State<MapView> {
     _mapController.move(LatLng(position.latitude, position.longitude), 12.8);
   }
 
-  void _showSchematicRouteSheet() {
-    final originId = _schematicOriginId;
-    final destId = _schematicDestId;
-    if (originId == null || destId == null) return;
-
-    final originStation = _mapStations.firstWhere(
-      (s) => s.stationId == originId,
-      orElse: () => _mapStations.first,
-    );
-    final destStation = _mapStations.firstWhere(
-      (s) => s.stationId == destId,
-      orElse: () => _mapStations.first,
-    );
-
-    final result = _findSchematicRoute(originId, destId);
-    if (result == null && !mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (ctx) => _SchematicRouteSheet(
-        originName: originStation.name,
-        originId: originId,
-        destinationName: destStation.name,
-        destinationId: destId,
-        path: result?.edges ?? <TransitConnection>[],
-        totalMinutes: result?.totalMinutes ?? 0,
-        stopsById: _stopsById,
-      ),
-    );
-  }
-
-  ({List<TransitConnection> edges, int totalMinutes})? _findSchematicRoute(
-    String originId,
-    String destId,
-  ) {
-    final stops = _stopsById;
-    final targets = <String>{destId};
-    if (!stops.containsKey(destId)) {
-      targets.addAll(
-        stops.values
-            .where((s) => s.stopName.toUpperCase() ==
-                stops[destId]?.stopName.toUpperCase())
-            .map((s) => s.stopId),
-      );
-    }
-    if (targets.isEmpty ||
-        (!stops.containsKey(originId) && !stops.values.any(
-              (s) => s.stopId == originId,
-            ))) {
-      return null;
-    }
-
-    final adjacency = <String, List<_RouteEdgeRef>>{};
-    for (final c in _connections) {
-      adjacency.putIfAbsent(c.fromStopId, () => []).add(
-        _RouteEdgeRef(toStopId: c.toStopId, minutes: c.travelMinutes, routeId: c.routeId),
-      );
-    }
-
-    final dist = <String, int>{originId: 0};
-    final prev = <String, String>{};
-    final prevEdge = <String, _RouteEdgeRef>{};
-    final unvisited = <String>{originId};
-
-    while (unvisited.isNotEmpty) {
-      final current = unvisited.reduce((a, b) =>
-          (dist[a] ?? 999999) < (dist[b] ?? 999999) ? a : b);
-      unvisited.remove(current);
-
-      if (targets.contains(current)) break;
-
-      final currentDist = dist[current] ?? 999999;
-      for (final edge in adjacency[current] ?? <_RouteEdgeRef>[]) {
-        final alt = currentDist + edge.minutes;
-        if (alt < (dist[edge.toStopId] ?? 999999)) {
-          dist[edge.toStopId] = alt;
-          prev[edge.toStopId] = current;
-          prevEdge[edge.toStopId] = edge;
-          unvisited.add(edge.toStopId);
-        }
-      }
-    }
-
-    String? bestDest;
-    var bestDist = 999999;
-    for (final t in targets) {
-      if ((dist[t] ?? 999999) < bestDist) {
-        bestDist = dist[t]!;
-        bestDest = t;
-      }
-    }
-    if (bestDest == null) return null;
-
-    final pathEdges = <TransitConnection>[];
-    var cursor = bestDest;
-    while (cursor != originId) {
-      final e = prevEdge[cursor];
-      final p = prev[cursor];
-      if (e == null || p == null) break;
-      pathEdges.insert(0,
-        _connections.firstWhere(
-          (c) => c.fromStopId == p && c.toStopId == cursor,
-          orElse: () => TransitConnection(
-            fromStopId: p,
-            toStopId: cursor,
-            routeId: e.routeId,
-            connectionType: 'standard_stop',
-            travelMinutes: e.minutes,
-          ),
-        ),
-      );
-      cursor = p;
-    }
-
-    return (edges: pathEdges, totalMinutes: bestDist);
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedStop =
@@ -477,50 +379,53 @@ class _MapViewState extends State<MapView> {
                     ),
                   ),
                 )
-              : _mapMode == _MapMode.schematic
-                  ? Stack(
-                      children: [
-                        SchematicTransitMap(
-                          stations: _mapStations,
-                          selectedOriginId: _schematicOriginId,
-                          selectedDestinationId: _schematicDestId,
-                          onOriginSelected: (station) {
-                            setState(() {
-                              _schematicOriginId = station.stationId;
-                            });
+                  : _mapMode == _MapMode.schematic
+                  ? ValueListenableBuilder<String?>(
+                      valueListenable: RouteSelectionService.instance.originStationId,
+                      builder: (context, originId, _) {
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: RouteSelectionService.instance.destinationStationId,
+                          builder: (context, destId, _) {
+                            if (_graph == null) return const Center(child: CircularProgressIndicator());
+                            return Stack(
+                              children: [
+                                SchematicTransitMap(
+                                  graph: _graph!,
+                                  selectedOriginId: originId,
+                                  selectedDestinationId: destId,
+                                  activeRoute: _activeRoute,
+                                  onOriginSelected: (_) {},
+                                  onDestinationSelected: (_) {},
+                                  debugMode: _debugCoordsMode,
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  left: 4,
+                                  child: Material(
+                                    elevation: 2,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        _debugCoordsMode
+                                            ? Icons.touch_app
+                                            : Icons.touch_app_outlined,
+                                        size: 20,
+                                      ),
+                                      tooltip: _debugCoordsMode
+                                          ? 'Coord calibration ON'
+                                          : 'Toggle coord calibration (tap map to get x,y)',
+                                      onPressed: () {
+                                        setState(() =>
+                                            _debugCoordsMode = !_debugCoordsMode);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
                           },
-                          onDestinationSelected: (station) {
-                            setState(() {
-                              _schematicDestId = station.stationId;
-                            });
-                          },
-                          onPlanRoute: _showSchematicRouteSheet,
-                          debugMode: _debugCoordsMode,
-                        ),
-                        Positioned(
-                          top: 4,
-                          left: 4,
-                          child: Material(
-                            elevation: 2,
-                            borderRadius: BorderRadius.circular(8),
-                            child: IconButton(
-                              icon: Icon(
-                                _debugCoordsMode
-                                    ? Icons.touch_app
-                                    : Icons.touch_app_outlined,
-                                size: 20,
-                              ),
-                              tooltip: _debugCoordsMode
-                                  ? 'Coord calibration ON'
-                                  : 'Toggle coord calibration (tap map to get x,y)',
-                              onPressed: () {
-                                setState(() =>
-                                    _debugCoordsMode = !_debugCoordsMode);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     )
                   : Stack(
                       children: [
@@ -731,182 +636,6 @@ class _MapViewState extends State<MapView> {
       ),
     );
   }
-}
-
-class _RouteEdgeRef {
-  final String toStopId;
-  final int minutes;
-  final String routeId;
-  const _RouteEdgeRef({required this.toStopId, required this.minutes, required this.routeId});
-}
-
-class _SchematicRouteSheet extends StatelessWidget {
-  final String originName;
-  final String originId;
-  final String destinationName;
-  final String destinationId;
-  final List<TransitConnection> path;
-  final int totalMinutes;
-  final Map<String, TransitStop> stopsById;
-
-  const _SchematicRouteSheet({
-    required this.originName,
-    required this.originId,
-    required this.destinationName,
-    required this.destinationId,
-    required this.path,
-    required this.totalMinutes,
-    required this.stopsById,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final segments = <_RouteSegmentUi>[];
-    String? currentLine;
-    String? segmentStart;
-    var segmentMinutes = 0;
-    var segmentStops = 0;
-
-    for (final edge in path) {
-      if (edge.connectionType == 'transfer' || edge.connectionType == 'interchange_transfer') {
-        if (currentLine != null && segmentStart != null) {
-          segments.add(_RouteSegmentUi(
-            line: currentLine,
-            fromName: stopsById[segmentStart]?.stopName ?? segmentStart,
-            toName: stopsById[edge.fromStopId]?.stopName ?? edge.fromStopId,
-            stops: segmentStops,
-            minutes: segmentMinutes,
-          ));
-        }
-        segments.add(_RouteSegmentUi(
-          line: 'Transfer',
-          fromName: stopsById[edge.fromStopId]?.stopName ?? edge.fromStopId,
-          toName: stopsById[edge.toStopId]?.stopName ?? edge.toStopId,
-          stops: 0,
-          minutes: edge.travelMinutes,
-        ));
-        currentLine = null;
-        segmentStart = null;
-        segmentMinutes = 0;
-        segmentStops = 0;
-      } else {
-        if (currentLine == null) {
-          currentLine = edge.routeId;
-          segmentStart = edge.fromStopId;
-          segmentMinutes = 0;
-          segmentStops = 0;
-        }
-        segmentMinutes += edge.travelMinutes;
-        segmentStops++;
-      }
-    }
-    if (currentLine != null && segmentStart != null) {
-      final lastEdge = path.isNotEmpty ? path.last : null;
-      segments.add(_RouteSegmentUi(
-        line: currentLine,
-        fromName: stopsById[segmentStart]?.stopName ?? segmentStart,
-        toName: lastEdge != null ? (stopsById[lastEdge.toStopId]?.stopName ?? lastEdge.toStopId) : destinationName,
-        stops: segmentStops,
-        minutes: segmentMinutes,
-      ));
-    }
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$originName → $destinationName',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$totalMinutes min • ${path.length} stops',
-              style: const TextStyle(color: Color(0xFF667085), fontWeight: FontWeight.w600),
-            ),
-            if (path.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text('No route found between these stations on the schematic map.',
-                    style: TextStyle(color: Color(0xFF667085))),
-              )
-            else
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: segments.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final seg = segments[index];
-                    final color = seg.line == 'Transfer'
-                        ? const Color(0xFF667085)
-                        : getRouteColor(seg.line);
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE3EAF7)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  seg.line == 'Transfer'
-                                      ? 'Transfer at ${seg.toName}'
-                                      : '${seg.line}: ${seg.fromName} → ${seg.toName}',
-                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                                ),
-                                Text(
-                                  '${seg.minutes} min • ${seg.stops} stops',
-                                  style: const TextStyle(color: Color(0xFF667085), fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 14,
-                              color: color.withValues(alpha: 0.6)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RouteSegmentUi {
-  final String line;
-  final String fromName;
-  final String toName;
-  final int stops;
-  final int minutes;
-  const _RouteSegmentUi({
-    required this.line,
-    required this.fromName,
-    required this.toName,
-    required this.stops,
-    required this.minutes,
-  });
 }
 
 enum _MapMode {
