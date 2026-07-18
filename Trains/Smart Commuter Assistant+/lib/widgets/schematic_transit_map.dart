@@ -10,6 +10,8 @@ class SchematicTransitMap extends StatefulWidget {
   final String? selectedDestinationId;
   final ValueChanged<MapStation>? onOriginSelected;
   final ValueChanged<MapStation>? onDestinationSelected;
+  final VoidCallback? onPlanRoute;
+  final bool debugMode;
 
   const SchematicTransitMap({
     super.key,
@@ -18,6 +20,8 @@ class SchematicTransitMap extends StatefulWidget {
     this.selectedDestinationId,
     this.onOriginSelected,
     this.onDestinationSelected,
+    this.onPlanRoute,
+    this.debugMode = false,
   });
 
   @override
@@ -29,6 +33,8 @@ class _SchematicTransitMapState extends State<SchematicTransitMap> {
       TransformationController();
   MapStation? _selectedStation;
   String? _hoveredStationId;
+  Offset? _debugTapPosition;
+  bool _debugLongPress = false;
 
   static const double _mapImageWidth = 1805;
   static const double _mapImageHeight = 2560;
@@ -47,6 +53,7 @@ class _SchematicTransitMapState extends State<SchematicTransitMap> {
       isScrollControlled: true,
       builder: (ctx) => _StationActionSheet(
         station: station,
+        debugMode: widget.debugMode,
         onViewDetails: () {
           Navigator.pop(ctx);
           Navigator.push(
@@ -266,6 +273,76 @@ class _SchematicTransitMapState extends State<SchematicTransitMap> {
                     ),
                   ),
                 ),
+              if (widget.debugMode)
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTapUp: (details) {
+                      final localPos = details.localPosition;
+                      final x = (localPos.dx / _mapImageWidth).clamp(0.0, 1.0);
+                      final y = (localPos.dy / _mapImageHeight).clamp(0.0, 1.0);
+                      setState(() {
+                        _debugTapPosition = Offset(x, y);
+                        _debugLongPress = false;
+                      });
+                    },
+                    onLongPressStart: (details) {
+                      final localPos = details.localPosition;
+                      final x = (localPos.dx / _mapImageWidth).clamp(0.0, 1.0);
+                      final y = (localPos.dy / _mapImageHeight).clamp(0.0, 1.0);
+                      setState(() {
+                        _debugTapPosition = Offset(x, y);
+                        _debugLongPress = true;
+                      });
+                    },
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+              if (widget.debugMode && _debugTapPosition != null)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Material(
+                    elevation: 8,
+                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xDD1E293B),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Tap: x=${_debugTapPosition!.dx.toStringAsFixed(3)}, y=${_debugTapPosition!.dy.toStringAsFixed(3)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          if (_debugLongPress)
+                            const Text(
+                              'Long-press — use these coords in map_stations.json',
+                              style: TextStyle(
+                                color: Color(0xFFFCD34D),
+                                fontSize: 10,
+                              ),
+                            ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Paste into map_stations.json:\n"x": ${_debugTapPosition!.dx.toStringAsFixed(3)},\n"y": ${_debugTapPosition!.dy.toStringAsFixed(3)}',
+                            style: const TextStyle(
+                              color: Color(0xFFA5B4FC),
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               if (widget.selectedOriginId != null &&
                   widget.selectedDestinationId != null)
                 Positioned(
@@ -336,22 +413,7 @@ class _SchematicTransitMapState extends State<SchematicTransitMap> {
                             ),
                           ),
                           TextButton.icon(
-                            onPressed: () {
-                              widget.onOriginSelected?.call(
-                                widget.stations.firstWhere(
-                                  (s) =>
-                                      s.stationId ==
-                                      widget.selectedOriginId,
-                                ),
-                              );
-                              widget.onDestinationSelected?.call(
-                                widget.stations.firstWhere(
-                                  (s) =>
-                                      s.stationId ==
-                                      widget.selectedDestinationId,
-                                ),
-                              );
-                            },
+                            onPressed: widget.onPlanRoute,
                             icon: const Icon(Icons.route_rounded, size: 18),
                             label: const Text('Plan Route'),
                           ),
@@ -426,12 +488,14 @@ class _StationActionSheet extends StatelessWidget {
   final VoidCallback onViewDetails;
   final VoidCallback? onSetOrigin;
   final VoidCallback? onSetDestination;
+  final bool debugMode;
 
   const _StationActionSheet({
     required this.station,
     required this.onViewDetails,
     this.onSetOrigin,
     this.onSetDestination,
+    this.debugMode = false,
   });
 
   @override
@@ -490,6 +554,19 @@ class _StationActionSheet extends StatelessWidget {
                 ),
               ),
             ),
+            if (debugMode)
+              Padding(
+                padding: const EdgeInsets.only(left: 22, bottom: 12),
+                child: Text(
+                  'Debug — JSON coords: x=${station.x.toStringAsFixed(3)}, y=${station.y.toStringAsFixed(3)}',
+                  style: const TextStyle(
+                    color: Color(0xFF6366F1),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
             const SizedBox(height: 16),
             Row(
               children: [

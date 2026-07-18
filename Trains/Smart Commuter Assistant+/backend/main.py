@@ -109,6 +109,19 @@ class _RouteProfile:
         self.crowd_penalty = crowd_penalty
 
 
+class StationInfoModel(BaseModel):
+    stop_id: str
+    stop_name: str
+    route_id: str
+    latitude: float
+    longitude: float
+
+
+class StationListResponse(BaseModel):
+    stations: list[StationInfoModel]
+    count: int
+
+
 class CrowdReportRequest(BaseModel):
     stop_id: str
     occupancy_level: int = 3
@@ -162,6 +175,26 @@ def health() -> dict:
         "edges": len(network["adjacency"]),
         "gtfs": gtfs,
     }
+
+
+@app.get("/stations", response_model=StationListResponse)
+def list_stations() -> StationListResponse:
+    network = load_network()
+    stops_by_id: dict[str, StopRecord] = network["stops_by_id"]
+    stations = [
+        StationInfoModel(
+            stop_id=stop.stop_id,
+            stop_name=stop.stop_name,
+            route_id=stop.route_id,
+            latitude=stop.latitude,
+            longitude=stop.longitude,
+        )
+        for stop in sorted(
+            stops_by_id.values(),
+            key=lambda s: (s.stop_id, s.route_id),
+        )
+    ]
+    return StationListResponse(stations=stations, count=len(stations))
 
 
 @app.post("/crowd/report", response_model=CrowdReportResponse)
