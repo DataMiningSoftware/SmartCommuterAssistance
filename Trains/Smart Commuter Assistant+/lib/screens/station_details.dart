@@ -32,12 +32,15 @@ class _StationDetailsState extends State<StationDetails> {
 
   Future<StationCrowdBoardItem?> _loadCrowd() async {
     final board = await _crowdReportsService.fetchStationCrowdBoard();
-    return board.cast<StationCrowdBoardItem?>().firstWhere(
-      (item) => item.stopIds.any(
-        (id) => id.trim().toUpperCase() == widget.stopId.trim().toUpperCase(),
-      ),
-      orElse: () => null,
-    );
+    try {
+      return board.firstWhere(
+        (item) => item.stopIds.any(
+          (id) => id.trim().toUpperCase() == widget.stopId.trim().toUpperCase(),
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

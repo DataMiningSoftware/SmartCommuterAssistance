@@ -162,7 +162,7 @@ class NearbyStationCrowdForecast {
 }
 
 class CrowdReportsService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
   final TransitNetworkService _transitNetworkService = TransitNetworkService();
   static const Duration _latestReportsCacheTtl = Duration(seconds: 20);
   static const Duration _forecastGridCacheTtl = Duration(seconds: 30);

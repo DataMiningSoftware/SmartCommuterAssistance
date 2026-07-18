@@ -22,6 +22,22 @@ import 'widgets/train_loading_transition.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+      );
+    } catch (error) {
+      debugPrint('Supabase init skipped, using local guest mode: $error');
+    }
+  } else {
+    debugPrint('Supabase config missing, starting in local guest mode.');
+  }
+
   await SentryFlutter.init(
     (options) {
       options.dsn = const String.fromEnvironment(
@@ -30,25 +46,7 @@ Future<void> main() async {
       );
       options.tracesSampleRate = 0.2;
     },
-    appRunner: () async {
-      const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-      const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-
-      if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-        try {
-          await Supabase.initialize(
-            url: supabaseUrl,
-            anonKey: supabaseAnonKey,
-          );
-        } catch (error) {
-          debugPrint('Supabase init skipped, using local guest mode: $error');
-        }
-      } else {
-        debugPrint('Supabase config missing, starting in local guest mode.');
-      }
-
-      runApp(const SmartCommuterApp());
-    },
+    appRunner: () => runApp(const SmartCommuterApp()),
   );
 }
 
