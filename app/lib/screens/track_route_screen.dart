@@ -116,10 +116,16 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     await _notificationService.requestPermissions();
     await _loadTrip();
     await _loadNetworkData();
+    if (mounted) {
+      setState(() {});
+    }
     try {
       await _loadCrowdForecasts().timeout(const Duration(seconds: 10));
     } catch (_) {
       // Crowd forecasts unavailable offline — will use fallback defaults.
+    }
+    if (mounted) {
+      setState(() {});
     }
     if (_trip != null) {
       await _computeRouteStops();
