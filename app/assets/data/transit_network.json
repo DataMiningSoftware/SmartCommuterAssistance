@@ -41,8 +41,8 @@
     {
       "id": "AG12",
       "name": "MIHARJA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.120973,
+      "lng": 101.717922,
       "gridX": 87.0,
       "gridY": 65.0,
       "lines": [
@@ -64,8 +64,8 @@
     {
       "id": "AG14",
       "name": "PANDAN JAYA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.130141,
+      "lng": 101.739122,
       "gridX": 91.0,
       "gridY": 51.0,
       "lines": [
@@ -75,8 +75,8 @@
     {
       "id": "AG15",
       "name": "PANDAN INDAH",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.134581,
+      "lng": 101.746509,
       "gridX": 91.0,
       "gridY": 45.0,
       "lines": [
@@ -86,8 +86,8 @@
     {
       "id": "AG16",
       "name": "CEMPAKA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.138324,
+      "lng": 101.752979,
       "gridX": 91.0,
       "gridY": 38.0,
       "lines": [
@@ -97,8 +97,8 @@
     {
       "id": "AG17",
       "name": "CAHAYA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.140575,
+      "lng": 101.756677,
       "gridX": 91.0,
       "gridY": 31.0,
       "lines": [
@@ -108,8 +108,8 @@
     {
       "id": "AG18",
       "name": "AMPANG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.150318,
+      "lng": 101.760049,
       "gridX": 91.0,
       "gridY": 26.0,
       "lines": [
@@ -145,8 +145,8 @@
     {
       "id": "AG4",
       "name": "PWTC",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.166333,
+      "lng": 101.693586,
       "gridX": 57.0,
       "gridY": 56.0,
       "lines": [
@@ -157,8 +157,8 @@
     {
       "id": "AG5",
       "name": "SULTAN ISMAIL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.161245,
+      "lng": 101.694109,
       "gridX": 57.0,
       "gridY": 58.0,
       "lines": [
@@ -169,8 +169,8 @@
     {
       "id": "AG6",
       "name": "BANDARAYA - UOB",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.155567,
+      "lng": 101.694485,
       "gridX": 57.0,
       "gridY": 61.0,
       "lines": [
@@ -194,8 +194,8 @@
     {
       "id": "AG8",
       "name": "PLAZA RAKYAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.144049,
+      "lng": 101.702105,
       "gridX": 57.0,
       "gridY": 67.0,
       "lines": [
@@ -230,8 +230,8 @@
     {
       "id": "BANDAR_BARU_KLANG",
       "name": "Bandar Baru Klang",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0625,
+      "lng": 101.465556,
       "gridX": 9.0,
       "gridY": 111.0,
       "lines": [
@@ -241,8 +241,8 @@
     {
       "id": "BANDAR_BUKIT_TINGGI",
       "name": "Bandar Bukit Tinggi",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.993056,
+      "lng": 101.445833,
       "gridX": 17.0,
       "gridY": 121.0,
       "lines": [
@@ -351,8 +351,8 @@
     {
       "id": "BRT3",
       "name": "SUNWAY LAGOON",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0706,
+      "lng": 101.6107,
       "gridX": 30.0,
       "gridY": 104.0,
       "lines": [
@@ -362,8 +362,8 @@
     {
       "id": "BRT4",
       "name": "SUNMED",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0656,
+      "lng": 101.6087,
       "gridX": 36.0,
       "gridY": 104.0,
       "lines": [
@@ -395,8 +395,8 @@
     {
       "id": "BRT7",
       "name": "USJ7",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0553,
+      "lng": 101.5919,
       "gridX": 22.0,
       "gridY": 108.0,
       "lines": [
@@ -429,8 +429,8 @@
     {
       "id": "GLENMARIE2",
       "name": "Glenmarie 2",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.095278,
+      "lng": 101.588611,
       "gridX": 15.0,
       "gridY": 91.0,
       "lines": [
@@ -451,8 +451,8 @@
     {
       "id": "JALAN_MERU",
       "name": "Jalan Meru",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.058889,
+      "lng": 101.451944,
       "gridX": 9.0,
       "gridY": 116.0,
       "lines": [
@@ -473,8 +473,8 @@
     {
       "id": "JOHAN_SETIA",
       "name": "Johan Setia",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.976111,
+      "lng": 101.459167,
       "gridX": 17.0,
       "gridY": 127.0,
       "lines": [
@@ -539,8 +539,8 @@
     {
       "id": "KG04",
       "name": "KWASA DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.176146,
+      "lng": 101.572052,
       "gridX": 27.0,
       "gridY": 76.0,
       "lines": [
@@ -551,8 +551,8 @@
     {
       "id": "KG05",
       "name": "KWASA SENTRAL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.170112,
+      "lng": 101.564651,
       "gridX": 28.0,
       "gridY": 80.0,
       "lines": [
@@ -562,8 +562,8 @@
     {
       "id": "KG06",
       "name": "KOTA DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.150134,
+      "lng": 101.57869,
       "gridX": 27.0,
       "gridY": 84.0,
       "lines": [
@@ -573,8 +573,8 @@
     {
       "id": "KG07",
       "name": "SURIAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.14948,
+      "lng": 101.593925,
       "gridX": 27.0,
       "gridY": 88.0,
       "lines": [
@@ -584,8 +584,8 @@
     {
       "id": "KG08",
       "name": "MUTIARA DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.155301,
+      "lng": 101.609077,
       "gridX": 27.0,
       "gridY": 92.0,
       "lines": [
@@ -606,8 +606,8 @@
     {
       "id": "KG10",
       "name": "TAMAN TUN DR ISMAIL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.13613,
+      "lng": 101.630539,
       "gridX": 27.0,
       "gridY": 100.0,
       "lines": [
@@ -617,8 +617,8 @@
     {
       "id": "KG12",
       "name": "PHILEO DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.129864,
+      "lng": 101.642471,
       "gridX": 27.0,
       "gridY": 104.0,
       "lines": [
@@ -628,8 +628,8 @@
     {
       "id": "KG13",
       "name": "PUSAT BANDAR DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.143444,
+      "lng": 101.662857,
       "gridX": 31.0,
       "gridY": 108.0,
       "lines": [
@@ -639,8 +639,8 @@
     {
       "id": "KG14",
       "name": "SEMANTAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.150977,
+      "lng": 101.665497,
       "gridX": 36.0,
       "gridY": 108.0,
       "lines": [
@@ -650,8 +650,8 @@
     {
       "id": "KG15",
       "name": "MUZIUM NEGARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.137317,
+      "lng": 101.687336,
       "gridX": 42.0,
       "gridY": 76.0,
       "lines": [
@@ -731,8 +731,8 @@
     {
       "id": "KG23",
       "name": "TAMAN PERTAMA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.112547,
+      "lng": 101.729371,
       "gridX": 93.0,
       "gridY": 64.0,
       "lines": [
@@ -742,8 +742,8 @@
     {
       "id": "KG24",
       "name": "TAMAN MIDAH",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.104505,
+      "lng": 101.732186,
       "gridX": 93.0,
       "gridY": 67.0,
       "lines": [
@@ -753,8 +753,8 @@
     {
       "id": "KG25",
       "name": "TAMAN MUTIARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.090989,
+      "lng": 101.740453,
       "gridX": 93.0,
       "gridY": 70.0,
       "lines": [
@@ -764,8 +764,8 @@
     {
       "id": "KG26",
       "name": "TAMAN CONNAUGHT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.079172,
+      "lng": 101.74522,
       "gridX": 93.0,
       "gridY": 73.0,
       "lines": [
@@ -775,8 +775,8 @@
     {
       "id": "KG27",
       "name": "TAMAN SUNTEX",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.071578,
+      "lng": 101.763552,
       "gridX": 93.0,
       "gridY": 76.0,
       "lines": [
@@ -797,8 +797,8 @@
     {
       "id": "KG29",
       "name": "BANDAR TUN HUSSEIN ONN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.048223,
+      "lng": 101.775109,
       "gridX": 93.0,
       "gridY": 82.0,
       "lines": [
@@ -808,8 +808,8 @@
     {
       "id": "KG30",
       "name": "BATU 11 CHERAS",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.041339,
+      "lng": 101.773383,
       "gridX": 93.0,
       "gridY": 85.0,
       "lines": [
@@ -819,8 +819,8 @@
     {
       "id": "KG31",
       "name": "BUKIT DUKUNG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.026413,
+      "lng": 101.771072,
       "gridX": 93.0,
       "gridY": 88.0,
       "lines": [
@@ -830,8 +830,8 @@
     {
       "id": "KG33",
       "name": "SUNGAI JERNIH",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.000948,
+      "lng": 101.783857,
       "gridX": 93.0,
       "gridY": 91.0,
       "lines": [
@@ -852,8 +852,8 @@
     {
       "id": "KG35",
       "name": "KAJANG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.982778,
+      "lng": 101.790278,
       "gridX": 79.0,
       "gridY": 95.0,
       "lines": [
@@ -896,8 +896,8 @@
     {
       "id": "KJ12",
       "name": "DANG WANGI",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.156942,
+      "lng": 101.701975,
       "gridX": 65.0,
       "gridY": 57.0,
       "lines": [
@@ -1124,8 +1124,8 @@
     {
       "id": "KJ30",
       "name": "SS 18",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.067182,
+      "lng": 101.585945,
       "gridX": 22.0,
       "gridY": 104.0,
       "lines": [
@@ -1135,8 +1135,8 @@
     {
       "id": "KJ31",
       "name": "USJ7",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.054956,
+      "lng": 101.592194,
       "gridX": 22.0,
       "gridY": 108.0,
       "lines": [
@@ -1147,8 +1147,8 @@
     {
       "id": "KJ32",
       "name": "TAIPAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.04815,
+      "lng": 101.590233,
       "gridX": 22.0,
       "gridY": 114.0,
       "lines": [
@@ -1158,8 +1158,8 @@
     {
       "id": "KJ33",
       "name": "WAWASAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.035062,
+      "lng": 101.588348,
       "gridX": 22.0,
       "gridY": 117.0,
       "lines": [
@@ -1169,8 +1169,8 @@
     {
       "id": "KJ34",
       "name": "USJ 21",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.029881,
+      "lng": 101.581711,
       "gridX": 22.0,
       "gridY": 121.0,
       "lines": [
@@ -1180,8 +1180,8 @@
     {
       "id": "KJ35",
       "name": "ALAM MEGAH",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.023151,
+      "lng": 101.572029,
       "gridX": 26.0,
       "gridY": 124.0,
       "lines": [
@@ -1191,8 +1191,8 @@
     {
       "id": "KJ36",
       "name": "SUBANG ALAM",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.009421,
+      "lng": 101.572281,
       "gridX": 30.0,
       "gridY": 124.0,
       "lines": [
@@ -1202,8 +1202,8 @@
     {
       "id": "KJ37",
       "name": "PUTRA HEIGHTS",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.996227,
+      "lng": 101.575462,
       "gridX": 34.0,
       "gridY": 124.0,
       "lines": [
@@ -1247,8 +1247,8 @@
     {
       "id": "KJ7",
       "name": "DATO' KERAMAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.16509,
+      "lng": 101.73184,
       "gridX": 73.0,
       "gridY": 49.0,
       "lines": [
@@ -1292,8 +1292,8 @@
     {
       "id": "KLANG_JAYA",
       "name": "Klang Jaya",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.005278,
+      "lng": 101.441667,
       "gridX": 17.0,
       "gridY": 114.0,
       "lines": [
@@ -1423,8 +1423,8 @@
     {
       "id": "MR2",
       "name": "TUN SAMBANTHAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.13132,
+      "lng": 101.69085,
       "gridX": 59.0,
       "gridY": 76.0,
       "lines": [
@@ -1434,8 +1434,8 @@
     {
       "id": "MR3",
       "name": "MAHARAJALELA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.138743,
+      "lng": 101.699268,
       "gridX": 59.0,
       "gridY": 73.0,
       "lines": [
@@ -1613,8 +1613,8 @@
     {
       "id": "PY01",
       "name": "KWASA DAMANSARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.1763324,
+      "lng": 101.5721456,
       "gridX": 27.0,
       "gridY": 76.0,
       "lines": [
@@ -1625,8 +1625,8 @@
     {
       "id": "PY03",
       "name": "KAMPUNG SELAMAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.197266,
+      "lng": 101.578499,
       "gridX": 23.0,
       "gridY": 71.0,
       "lines": [
@@ -1647,8 +1647,8 @@
     {
       "id": "PY05",
       "name": "DAMANSARA DAMAI",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.199892,
+      "lng": 101.592623,
       "gridX": 27.0,
       "gridY": 56.0,
       "lines": [
@@ -1658,8 +1658,8 @@
     {
       "id": "PY06",
       "name": "SRI DAMANSARA BARAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.198197,
+      "lng": 101.608302,
       "gridX": 27.0,
       "gridY": 52.0,
       "lines": [
@@ -1669,8 +1669,8 @@
     {
       "id": "PY07",
       "name": "SRI DAMANSARA SENTRAL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.198815,
+      "lng": 101.621396,
       "gridX": 27.0,
       "gridY": 48.0,
       "lines": [
@@ -1680,8 +1680,8 @@
     {
       "id": "PY08",
       "name": "SRI DAMANSARA TIMUR",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.207832,
+      "lng": 101.628716,
       "gridX": 33.0,
       "gridY": 48.0,
       "lines": [
@@ -1691,8 +1691,8 @@
     {
       "id": "PY09",
       "name": "METRO PRIMA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.214438,
+      "lng": 101.639402,
       "gridX": 39.0,
       "gridY": 48.0,
       "lines": [
@@ -1702,8 +1702,8 @@
     {
       "id": "PY10",
       "name": "KEPONG BARU",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.211663,
+      "lng": 101.648193,
       "gridX": 42.0,
       "gridY": 48.0,
       "lines": [
@@ -1713,8 +1713,8 @@
     {
       "id": "PY11",
       "name": "JINJANG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.209544,
+      "lng": 101.655829,
       "gridX": 44.0,
       "gridY": 48.0,
       "lines": [
@@ -1724,8 +1724,8 @@
     {
       "id": "PY12",
       "name": "SRI DELIMA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.207108,
+      "lng": 101.665749,
       "gridX": 42.0,
       "gridY": 53.0,
       "lines": [
@@ -1735,8 +1735,8 @@
     {
       "id": "PY13",
       "name": "KAMPUNG BATU",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.205521,
+      "lng": 101.675473,
       "gridX": 49.0,
       "gridY": 36.0,
       "lines": [
@@ -1746,8 +1746,8 @@
     {
       "id": "PY14",
       "name": "KENTOMEN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.19563,
+      "lng": 101.6797,
       "gridX": 49.0,
       "gridY": 40.0,
       "lines": [
@@ -1768,8 +1768,8 @@
     {
       "id": "PY16",
       "name": "SENTUL BARAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.179369,
+      "lng": 101.684742,
       "gridX": 45.0,
       "gridY": 45.0,
       "lines": [
@@ -1793,8 +1793,8 @@
     {
       "id": "PY18",
       "name": "HOSPITAL KUALA LUMPUR",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.17405,
+      "lng": 101.70239,
       "gridX": 63.0,
       "gridY": 51.0,
       "lines": [
@@ -1804,8 +1804,8 @@
     {
       "id": "PY19",
       "name": "RAJA UDA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.16794,
+      "lng": 101.71017,
       "gridX": 66.0,
       "gridY": 52.0,
       "lines": [
@@ -1827,8 +1827,8 @@
     {
       "id": "PY21",
       "name": "PERSIARAN KLCC",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.15712,
+      "lng": 101.71834,
       "gridX": 85.0,
       "gridY": 55.0,
       "lines": [
@@ -1838,8 +1838,8 @@
     {
       "id": "PY22",
       "name": "CONLAY",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.15145,
+      "lng": 101.71801,
       "gridX": 85.0,
       "gridY": 58.0,
       "lines": [
@@ -1885,8 +1885,8 @@
     {
       "id": "PY28",
       "name": "TAMAN NAGA EMAS",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.077688,
+      "lng": 101.699867,
       "gridX": 59.0,
       "gridY": 100.0,
       "lines": [
@@ -1908,8 +1908,8 @@
     {
       "id": "PY31",
       "name": "SERDANG RAYA UTARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.041674,
+      "lng": 101.704928,
       "gridX": 63.0,
       "gridY": 106.0,
       "lines": [
@@ -1919,8 +1919,8 @@
     {
       "id": "PY32",
       "name": "SERDANG RAYA SELATAN",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.028463,
+      "lng": 101.707514,
       "gridX": 63.0,
       "gridY": 109.0,
       "lines": [
@@ -1941,8 +1941,8 @@
     {
       "id": "PY34",
       "name": "UPM",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.008489,
+      "lng": 101.705396,
       "gridX": 63.0,
       "gridY": 115.0,
       "lines": [
@@ -1952,8 +1952,8 @@
     {
       "id": "PY36",
       "name": "TAMAN EQUINE",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.98942,
+      "lng": 101.67244,
       "gridX": 63.0,
       "gridY": 118.0,
       "lines": [
@@ -1963,8 +1963,8 @@
     {
       "id": "PY37",
       "name": "PUTRA PERMAI",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.98339,
+      "lng": 101.66099,
       "gridX": 63.0,
       "gridY": 121.0,
       "lines": [
@@ -1974,8 +1974,8 @@
     {
       "id": "PY38",
       "name": "16 SIERRA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.964974,
+      "lng": 101.654812,
       "gridX": 63.0,
       "gridY": 124.0,
       "lines": [
@@ -1985,8 +1985,8 @@
     {
       "id": "PY39",
       "name": "CYBERJAYA UTARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.95,
+      "lng": 101.6573,
       "gridX": 63.0,
       "gridY": 127.0,
       "lines": [
@@ -1996,8 +1996,8 @@
     {
       "id": "PY40",
       "name": "CYBERJAYA CITY CENTRE",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.9384,
+      "lng": 101.6659,
       "gridX": 63.0,
       "gridY": 130.0,
       "lines": [
@@ -2007,8 +2007,8 @@
     {
       "id": "PY41",
       "name": "PUTRAJAYA SENTRAL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.9313,
+      "lng": 101.6715,
       "gridX": 68.0,
       "gridY": 133.0,
       "lines": [
@@ -2222,8 +2222,8 @@
     {
       "id": "SP12",
       "name": "CHERAS",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.112609,
+      "lng": 101.714178,
       "gridX": 85.0,
       "gridY": 76.0,
       "lines": [
@@ -2300,8 +2300,8 @@
     {
       "id": "SP19",
       "name": "AWAN BESAR",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.062131,
+      "lng": 101.670555,
       "gridX": 51.0,
       "gridY": 100.0,
       "lines": [
@@ -2323,8 +2323,8 @@
     {
       "id": "SP20",
       "name": "MUHIBBAH",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.062229,
+      "lng": 101.662552,
       "gridX": 47.0,
       "gridY": 100.0,
       "lines": [
@@ -2334,8 +2334,8 @@
     {
       "id": "SP21",
       "name": "ALAM SUTERA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0547,
+      "lng": 101.656468,
       "gridX": 47.0,
       "gridY": 103.0,
       "lines": [
@@ -2345,8 +2345,8 @@
     {
       "id": "SP22",
       "name": "KINRARA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.050506,
+      "lng": 101.644294,
       "gridX": 47.0,
       "gridY": 106.0,
       "lines": [
@@ -2356,8 +2356,8 @@
     {
       "id": "SP24",
       "name": "IOI PUCHONG JAYA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.048101,
+      "lng": 101.62095,
       "gridX": 47.0,
       "gridY": 109.0,
       "lines": [
@@ -2367,8 +2367,8 @@
     {
       "id": "SP25",
       "name": "PUSAT BANDAR PUCHONG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.033194,
+      "lng": 101.616057,
       "gridX": 47.0,
       "gridY": 115.0,
       "lines": [
@@ -2378,8 +2378,8 @@
     {
       "id": "SP26",
       "name": "TAMAN PERINDUSTRIAN PUCHONG",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.022814,
+      "lng": 101.613514,
       "gridX": 47.0,
       "gridY": 118.0,
       "lines": [
@@ -2389,8 +2389,8 @@
     {
       "id": "SP27",
       "name": "BANDAR PUTERI",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.017111,
+      "lng": 101.612855,
       "gridX": 47.0,
       "gridY": 121.0,
       "lines": [
@@ -2400,8 +2400,8 @@
     {
       "id": "SP28",
       "name": "PUCHONG PERDANA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.007913,
+      "lng": 101.605021,
       "gridX": 43.0,
       "gridY": 124.0,
       "lines": [
@@ -2411,8 +2411,8 @@
     {
       "id": "SP29",
       "name": "PUCHONG PRIMA",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.999808,
+      "lng": 101.596692,
       "gridX": 39.0,
       "gridY": 124.0,
       "lines": [
@@ -2436,8 +2436,8 @@
     {
       "id": "SP31",
       "name": "PUTRA HEIGHTS",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 2.996016,
+      "lng": 101.575521,
       "gridX": 34.0,
       "gridY": 124.0,
       "lines": [
@@ -2448,8 +2448,8 @@
     {
       "id": "SP4",
       "name": "PWTC",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.166333,
+      "lng": 101.693586,
       "gridX": 57.0,
       "gridY": 56.0,
       "lines": [
@@ -2460,8 +2460,8 @@
     {
       "id": "SP5",
       "name": "SULTAN ISMAIL",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.161245,
+      "lng": 101.694109,
       "gridX": 57.0,
       "gridY": 58.0,
       "lines": [
@@ -2472,8 +2472,8 @@
     {
       "id": "SP6",
       "name": "BANDARAYA - UOB",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.155567,
+      "lng": 101.694485,
       "gridX": 57.0,
       "gridY": 61.0,
       "lines": [
@@ -2497,8 +2497,8 @@
     {
       "id": "SP8",
       "name": "PLAZA RAKYAT",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.144049,
+      "lng": 101.702105,
       "gridX": 57.0,
       "gridY": 67.0,
       "lines": [
@@ -2533,8 +2533,8 @@
     {
       "id": "STADIUM_SHAH_ALAM",
       "name": "Stadium Shah Alam",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.079722,
+      "lng": 101.548889,
       "gridX": 9.0,
       "gridY": 98.0,
       "lines": [
@@ -2555,8 +2555,8 @@
     {
       "id": "TAMAN_SELATAN",
       "name": "Taman Selatan",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.026667,
+      "lng": 101.442222,
       "gridX": 17.0,
       "gridY": 111.0,
       "lines": [
@@ -2621,8 +2621,8 @@
     {
       "id": "UITM_SHAH_ALAM",
       "name": "UiTM Shah Alam",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.0625,
+      "lng": 101.501111,
       "gridX": 9.0,
       "gridY": 104.0,
       "lines": [
