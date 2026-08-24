@@ -4,6 +4,8 @@
 -- serve it. Used by the Stations screen to show per-station line badges.
 -- ============================================================
 
+DROP FUNCTION IF EXISTS public.get_unique_stations();
+
 CREATE OR REPLACE FUNCTION public.get_unique_stations()
 RETURNS TABLE (station_name TEXT, lines TEXT[])
 LANGUAGE sql
