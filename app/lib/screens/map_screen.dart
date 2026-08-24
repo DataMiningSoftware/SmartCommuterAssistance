@@ -395,7 +395,7 @@ class _MapScreenState extends State<MapScreen> {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    station.name,
+                    StationNameMatcher.instance.displayName(station.name),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

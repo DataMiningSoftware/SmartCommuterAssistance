@@ -31,4 +31,22 @@ class StationNameMatcher {
     if (na == nb) return true;
     return _aliasTable[na] == nb || _aliasTable[nb] == na;
   }
+
+  String displayName(String raw) {
+    var s = raw.trim();
+    s = s.replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+    s = s.replaceFirst(RegExp(r'^bank rakyat\s+', caseSensitive: false), '');
+    s = s.replaceFirst(RegExp(r'^cgc\s+', caseSensitive: false), '');
+    s = s
+        .replaceAll(
+          RegExp(
+            r'\s*-\s*(?:redone|uob|cbp coopbank pertama|the face style|maybank)\s*$',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .trim();
+    s = s.replaceAll(RegExp(r'\s+'), ' ');
+    return s;
+  }
 }

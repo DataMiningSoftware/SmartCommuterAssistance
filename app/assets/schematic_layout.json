@@ -15,15 +15,15 @@
     },
     "3": {
       "label": "LRT Ampang Line",
-      "color": "#F7941D"
+      "color": "#F39200"
     },
     "4": {
       "label": "LRT Sri Petaling Line",
-      "color": "#7A1F3D"
+      "color": "#8A1538"
     },
     "5": {
       "label": "LRT Kelana Jaya Line",
-      "color": "#ED1C24"
+      "color": "#E34262"
     },
     "6": {
       "label": "ERL KLIA Ekspres Line",
@@ -35,11 +35,11 @@
     },
     "8": {
       "label": "KL Monorail Line",
-      "color": "#8CC63F"
+      "color": "#8DC63F"
     },
     "9": {
       "label": "MRT Kajang Line",
-      "color": "#00723A"
+      "color": "#007A4D"
     },
     "10": {
       "label": "KTM KL Sentral - Skypark Terminal Line",
@@ -51,11 +51,11 @@
     },
     "12": {
       "label": "MRT Putrajaya Line",
-      "color": "#F2C500"
+      "color": "#FFD100"
     },
     "B1": {
       "label": "BRT Sunway Line",
-      "color": "#2E7D32"
+      "color": "#005A5B"
     }
   },
   "stations": {

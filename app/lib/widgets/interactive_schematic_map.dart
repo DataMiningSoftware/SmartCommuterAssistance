@@ -334,7 +334,7 @@ class _SchematicPainter extends CustomPainter {
       if (isSelected || radius > 4) {
         final tp = TextPainter(
           text: TextSpan(
-            text: station.name,
+            text: StationNameMatcher.instance.displayName(station.name),
             style: TextStyle(
               fontSize: 9,
               color: Colors.black87,
