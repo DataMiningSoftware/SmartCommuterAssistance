@@ -12,36 +12,30 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Trains/Smart Commuter Assistant+
+        working-directory: app
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.x"
+          flutter-version: "3.38.2"
           channel: stable
       - run: flutter pub get
       - name: Analyze
         run: flutter analyze --no-pub --no-fatal-infos
       - name: Test
         run: flutter test
-        continue-on-error: true
 
   python:
     name: Python Lint & Test
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Trains/Smart Commuter Assistant+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements-dev.txt
-        continue-on-error: true
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r backend/requirements.txt -r requirements-dev.txt
       - name: Lint
-        run: pip install flake8 && python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        continue-on-error: true
+        run: python -m flake8 backend scripts tests --count --select=E9,F63,F7,F82 --show-source --statistics
       - name: Test
         run: python -m pytest tests/ -v
-        continue-on-error: true

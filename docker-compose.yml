@@ -1,0 +1,11 @@
+services:
+  python-worker:
+    build:
+      context: .
+      dockerfile: docker/python-worker/Dockerfile
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    volumes:
+      - ./:/app:cached
+    command: ["python", "scripts/build_and_upsert_hourly_forecast.py", "--dry-run"]

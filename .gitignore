@@ -1,0 +1,27 @@
+# Python caches and logs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Backend local env, venv, and logs
+backend/.env
+backend/.venv/
+backend/uvicorn.out.log
+backend/uvicorn.err.log
+*.log
+
+# Local secrets (any depth)
+.env
+
+# Generated model & training artifacts
+*.pkl
+*.pkl.*
+scripts/simulated_crowd_data.csv
+scripts/simulated_crowd_data_from_trends.csv
+scripts/simulated_crowd_forecast.csv
+scripts/real_training_data.csv
+scripts/crowd_forecast_hourly_baseline.csv
+scripts/train_stops_kl_with_categories.csv
+
+# Scratch notes
+TODO_*.md
