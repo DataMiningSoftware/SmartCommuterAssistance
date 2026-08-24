@@ -40,23 +40,24 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/smart-commuter-backend:latest
+          tags: ghcr.io/dataminingsoftware/smart-commuter-backend:latest
 
   deploy:
-    name: Deploy to Fly.io
+    name: Deploy to Cloud Run
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: ${{ secrets.FLY_API_TOKEN != '' }}
+    if: vars.DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Set secrets
-        run: |
-          flyctl secrets set SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            SUPABASE_SERVICE_KEY="${{ secrets.SUPABASE_SERVICE_KEY }}" --app smart-commuter-backend
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - name: Deploy
-        run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: smart-commuter-backend
+          region: asia-southeast1
+          source: .
+          env_vars: SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}

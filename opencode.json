@@ -16,7 +16,7 @@
     "vision_agent": {
       "description": "Extracts station coordinates from the transit map reference image — the only agent that can see images",
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "google/gemini-2.5-flash",
       "tools": { "write": true, "edit": true, "bash": false }
     },
     "schema_agent": {

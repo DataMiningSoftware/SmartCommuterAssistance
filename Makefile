@@ -23,10 +23,10 @@ test:
 	pytest -q
 
 train:
-	python lib/PythonScript/train_crowd_model.py --input lib/PythonScript/simulated_crowd_data.csv --output lib/PythonScript/crowd_predictor.pkl
+	python scripts/train_crowd_model.py --input scripts/simulated_crowd_data.csv --output scripts/crowd_predictor.pkl
 
 generate:
-	python lib/PythonScript/generate_crowd_data.py --rows 10000 --output lib/PythonScript/simulated_crowd_data.csv
+	python scripts/generate_crowd_data.py --rows 10000 --output scripts/simulated_crowd_data.csv
 
 docker-build:
 	docker build -t sca-python-worker -f docker/python-worker/Dockerfile .
