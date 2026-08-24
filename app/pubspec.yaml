@@ -1,5 +1,5 @@
-name: dynoc
-description: DYNOC - Dynamic Navigation & Occupancy Computations
+name: smart_commuter
+description: Smart Commuter Assistant+ - Dynamic Navigation & Occupancy Computations
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

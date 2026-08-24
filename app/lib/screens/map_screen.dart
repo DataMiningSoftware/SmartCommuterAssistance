@@ -292,7 +292,7 @@ class _MapScreenState extends State<MapScreen> {
             children: [
               TileLayer(
                 urlTemplate: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-                userAgentPackageName: 'com.nawfal.dynoc',
+                userAgentPackageName: 'com.nawfal.smartcommuter',
               ),
               PolylineLayer(polylines: _buildLinePolylines(routeStationIds, hasRoute)),
               MarkerLayer(markers: _buildStationMarkers(routeStationIds, hasRoute)),

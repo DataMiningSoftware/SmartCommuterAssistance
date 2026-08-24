@@ -15,7 +15,7 @@ if (hasReleaseKeystore) {
 }
 
 android {
-    namespace = "com.nawfal.dynoc"
+    namespace = "com.nawfal.smartcommuter"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nawfal.dynoc"
+        applicationId = "com.nawfal.smartcommuter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

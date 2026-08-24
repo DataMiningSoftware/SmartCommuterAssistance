@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dynoc/services/train_arrival_service.dart';
+import 'package:smart_commuter/services/train_arrival_service.dart';
 
 void main() {
   group('ScheduledTrainArrival fromJson', () {

@@ -1,11 +1,11 @@
 {
-    "name": "DYNOC",
-    "short_name": "DYNOC",
+    "name": "Smart Commuter Assistant+",
+    "short_name": "Smart Commuter+",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Smart Commuter Assistant+ — Malaysian public transport companion.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

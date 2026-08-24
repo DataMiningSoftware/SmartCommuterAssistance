@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dynoc/services/transit_network_service.dart';
+import 'package:smart_commuter/services/transit_network_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

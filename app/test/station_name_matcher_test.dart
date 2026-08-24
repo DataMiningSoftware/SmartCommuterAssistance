@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dynoc/services/station_name_matcher.dart';
+import 'package:smart_commuter/services/station_name_matcher.dart';
 
 void main() {
   final m = StationNameMatcher.instance;

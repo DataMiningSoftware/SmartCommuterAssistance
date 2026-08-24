@@ -194,7 +194,7 @@ For production, make sure `BACKEND_URL` in the Dart defines points to the deploy
 ```
 .
 ├── .github/workflows/          # CI workflows
-├── app/                        # Flutter app (DYNOC)
+├── app/                        # Flutter app (Smart Commuter Assistant+)
 │   ├── assets/
 │   │   ├── data/               # transit_network.json, gtfs_schedule.json
 │   │   └── images/             # klang_valley_map.jpeg, logo.png

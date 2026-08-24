@@ -235,7 +235,7 @@ class SmartCommuterApp extends StatelessWidget {
       valueListenable: ThemeController.instance.mode,
       builder: (context, mode, _) {
         return MaterialApp(
-          title: 'DYNOC',
+          title: 'Smart Commuter Assistant+',
           debugShowCheckedModeBanner: false,
           themeMode: mode,
           theme: lightTheme,

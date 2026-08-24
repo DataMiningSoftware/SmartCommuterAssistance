@@ -217,9 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About DYNOC'),
+        title: const Text('About Smart Commuter Assistant+'),
         content: const Text(
-          'DYNOC v1.0\n\n'
+          'Smart Commuter Assistant+ v1.0\n\n'
           'Dynamic Navigation & Occupancy Computations.\n\n'
           'An intelligent companion for Malaysian public transport.',
         ),
