@@ -1,8 +1,4 @@
-import 'dart:async';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/map_station.dart';
 import '../models/schematic_layout.dart';
@@ -38,7 +34,6 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
 
   double _canvasWidth = 800;
   double _canvasHeight = 1120;
-  ui.Image? _mapImage;
 
   Map<String, String>? _nameToSchematicId;
 
@@ -58,8 +53,6 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
   double _displayWidth = 752;
   double _displayHeight = 1072;
 
-  static const String _imageAsset = 'assets/images/klang_valley_map.jpeg';
-
   @override
   void initState() {
     super.initState();
@@ -68,19 +61,6 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
     widget.controller.addListener(_onControllerChanged);
-    _loadImage();
-  }
-
-  Future<void> _loadImage() async {
-    try {
-      final data = await rootBundle.load(_imageAsset);
-      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
-      final frame = await codec.getNextFrame();
-      if (!mounted) return;
-      setState(() => _mapImage = frame.image);
-    } catch (_) {
-      // Image is optional — transit lines still render without it
-    }
   }
 
   @override
@@ -93,24 +73,10 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
   void _onControllerChanged() => setState(() {});
 
   void _updateDisplayMetrics() {
-    final image = _mapImage;
-    if (image != null) {
-      final imageW = image.width.toDouble();
-      final imageH = image.height.toDouble();
-      final scale = (_canvasWidth / imageW) < (_canvasHeight / imageH)
-          ? _canvasWidth / imageW
-          : _canvasHeight / imageH;
-
-      _displayOffsetX = (_canvasWidth - imageW * scale) / 2;
-      _displayOffsetY = (_canvasHeight - imageH * scale) / 2;
-      _displayWidth = imageW * scale;
-      _displayHeight = imageH * scale;
-    } else {
-      _displayOffsetX = _padding;
-      _displayOffsetY = _padding;
-      _displayWidth = _canvasWidth - _padding * 2;
-      _displayHeight = _canvasHeight - _padding * 2;
-    }
+    _displayOffsetX = _padding;
+    _displayOffsetY = _padding;
+    _displayWidth = _canvasWidth - _padding * 2;
+    _displayHeight = _canvasHeight - _padding * 2;
   }
 
   Offset _toPixel(double nx, double ny) {
@@ -181,15 +147,6 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                   routeStationIds: _routeStationIds,
                   blinkValue: _blink.value,
                   toPixel: _toPixel,
-                  mapImage: _mapImage,
-                  imageDisplayRect: _mapImage != null
-                      ? Rect.fromLTWH(
-                          _displayOffsetX,
-                          _displayOffsetY,
-                          _displayWidth,
-                          _displayHeight,
-                        )
-                      : null,
                   hiddenLineIds: widget.hiddenLineIds,
                 ),
               );
@@ -209,8 +166,6 @@ class _SchematicPainter extends CustomPainter {
     required this.routeStationIds,
     required this.blinkValue,
     required this.toPixel,
-    this.mapImage,
-    this.imageDisplayRect,
     this.hiddenLineIds = const {},
   });
 
@@ -219,8 +174,6 @@ class _SchematicPainter extends CustomPainter {
   final Set<String> routeStationIds;
   final double blinkValue;
   final Offset Function(double, double) toPixel;
-  final ui.Image? mapImage;
-  final Rect? imageDisplayRect;
   final Set<String> hiddenLineIds;
 
   bool get _hasRoute =>
@@ -235,21 +188,6 @@ class _SchematicPainter extends CustomPainter {
       Offset.zero & size,
       Paint()..color = const Color(0xFFF5F5F5),
     );
-
-    // Draw background map image
-    if (mapImage != null && imageDisplayRect != null) {
-      canvas.drawImageRect(
-        mapImage!,
-        Rect.fromLTWH(
-          0,
-          0,
-          mapImage!.width.toDouble(),
-          mapImage!.height.toDouble(),
-        ),
-        imageDisplayRect!,
-        Paint(),
-      );
-    }
 
     final visibleLines = layout.lines.values
         .where((l) => !hiddenLineIds.contains(l.id))
