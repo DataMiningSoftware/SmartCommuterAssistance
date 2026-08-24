@@ -1,0 +1,25 @@
+name: Daily Retrain Pipeline
+
+on:
+  schedule:
+    # 18:30 UTC = 02:30 Malaysia time (after midnight, quiet hours)
+    - cron: "30 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  retrain:
+    name: Aggregate, retrain, and upsert forecasts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run daily retrain
+        working-directory: scripts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python run_daily_pipeline.py
