@@ -139,7 +139,19 @@ class _MapScreenState extends State<MapScreen> {
         );
       }
 
-      layout.reorderUsingGraph(graph);
+      final orderedNamesByRoute = <String, List<String>>{};
+      final stopsByRoute = <String, List<TransitStop>>{};
+      for (final stop in network.stopsById.values) {
+        stopsByRoute.putIfAbsent(stop.routeId, () => []).add(stop);
+      }
+      for (final entry in stopsByRoute.entries) {
+        final sorted = List<TransitStop>.from(entry.value)
+          ..sort((a, b) => a.sequenceOrder.compareTo(b.sequenceOrder));
+        orderedNamesByRoute[entry.key] =
+            sorted.map((s) => s.stopName).toList();
+      }
+
+      layout.reorderUsingGraph(graph, orderedNamesByRoute: orderedNamesByRoute);
 
       final baseUrl = BackendConfigService().baseUrl.value;
       final planner = TransitPlannerService(

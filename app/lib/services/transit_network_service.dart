@@ -12,6 +12,7 @@ class TransitStop {
   final String routeId;
   final double latitude;
   final double longitude;
+  final int sequenceOrder;
 
   const TransitStop({
     required this.stopId,
@@ -19,6 +20,7 @@ class TransitStop {
     required this.routeId,
     required this.latitude,
     required this.longitude,
+    this.sequenceOrder = 0,
   });
 }
 
@@ -121,7 +123,7 @@ class TransitNetworkService {
     try {
       final remoteRows = await client!
           .from('train_stops_kl')
-          .select('stop_id,stop_name,stop_lat,stop_lon,route_id')
+          .select('stop_id,stop_name,stop_lat,stop_lon,route_id,sequence_order')
           .timeout(const Duration(seconds: 5));
       final maps = remoteRows
           .whereType<Map>()
@@ -171,6 +173,7 @@ class TransitNetworkService {
         routeId: routeId,
         latitude: latitude,
         longitude: longitude,
+        sequenceOrder: _toInt(row['sequence_order']),
       );
     }
 
@@ -222,6 +225,7 @@ class TransitNetworkService {
     final rows = const LineSplitter().convert(raw).skip(1).where((line) => line.trim().isNotEmpty).toList();
 
     final stopsById = <String, TransitStop>{};
+    var sequence = 0;
     for (final line in rows) {
       final columns = line.split(',');
       if (columns.length < 5) continue;
@@ -233,12 +237,14 @@ class TransitNetworkService {
       if (stopId.isEmpty || stopName.isEmpty || latitude == null || longitude == null) {
         continue;
       }
+      sequence++;
       stopsById[stopId] = TransitStop(
         stopId: stopId,
         stopName: stopName,
         routeId: routeId,
         latitude: latitude,
         longitude: longitude,
+        sequenceOrder: sequence,
       );
     }
 
@@ -412,6 +418,12 @@ class TransitNetworkService {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
   }
 }
 

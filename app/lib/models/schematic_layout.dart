@@ -107,7 +107,10 @@ class SchematicLayout {
     );
   }
 
-  void reorderUsingGraph(TransitGraph graph) {
+  void reorderUsingGraph(
+    TransitGraph graph, {
+    Map<String, List<String>>? orderedNamesByRoute,
+  }) {
     const lineToGraphRoutes = <String, List<String>>{
       '1': ['KT1', 'KC'],
       '2': ['KT2', 'KD'],
@@ -139,12 +142,13 @@ class SchematicLayout {
       final ordered = <String>[];
       final seen = <String>{};
       for (final routeId in routeIds) {
-        final order = graph.lineStationOrder[routeId];
-        if (order == null) continue;
-        for (final graphId in order) {
-          final gs = graph.stations[graphId];
-          if (gs == null) continue;
-          final normalized = matcher.normalize(gs.name);
+        final orderedNames = orderedNamesByRoute?[routeId] ??
+            (graph.lineStationOrder[routeId] ?? const <String>[])
+                .map((id) => graph.stations[id]?.name ?? '')
+                .where((name) => name.isNotEmpty)
+                .toList();
+        for (final name in orderedNames) {
+          final normalized = matcher.normalize(name);
           String? sid;
           for (final e in nameToSid.entries) {
             if (matcher.match(e.key, normalized)) {
