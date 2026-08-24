@@ -21,6 +21,9 @@ alter table public.crowd_forecast_hourly
   drop constraint if exists crowd_forecast_hourly_stop_id_forecast_hour_is_weekend_key;
 
 alter table public.crowd_forecast_hourly
+  drop constraint if exists crowd_forecast_hourly_stop_hour_dow_key;
+
+alter table public.crowd_forecast_hourly
   add constraint crowd_forecast_hourly_stop_hour_dow_key
   unique (stop_id, forecast_hour, day_of_week);
 
