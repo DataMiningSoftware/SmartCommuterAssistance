@@ -12,6 +12,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 TRAIN_SCRIPT = SCRIPT_DIR / "train_crowd_model.py"
 PREDICT_SCRIPT = SCRIPT_DIR / "predict_and_upsert_crowd.py"
 AGGREGATE_SCRIPT = SCRIPT_DIR / "aggregate_training_data.py"
+GENERATE_SCRIPT = SCRIPT_DIR / "generate_crowd_data.py"
 TRAINING_DATA = SCRIPT_DIR / "real_training_data.csv"
 SIMULATED_DATA = SCRIPT_DIR / "simulated_crowd_data.csv"
 MODEL_OUTPUT = SCRIPT_DIR / "crowd_predictor.pkl"
@@ -58,7 +59,12 @@ def main() -> None:
 
     data_path = TRAINING_DATA if TRAINING_DATA.exists() else SIMULATED_DATA
     if not data_path.exists():
-        print("  No training data found. Run generate_crowd_data.py first.")
+        step("1b/3 — No real or simulated data found; generating simulated data")
+        run([str(GENERATE_SCRIPT), "--rows", "10000"], env=_env())
+        data_path = SIMULATED_DATA
+
+    if not data_path.exists():
+        print("  Failed to produce training data. Aborting.")
         sys.exit(1)
 
     step(f"2/3 — Training model on {data_path.name}")
