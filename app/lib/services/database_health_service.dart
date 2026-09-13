@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'backend_config_service.dart';
 
 class DatabaseHealthService {
   DatabaseHealthService._();
@@ -21,18 +24,41 @@ class DatabaseHealthService {
   }
 
   Future<void> _check() async {
+    if (!isSupabaseConfigured.value) {
+      isConnected.value = false;
+      return;
+    }
+    final supabaseOk = await _checkSupabase();
+    final backendOk = await _checkBackend();
+    isConnected.value = supabaseOk && backendOk;
+  }
+
+  Future<bool> _checkSupabase() async {
     try {
-      if (!isSupabaseConfigured.value) {
-        isConnected.value = false;
-        return;
-      }
       await Supabase.instance.client
           .from('crowd_reports')
           .select('id')
           .limit(1);
-      isConnected.value = true;
+      return true;
     } catch (_) {
-      isConnected.value = false;
+      return false;
+    }
+  }
+
+  Future<bool> _checkBackend() async {
+    final baseUrl = BackendConfigService().baseUrl.value.trim();
+    if (baseUrl.isEmpty ||
+        baseUrl.contains('127.0.0.1') ||
+        baseUrl.contains('10.0.2.2')) {
+      return true;
+    }
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/health'))
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
     }
   }
 

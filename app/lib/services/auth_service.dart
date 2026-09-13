@@ -104,6 +104,22 @@ class AuthService {
     }
   }
 
+  Future<void> signInWithOtp(String phone) async {
+    await Supabase.instance.client.auth.signInWithOtp(phone: phone.trim());
+  }
+
+  Future<void> verifyOtp({
+    required String phone,
+    required String token,
+  }) async {
+    final response = await Supabase.instance.client.auth.verifyOTP(
+      phone: phone.trim(),
+      token: token.trim(),
+      type: OtpType.sms,
+    );
+    await _syncCurrentUserFromSession(response.session);
+  }
+
   Future<void> logout() async {
     try {
       await Supabase.instance.client.auth.signOut();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
+import 'phone_signin_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -142,6 +143,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                     builder: (_) => const SignUpScreen()),
                               ),
                       child: const Text('Create account'),
+                    ),
+                    TextButton(
+                      onPressed: _loading
+                          ? null
+                          : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const PhoneSignInScreen()),
+                              ),
+                      child: const Text('Sign in with phone'),
                     ),
                   ],
                 ),
