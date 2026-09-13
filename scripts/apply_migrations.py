@@ -12,7 +12,11 @@ MIGRATIONS = [
     "migration_trip_feedback.sql",
     "migration_get_unique_stations.sql",
     "migration_cleanup.sql",
+    "migration_social.sql",
+    "migration_competition.sql",
+    "migration_education.sql",
     "rls_policies.sql",
+    "rls_social_policies.sql",
 ]
 
 
