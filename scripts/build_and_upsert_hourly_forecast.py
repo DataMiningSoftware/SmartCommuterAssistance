@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -173,19 +174,43 @@ def chunked(
     return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
+def _is_retryable(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return (
+        "gateway timeout" in text
+        or "timed out" in text
+        or "504" in str(exc)
+        or "429" in str(exc)
+    )
+
+
 def upsert_rows(
     client: Client,
     table: str,
     rows: list[dict[str, object]],
     chunk_size: int,
+    max_retries: int = 5,
 ) -> None:
     chunks = chunked(rows, chunk_size)
+    total = len(chunks)
     for index, chunk in enumerate(chunks, start=1):
-        client.table(table).upsert(
-            chunk,
-            on_conflict="stop_id,forecast_hour,day_of_week",
-        ).execute()
-        print(f"Upserted chunk {index}/{len(chunks)} ({len(chunk)} rows)")
+        for attempt in range(1, max_retries + 1):
+            try:
+                client.table(table).upsert(
+                    chunk,
+                    on_conflict="stop_id,forecast_hour,day_of_week",
+                ).execute()
+                print(f"Upserted chunk {index}/{total} ({len(chunk)} rows)")
+                break
+            except Exception as exc:
+                if not _is_retryable(exc) or attempt == max_retries:
+                    raise
+                backoff = min(2 ** (attempt - 1), 30)
+                print(
+                    f"Chunk {index}/{total} failed; "
+                    f"retrying in {backoff}s (attempt {attempt}/{max_retries})"
+                )
+                time.sleep(backoff)
 
 
 def parse_args() -> argparse.Namespace:
@@ -215,7 +240,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--chunk-size",
         type=int,
-        default=1000,
+        default=500,
         help="Rows per upsert request",
     )
     parser.add_argument(

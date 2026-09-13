@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install pandas supabase
+        run: pip install pandas supabase==2.31.0
       - name: Build & upsert forecast
         working-directory: scripts
         env:
