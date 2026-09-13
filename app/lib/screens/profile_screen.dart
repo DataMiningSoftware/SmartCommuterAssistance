@@ -7,6 +7,7 @@ import '../services/theme_controller.dart';
 import '../widgets/app_page_title.dart';
 import 'education_screen.dart';
 import 'friends_screen.dart';
+import 'route_builder_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -196,6 +197,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 10),
           _Panel(
             children: [
+              _ActionRow(
+                  icon: Icons.alt_route_rounded,
+                  title: 'Route Builder',
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const RouteBuilderScreen()))),
+              const Divider(height: 1),
               _ActionRow(
                   icon: Icons.people_outline,
                   title: 'Friends',
