@@ -127,6 +127,7 @@ class SocialService {
   RealtimeChannel? _memberChannel;
 
   String? get userId => _client.auth.currentUser?.id;
+  bool get isAuthenticated => userId != null;
 
   // ---- Friends ----------------------------------------------------
 
@@ -201,31 +202,46 @@ class SocialService {
     return List.generate(6, (_) => chars[rnd.nextInt(chars.length)]).join();
   }
 
-  Future<Party?> createParty() async {
-    try {
-      final code = _generateJoinCode();
-      final data = await _client.rpc('create_party', params: {'p_join_code': code});
-      final list = data is List ? data : const [];
-      if (list.isEmpty) return null;
-      final partyId = (list.first as Map<String, dynamic>)['party_id']?.toString();
-      if (partyId == null) return null;
-      return _loadParty(partyId);
-    } catch (_) {
-      return null;
+  Future<Party> createParty() async {
+    if (!isAuthenticated) {
+      throw Exception('Sign in to start a party.');
     }
+    final code = _generateJoinCode();
+    final data =
+        await _client.rpc('create_party', params: {'p_join_code': code});
+    final list = data is List ? data : const [];
+    if (list.isEmpty) {
+      throw Exception('Could not create party. Has the database migration run?');
+    }
+    final partyId = (list.first as Map<String, dynamic>)['party_id']?.toString();
+    if (partyId == null) {
+      throw Exception('Could not create party.');
+    }
+    final party = await _loadParty(partyId);
+    if (party == null) {
+      throw Exception('Could not load the new party.');
+    }
+    return party;
   }
 
-  Future<Party?> joinParty(String code) async {
-    try {
-      final data = await _client.rpc('join_party', params: {'p_join_code': code});
-      final list = data is List ? data : const [];
-      if (list.isEmpty) return null;
-      final partyId = (list.first as Map<String, dynamic>)['party_id']?.toString();
-      if (partyId == null) return null;
-      return _loadParty(partyId);
-    } catch (_) {
-      return null;
+  Future<Party> joinParty(String code) async {
+    if (!isAuthenticated) {
+      throw Exception('Sign in to join a party.');
     }
+    final data = await _client.rpc('join_party', params: {'p_join_code': code});
+    final list = data is List ? data : const [];
+    if (list.isEmpty) {
+      throw Exception('Could not join party.');
+    }
+    final partyId = (list.first as Map<String, dynamic>)['party_id']?.toString();
+    if (partyId == null) {
+      throw Exception('Could not join party.');
+    }
+    final party = await _loadParty(partyId);
+    if (party == null) {
+      throw Exception('Could not load the joined party.');
+    }
+    return party;
   }
 
   Future<void> leaveParty(String partyId) async {

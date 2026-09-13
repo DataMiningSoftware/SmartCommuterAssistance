@@ -24,6 +24,14 @@ class _PartySheetState extends State<PartySheet> {
     super.dispose();
   }
 
+  String _cleanError(Object error) {
+    final raw = error.toString();
+    final match = RegExp(r'''message["']?\s*:\s*["']([^"']+)["']''')
+        .firstMatch(raw);
+    if (match != null) return match.group(1)!;
+    return raw.replaceFirst('Exception: ', '');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -55,17 +63,33 @@ class _PartySheetState extends State<PartySheet> {
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () async {
-              final party = await _social.createParty();
-              if (context.mounted && party != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Party created. Code: ${party.joinCode}')),
-                );
+              try {
+                final party = await _social.createParty();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Party created. Code: ${party.joinCode}')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(_cleanError(e))),
+                  );
+                }
               }
             },
             icon: const Icon(Icons.add_rounded),
             label: const Text('Create party'),
           ),
           const SizedBox(height: 12),
+          if (!_social.isAuthenticated)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Parties need an account — sign in to create or join one.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
           Row(
             children: [
               Expanded(
@@ -81,14 +105,15 @@ class _PartySheetState extends State<PartySheet> {
               const SizedBox(width: 10),
               FilledButton(
                 onPressed: () async {
-                  final party =
-                      await _social.joinParty(_codeController.text.trim());
-                  if (context.mounted && party != null) {
-                    setState(() {});
-                  } else if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Could not join party.')),
-                    );
+                  try {
+                    await _social.joinParty(_codeController.text.trim());
+                    if (context.mounted) setState(() {});
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(_cleanError(e))),
+                      );
+                    }
                   }
                 },
                 child: const Text('Join'),
