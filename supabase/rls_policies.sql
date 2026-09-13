@@ -43,9 +43,13 @@ DO $$ BEGIN
     EXECUTE 'ALTER TABLE profiles ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Users can read own profile" ON profiles';
     EXECUTE 'DROP POLICY IF EXISTS "Users can update own profile" ON profiles';
+    EXECUTE 'DROP POLICY IF EXISTS "Users can insert own profile" ON profiles';
+    EXECUTE 'DROP POLICY IF EXISTS "Authenticated users can read profiles" ON profiles';
 
-    EXECUTE 'CREATE POLICY "Users can read own profile"
-      ON profiles FOR SELECT USING (auth.uid() = id)';
+    EXECUTE 'CREATE POLICY "Authenticated users can read profiles"
+      ON profiles FOR SELECT TO authenticated USING (true)';
+    EXECUTE 'CREATE POLICY "Users can insert own profile"
+      ON profiles FOR INSERT WITH CHECK (auth.uid() = id)';
     EXECUTE 'CREATE POLICY "Users can update own profile"
       ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id)';
   END IF;

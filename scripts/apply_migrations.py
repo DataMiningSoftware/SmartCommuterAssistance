@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 MIGRATIONS = [
+    "migration_profiles.sql",
+    "storage_avatars.sql",
     "migration_crowd_system.sql",
     "migration_day_of_week.sql",
     "migration_trip_feedback.sql",
