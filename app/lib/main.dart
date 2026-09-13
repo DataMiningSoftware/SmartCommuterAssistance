@@ -18,6 +18,7 @@ import 'services/commuter_ml_service.dart';
 import 'services/database_service.dart';
 import 'services/closing_time_service.dart';
 import 'services/database_health_service.dart';
+import 'services/location_sharing_service.dart';
 import 'services/navigation_state.dart';
 import 'services/notification_service.dart';
 import 'services/theme_controller.dart';
@@ -279,6 +280,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
     await DatabaseHealthService.instance.initialize();
     await CommuterMlService().initialize();
     ClosingTimeService.instance.initialize();
+    LocationSharingService.instance.start();
   }
 
   @override
