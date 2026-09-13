@@ -786,8 +786,8 @@
     {
       "id": "KG28",
       "name": "SRI RAYA",
-      "lat": 3.0666,
-      "lng": 101.7026,
+      "lat": 3.062273,
+      "lng": 101.772899,
       "gridX": 93.0,
       "gridY": 79.0,
       "lines": [
@@ -1874,8 +1874,8 @@
     {
       "id": "PY27",
       "name": "KUCHAI",
-      "lat": 3.0882,
-      "lng": 101.6868,
+      "lat": 3.089546,
+      "lng": 101.694124,
       "gridX": 57.0,
       "gridY": 97.0,
       "lines": [
@@ -1896,8 +1896,8 @@
     {
       "id": "PY29",
       "name": "SUNGAI BESI",
-      "lat": 3.0886,
-      "lng": 101.7088,
+      "lat": 3.063737,
+      "lng": 101.7084,
       "gridX": 63.0,
       "gridY": 103.0,
       "lines": [
@@ -2233,8 +2233,8 @@
     {
       "id": "SP13",
       "name": "SALAK SELATAN",
-      "lat": 3.0792,
-      "lng": 101.7045,
+      "lat": 3.102201,
+      "lng": 101.706179,
       "gridX": 85.0,
       "gridY": 79.0,
       "lines": [
@@ -2244,8 +2244,8 @@
     {
       "id": "SP14",
       "name": "BANDAR TUN RAZAK",
-      "lat": 3.0914,
-      "lng": 101.7193,
+      "lat": 3.089576,
+      "lng": 101.712466,
       "gridX": 85.0,
       "gridY": 82.0,
       "lines": [
@@ -2266,8 +2266,8 @@
     {
       "id": "SP16",
       "name": "SUNGAI BESI",
-      "lat": 3.0886,
-      "lng": 101.7088,
+      "lat": 3.063842,
+      "lng": 101.708062,
       "gridX": 63.0,
       "gridY": 103.0,
       "lines": [
@@ -2881,928 +2881,424 @@
       "route": "AG"
     },
     {
-      "from": "AG18",
-      "to": "KG22",
+      "from": "SP1",
+      "to": "BATU_KENTONMEN_LRT",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
-      "from": "KG22",
-      "to": "AG18",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "KG22",
-      "to": "KJ13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "KJ13",
-      "to": "KG22",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "KJ13",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "MR11",
-      "to": "KJ13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "MR11",
-      "to": "MR4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "MR4",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "MR4",
-      "to": "PY17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "PY17",
-      "to": "MR4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "PY17",
-      "to": "PY24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "PY24",
-      "to": "PY17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "PY24",
+      "from": "BATU_KENTONMEN_LRT",
       "to": "SP1",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
-      "from": "SP1",
-      "to": "PY24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "SP1",
-      "to": "SP10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "SP10",
-      "to": "SP1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "SP10",
-      "to": "SP11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "SP11",
-      "to": "SP10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "AG"
-    },
-    {
-      "from": "SP11",
+      "from": "BATU_KENTONMEN_LRT",
       "to": "SP2",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP2",
-      "to": "SP11",
+      "to": "BATU_KENTONMEN_LRT",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP2",
       "to": "SP3",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP3",
       "to": "SP2",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP3",
       "to": "SP4",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP4",
       "to": "SP3",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP4",
       "to": "SP5",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP5",
       "to": "SP4",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP5",
       "to": "SP6",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP6",
       "to": "SP5",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP6",
       "to": "SP7",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP7",
       "to": "SP6",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP7",
       "to": "SP8",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP8",
       "to": "SP7",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP8",
       "to": "SP9",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
       "from": "SP9",
       "to": "SP8",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "AG"
+      "route": "SP"
     },
     {
-      "from": "BRT1",
-      "to": "BRT2",
+      "from": "SP9",
+      "to": "SP10",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT2",
-      "to": "BRT1",
+      "from": "SP10",
+      "to": "SP9",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT2",
-      "to": "BRT3",
+      "from": "SP10",
+      "to": "SP11",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT3",
-      "to": "BRT2",
+      "from": "SP11",
+      "to": "SP10",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT3",
-      "to": "BRT4",
+      "from": "SP11",
+      "to": "SP12",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT4",
-      "to": "BRT3",
+      "from": "SP12",
+      "to": "SP11",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT4",
-      "to": "BRT5",
+      "from": "SP12",
+      "to": "SP13",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT5",
-      "to": "BRT4",
+      "from": "SP13",
+      "to": "SP12",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT5",
-      "to": "BRT6",
+      "from": "SP13",
+      "to": "SP14",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT6",
-      "to": "BRT5",
+      "from": "SP14",
+      "to": "SP13",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT6",
-      "to": "BRT7",
+      "from": "SP14",
+      "to": "SP15",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT7",
-      "to": "BRT6",
+      "from": "SP15",
+      "to": "SP14",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "BRT7",
-      "to": "KJ31",
+      "from": "SP15",
+      "to": "SP16",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "KJ31",
-      "to": "BRT7",
+      "from": "SP16",
+      "to": "SP15",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "KJ31",
-      "to": "SETIA_JAYA",
+      "from": "SP16",
+      "to": "SP17",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "SETIA_JAYA",
-      "to": "KJ31",
+      "from": "SP17",
+      "to": "SP16",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "SP"
     },
     {
-      "from": "KJ15",
-      "to": "MR1",
+      "from": "SP17",
+      "to": "SP18",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "MR1",
-      "to": "KJ15",
+      "from": "SP18",
+      "to": "SP17",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "MR1",
-      "to": "SALAK_TINGGI",
+      "from": "SP18",
+      "to": "SP19",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "SALAK_TINGGI",
-      "to": "MR1",
+      "from": "SP19",
+      "to": "SP18",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "SALAK_TINGGI",
-      "to": "KLIA2",
+      "from": "SP19",
+      "to": "SP20",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "KLIA2",
-      "to": "SALAK_TINGGI",
+      "from": "SP20",
+      "to": "SP19",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "KLIA2",
-      "to": "KLIA",
+      "from": "SP20",
+      "to": "SP21",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "KLIA",
-      "to": "KLIA2",
+      "from": "SP21",
+      "to": "SP20",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER6"
+      "route": "SP"
     },
     {
-      "from": "KJ15",
-      "to": "MR1",
+      "from": "SP21",
+      "to": "SP22",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "MR1",
-      "to": "KJ15",
+      "from": "SP22",
+      "to": "SP21",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "MR1",
-      "to": "SALAK_TINGGI",
+      "from": "SP22",
+      "to": "SP24",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "SALAK_TINGGI",
-      "to": "MR1",
+      "from": "SP24",
+      "to": "SP22",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "SALAK_TINGGI",
-      "to": "KLIA2",
+      "from": "SP24",
+      "to": "PUCHONG_JAYA",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "KLIA2",
-      "to": "SALAK_TINGGI",
+      "from": "PUCHONG_JAYA",
+      "to": "SP24",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "KLIA2",
-      "to": "KLIA",
+      "from": "PUCHONG_JAYA",
+      "to": "SP25",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "KLIA",
-      "to": "KLIA2",
+      "from": "SP25",
+      "to": "PUCHONG_JAYA",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "ER7"
+      "route": "SP"
     },
     {
-      "from": "KG04",
-      "to": "KG05",
+      "from": "SP25",
+      "to": "SP26",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG05",
-      "to": "KG04",
+      "from": "SP26",
+      "to": "SP25",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG05",
-      "to": "KG06",
+      "from": "SP26",
+      "to": "SP27",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG06",
-      "to": "KG05",
+      "from": "SP27",
+      "to": "SP26",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG06",
-      "to": "KG07",
+      "from": "SP27",
+      "to": "SP28",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG07",
-      "to": "KG06",
+      "from": "SP28",
+      "to": "SP27",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG07",
-      "to": "KG08",
+      "from": "SP28",
+      "to": "SP29",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG08",
-      "to": "KG07",
+      "from": "SP29",
+      "to": "SP28",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG08",
-      "to": "KG09",
+      "from": "SP29",
+      "to": "SP31",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
-      "from": "KG09",
-      "to": "KG08",
+      "from": "SP31",
+      "to": "SP29",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG09",
-      "to": "KG10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG10",
-      "to": "KG09",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG10",
-      "to": "KG12",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG12",
-      "to": "KG10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG12",
-      "to": "KG13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG13",
-      "to": "KG12",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG13",
-      "to": "KG14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG14",
-      "to": "KG13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG14",
-      "to": "KG15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG15",
-      "to": "KG14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG15",
-      "to": "KG16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG16",
-      "to": "KG15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG16",
-      "to": "KG17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG17",
-      "to": "KG16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG17",
-      "to": "KG18A",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG18A",
-      "to": "KG17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG18A",
-      "to": "KG20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG20",
-      "to": "KG18A",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG20",
-      "to": "KG21",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG21",
-      "to": "KG20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG21",
-      "to": "KG22",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG22",
-      "to": "KG21",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG22",
-      "to": "KG23",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG23",
-      "to": "KG22",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG23",
-      "to": "KG24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG24",
-      "to": "KG23",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG24",
-      "to": "KG25",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG25",
-      "to": "KG24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG25",
-      "to": "KG26",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG26",
-      "to": "KG25",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG26",
-      "to": "KG27",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG27",
-      "to": "KG26",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG27",
-      "to": "KG28",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG28",
-      "to": "KG27",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG28",
-      "to": "KG29",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG29",
-      "to": "KG28",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG29",
-      "to": "KG30",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG30",
-      "to": "KG29",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG30",
-      "to": "KG31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG31",
-      "to": "KG30",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG31",
-      "to": "KG33",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG33",
-      "to": "KG31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG33",
-      "to": "KG34",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG34",
-      "to": "KG33",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG34",
-      "to": "KG35",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG35",
-      "to": "KG34",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KG35",
-      "to": "AG13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "AG13",
-      "to": "KG35",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "AG13",
-      "to": "KJ14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KJ14",
-      "to": "AG13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "KJ14",
-      "to": "MR6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "MR6",
-      "to": "KJ14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "MR6",
-      "to": "PY01",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "PY01",
-      "to": "MR6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "PY01",
-      "to": "PY23",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
-    },
-    {
-      "from": "PY23",
-      "to": "PY01",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KG"
+      "route": "SP"
     },
     {
       "from": "KJ1",
@@ -4016,19 +3512,47 @@
     },
     {
       "from": "KJ16",
-      "to": "KJ17",
+      "to": "PANTAI_DALAM",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
-      "from": "KJ17",
+      "from": "PANTAI_DALAM",
       "to": "KJ16",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
+      "from": "PANTAI_DALAM",
+      "to": "ANGKASAPURI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "PANTAI_DALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "KJ17",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KJ17",
+      "to": "ANGKASAPURI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
       "from": "KJ17",
       "to": "KJ18",
       "minutes": 2,
@@ -4114,19 +3638,61 @@
     },
     {
       "from": "KJ23",
-      "to": "KJ24",
+      "to": "JALAN_TEMPLER",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
-      "from": "KJ24",
+      "from": "JALAN_TEMPLER",
       "to": "KJ23",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
+      "from": "JALAN_TEMPLER",
+      "to": "SERI_SETIA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "SERI_SETIA",
+      "to": "JALAN_TEMPLER",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "SERI_SETIA",
+      "to": "KAMPUNG_DATO_HARUN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "SERI_SETIA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "KJ24",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KJ24",
+      "to": "KAMPUNG_DATO_HARUN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
       "from": "KJ24",
       "to": "KJ25",
       "minutes": 2,
@@ -4309,1194 +3875,396 @@
       "route": "KJ"
     },
     {
-      "from": "KJ37",
-      "to": "AG7",
+      "from": "KG04",
+      "to": "KG05",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "AG7",
-      "to": "KJ37",
+      "from": "KG05",
+      "to": "KG04",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "AG7",
-      "to": "ANGKASAPURI",
+      "from": "KG05",
+      "to": "KG06",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "ANGKASAPURI",
-      "to": "AG7",
+      "from": "KG06",
+      "to": "KG05",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "ANGKASAPURI",
-      "to": "BRT7",
+      "from": "KG06",
+      "to": "KG07",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "BRT7",
-      "to": "ANGKASAPURI",
+      "from": "KG07",
+      "to": "KG06",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "BRT7",
-      "to": "JALAN_TEMPLER",
+      "from": "KG07",
+      "to": "KG08",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "JALAN_TEMPLER",
-      "to": "BRT7",
+      "from": "KG08",
+      "to": "KG07",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "JALAN_TEMPLER",
-      "to": "KAMPUNG_DATO_HARUN",
+      "from": "KG08",
+      "to": "KG09",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "KAMPUNG_DATO_HARUN",
-      "to": "JALAN_TEMPLER",
+      "from": "KG09",
+      "to": "KG08",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "KAMPUNG_DATO_HARUN",
+      "from": "KG09",
+      "to": "KG10",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG10",
+      "to": "KG09",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG10",
+      "to": "KG12",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG12",
+      "to": "KG10",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG12",
+      "to": "KG13",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG13",
+      "to": "KG12",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG13",
+      "to": "KG14",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG14",
+      "to": "KG13",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG14",
+      "to": "KG15",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG15",
+      "to": "KG14",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG15",
       "to": "KG16",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
       "from": "KG16",
-      "to": "KAMPUNG_DATO_HARUN",
+      "to": "KG15",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
       "from": "KG16",
-      "to": "MR1",
+      "to": "KG17",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "MR1",
+      "from": "KG17",
       "to": "KG16",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KJ"
+      "route": "KG"
     },
     {
-      "from": "MR1",
-      "to": "PANTAI_DALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "PANTAI_DALAM",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "PANTAI_DALAM",
-      "to": "PY20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "PY20",
-      "to": "PANTAI_DALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "PY20",
-      "to": "SERI_SETIA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SERI_SETIA",
-      "to": "PY20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SERI_SETIA",
-      "to": "SP31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SP31",
-      "to": "SERI_SETIA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SP31",
-      "to": "SP7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SP7",
-      "to": "SP31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "GLENMARIE2",
-      "to": "SKYPARK_TERMINAL",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "SKYPARK_TERMINAL",
-      "to": "GLENMARIE2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "SKYPARK_TERMINAL",
-      "to": "STADIUM_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "STADIUM_SHAH_ALAM",
-      "to": "SKYPARK_TERMINAL",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "STADIUM_SHAH_ALAM",
-      "to": "DATO_MENTERI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "DATO_MENTERI",
-      "to": "STADIUM_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "DATO_MENTERI",
-      "to": "UITM_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "UITM_SHAH_ALAM",
-      "to": "DATO_MENTERI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "UITM_SHAH_ALAM",
-      "to": "SEKSYEN7_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "SEKSYEN7_SHAH_ALAM",
-      "to": "UITM_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "SEKSYEN7_SHAH_ALAM",
-      "to": "BANDAR_BARU_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "BANDAR_BARU_KLANG",
-      "to": "SEKSYEN7_SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "BANDAR_BARU_KLANG",
-      "to": "PASAR_BESAR_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "PASAR_BESAR_KLANG",
-      "to": "BANDAR_BARU_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "PASAR_BESAR_KLANG",
-      "to": "JALAN_MERU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "JALAN_MERU",
-      "to": "PASAR_BESAR_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KS"
-    },
-    {
-      "from": "BATU_CAVES",
-      "to": "TAMAN_WAHYU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TAMAN_WAHYU",
-      "to": "BATU_CAVES",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TAMAN_WAHYU",
-      "to": "PUTRA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "PUTRA",
-      "to": "TAMAN_WAHYU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "PUTRA",
-      "to": "BANK_NEGARA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BANK_NEGARA",
-      "to": "PUTRA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BANK_NEGARA",
-      "to": "KJ15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "KJ15",
-      "to": "BANK_NEGARA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "KJ15",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "MR1",
-      "to": "KJ15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "MR1",
-      "to": "MID_VALLEY",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "MID_VALLEY",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "MID_VALLEY",
-      "to": "SEPUTEH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEPUTEH",
-      "to": "MID_VALLEY",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEPUTEH",
-      "to": "SERDANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SERDANG",
-      "to": "SEPUTEH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SERDANG",
-      "to": "SETIA_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SETIA_JAYA",
-      "to": "SERDANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SETIA_JAYA",
-      "to": "KAJANG2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "KAJANG2",
-      "to": "SETIA_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "KAJANG2",
-      "to": "UKM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "UKM",
-      "to": "KAJANG2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "UKM",
-      "to": "BANGI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BANGI",
-      "to": "UKM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BANGI",
-      "to": "BATANG_BENAR",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BATANG_BENAR",
-      "to": "BANGI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "BATANG_BENAR",
-      "to": "NILAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "NILAI",
-      "to": "BATANG_BENAR",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "NILAI",
-      "to": "LABU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "LABU",
-      "to": "NILAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "LABU",
-      "to": "TIROI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TIROI",
-      "to": "LABU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TIROI",
-      "to": "SEREMBAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEREMBAN",
-      "to": "TIROI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEREMBAN",
-      "to": "SENAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SENAWANG",
-      "to": "SEREMBAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SENAWANG",
-      "to": "SUNGAI_GADUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SUNGAI_GADUT",
-      "to": "SENAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SUNGAI_GADUT",
-      "to": "REMBAU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "REMBAU",
-      "to": "SUNGAI_GADUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "REMBAU",
-      "to": "PULAU_SEBANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "PULAU_SEBANG",
-      "to": "REMBAU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TANJUNG_MALIM",
-      "to": "KEPONG_SENTRAL",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KEPONG_SENTRAL",
-      "to": "TANJUNG_MALIM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KEPONG_SENTRAL",
-      "to": "KUALA_KUBU_BHARU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_KUBU_BHARU",
-      "to": "KEPONG_SENTRAL",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_KUBU_BHARU",
-      "to": "RASA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RASA",
-      "to": "KUALA_KUBU_BHARU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RASA",
-      "to": "BATANG_KALI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATANG_KALI",
-      "to": "RASA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATANG_KALI",
-      "to": "KEPONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KEPONG",
-      "to": "BATANG_KALI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KEPONG",
-      "to": "SERENDAH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SERENDAH",
-      "to": "KEPONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SERENDAH",
-      "to": "SEGAMBUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SEGAMBUT",
-      "to": "SERENDAH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SEGAMBUT",
-      "to": "RAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RAWANG",
-      "to": "SEGAMBUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RAWANG",
-      "to": "KUANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUANG",
-      "to": "RAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUANG",
-      "to": "KUALA_LUMPUR",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_LUMPUR",
-      "to": "KUANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_LUMPUR",
-      "to": "KJ15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KJ15",
-      "to": "KUALA_LUMPUR",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KJ15",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "MR1",
-      "to": "KJ15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "MR1",
-      "to": "PETALING",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PETALING",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PETALING",
-      "to": "BATU_TIGA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATU_TIGA",
-      "to": "PETALING",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATU_TIGA",
-      "to": "SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SHAH_ALAM",
-      "to": "BATU_TIGA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SHAH_ALAM",
-      "to": "PADANG_JAWA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PADANG_JAWA",
-      "to": "SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PADANG_JAWA",
-      "to": "BUKIT_BADAK",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BUKIT_BADAK",
-      "to": "PADANG_JAWA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BUKIT_BADAK",
-      "to": "KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG",
-      "to": "BUKIT_BADAK",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG",
-      "to": "TAMAN_SELATAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TAMAN_SELATAN",
-      "to": "KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TAMAN_SELATAN",
-      "to": "KLANG_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG_JAYA",
-      "to": "TAMAN_SELATAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG_JAYA",
-      "to": "TELUK_PULAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_PULAI",
-      "to": "KLANG_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_PULAI",
-      "to": "SRI_ANDALAS",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SRI_ANDALAS",
-      "to": "TELUK_PULAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SRI_ANDALAS",
-      "to": "TELUK_GADONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_GADONG",
-      "to": "SRI_ANDALAS",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_GADONG",
-      "to": "KAMPUNG_RAJA_UDA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KAMPUNG_RAJA_UDA",
-      "to": "TELUK_GADONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KAMPUNG_RAJA_UDA",
-      "to": "BANDAR_BUKIT_TINGGI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BANDAR_BUKIT_TINGGI",
-      "to": "KAMPUNG_RAJA_UDA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BANDAR_BUKIT_TINGGI",
-      "to": "JALAN_KASTAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "JALAN_KASTAM",
-      "to": "BANDAR_BUKIT_TINGGI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "JALAN_KASTAM",
-      "to": "PELABUHAN_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PELABUHAN_KLANG",
-      "to": "JALAN_KASTAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "MR1",
-      "to": "MR2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR2",
-      "to": "MR1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR2",
-      "to": "MR3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR3",
-      "to": "MR2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR3",
-      "to": "MR4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR4",
-      "to": "MR3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR4",
-      "to": "MR5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR5",
-      "to": "MR4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR5",
-      "to": "MR6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR6",
-      "to": "MR5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR6",
-      "to": "MR7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR7",
-      "to": "MR6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR7",
-      "to": "MR8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR8",
-      "to": "MR7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR8",
-      "to": "MR9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR9",
-      "to": "MR8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR9",
-      "to": "MR10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR10",
-      "to": "MR9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR10",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR11",
-      "to": "MR10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "MR11",
-      "to": "AG3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "AG3",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "AG3",
-      "to": "AG9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "AG9",
-      "to": "AG3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "MR"
-    },
-    {
-      "from": "AG9",
+      "from": "KG17",
       "to": "KG18A",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
       "from": "KG18A",
-      "to": "AG9",
+      "to": "KG17",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
       "from": "KG18A",
-      "to": "KJ15",
+      "to": "KG20",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "KJ15",
+      "from": "KG20",
       "to": "KG18A",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "KJ15",
-      "to": "PY17",
+      "from": "KG20",
+      "to": "KG21",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "PY17",
-      "to": "KJ15",
+      "from": "KG21",
+      "to": "KG20",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "PY17",
-      "to": "SP3",
+      "from": "KG21",
+      "to": "KG22",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "SP3",
-      "to": "PY17",
+      "from": "KG22",
+      "to": "KG21",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "SP3",
-      "to": "SP9",
+      "from": "KG22",
+      "to": "KG23",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
     },
     {
-      "from": "SP9",
-      "to": "SP3",
+      "from": "KG23",
+      "to": "KG22",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "MR"
+      "route": "KG"
+    },
+    {
+      "from": "KG23",
+      "to": "KG24",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG24",
+      "to": "KG23",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG24",
+      "to": "KG25",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG25",
+      "to": "KG24",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG25",
+      "to": "KG26",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG26",
+      "to": "KG25",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG26",
+      "to": "KG27",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG27",
+      "to": "KG26",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG27",
+      "to": "KG28",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG28",
+      "to": "KG27",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG28",
+      "to": "KG29",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG29",
+      "to": "KG28",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG29",
+      "to": "KG30",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG30",
+      "to": "KG29",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG30",
+      "to": "KG31",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG31",
+      "to": "KG30",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG31",
+      "to": "KG33",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG33",
+      "to": "KG31",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG33",
+      "to": "KG34",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG34",
+      "to": "KG33",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG34",
+      "to": "KG35",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
+    },
+    {
+      "from": "KG35",
+      "to": "KG34",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KG"
     },
     {
       "from": "PY01",
@@ -5989,802 +4757,956 @@
       "route": "PY"
     },
     {
-      "from": "PY41",
-      "to": "AG11",
+      "from": "MR1",
+      "to": "MR2",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "PY"
+      "route": "MR"
     },
     {
-      "from": "AG11",
-      "to": "PY41",
+      "from": "MR2",
+      "to": "MR1",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "PY"
+      "route": "MR"
     },
     {
-      "from": "AG11",
-      "to": "AG3",
+      "from": "MR2",
+      "to": "MR3",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "PY"
+      "route": "MR"
     },
     {
-      "from": "AG3",
-      "to": "AG11",
+      "from": "MR3",
+      "to": "MR2",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "PY"
+      "route": "MR"
     },
     {
-      "from": "AG3",
-      "to": "KG04",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KG04",
-      "to": "AG3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KG04",
-      "to": "KG20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KG20",
-      "to": "KG04",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KG20",
-      "to": "KJ9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KJ9",
-      "to": "KG20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "KJ9",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "MR11",
-      "to": "KJ9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "MR11",
-      "to": "SP11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP11",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP11",
-      "to": "SP16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP16",
-      "to": "SP11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP16",
-      "to": "SP3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP3",
-      "to": "SP16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "PY"
-    },
-    {
-      "from": "SP1",
-      "to": "SP2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP2",
-      "to": "SP1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP2",
-      "to": "SP3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP3",
-      "to": "SP2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP3",
-      "to": "SP4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP4",
-      "to": "SP3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP4",
-      "to": "SP5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP5",
-      "to": "SP4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP5",
-      "to": "SP6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP6",
-      "to": "SP5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP6",
-      "to": "SP7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP7",
-      "to": "SP6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP7",
-      "to": "SP8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP8",
-      "to": "SP7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP8",
-      "to": "SP9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP9",
-      "to": "SP8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP9",
-      "to": "SP10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP10",
-      "to": "SP9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP10",
-      "to": "SP11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP11",
-      "to": "SP10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP11",
-      "to": "SP12",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP12",
-      "to": "SP11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP12",
-      "to": "SP13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP13",
-      "to": "SP12",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP13",
-      "to": "SP14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP14",
-      "to": "SP13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP14",
-      "to": "SP15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP15",
-      "to": "SP14",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP15",
-      "to": "SP16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP16",
-      "to": "SP15",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP16",
-      "to": "SP17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP17",
-      "to": "SP16",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP17",
-      "to": "SP18",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP18",
-      "to": "SP17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP18",
-      "to": "SP19",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP19",
-      "to": "SP18",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP19",
-      "to": "SP20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP20",
-      "to": "SP19",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP20",
-      "to": "SP21",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP21",
-      "to": "SP20",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP21",
-      "to": "SP22",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP22",
-      "to": "SP21",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP22",
-      "to": "SP24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP24",
-      "to": "SP22",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP24",
-      "to": "SP25",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP25",
-      "to": "SP24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP25",
-      "to": "SP26",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP26",
-      "to": "SP25",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP26",
-      "to": "SP27",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP27",
-      "to": "SP26",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP27",
-      "to": "SP28",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP28",
-      "to": "SP27",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP28",
-      "to": "SP29",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP29",
-      "to": "SP28",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP29",
-      "to": "SP31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP31",
-      "to": "SP29",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP31",
-      "to": "AG1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG1",
-      "to": "SP31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG1",
-      "to": "AG10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG10",
-      "to": "AG1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG10",
-      "to": "AG11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG11",
-      "to": "AG10",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG11",
-      "to": "AG2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG2",
-      "to": "AG11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG2",
-      "to": "AG3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG3",
-      "to": "AG2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG3",
-      "to": "AG4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG4",
-      "to": "AG3",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG4",
-      "to": "AG5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG5",
-      "to": "AG4",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG5",
-      "to": "AG6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG6",
-      "to": "AG5",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG6",
-      "to": "AG7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG7",
-      "to": "AG6",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG7",
-      "to": "AG8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG8",
-      "to": "AG7",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG8",
-      "to": "AG9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG9",
-      "to": "AG8",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "AG9",
-      "to": "BATU_KENTONMEN_LRT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "BATU_KENTONMEN_LRT",
-      "to": "AG9",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "BATU_KENTONMEN_LRT",
-      "to": "KJ13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "KJ13",
-      "to": "BATU_KENTONMEN_LRT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "KJ13",
-      "to": "KJ37",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "KJ37",
-      "to": "KJ13",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "KJ37",
-      "to": "MR11",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "MR11",
-      "to": "KJ37",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "MR11",
+      "from": "MR3",
       "to": "MR4",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
       "from": "MR4",
-      "to": "MR11",
+      "to": "MR3",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
       "from": "MR4",
-      "to": "PUCHONG_JAYA",
+      "to": "MR5",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PUCHONG_JAYA",
+      "from": "MR5",
       "to": "MR4",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PUCHONG_JAYA",
-      "to": "PY17",
+      "from": "MR5",
+      "to": "MR6",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PY17",
-      "to": "PUCHONG_JAYA",
+      "from": "MR6",
+      "to": "MR5",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PY17",
-      "to": "PY24",
+      "from": "MR6",
+      "to": "MR7",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PY24",
-      "to": "PY17",
+      "from": "MR7",
+      "to": "MR6",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PY24",
-      "to": "PY29",
+      "from": "MR7",
+      "to": "MR8",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
     },
     {
-      "from": "PY29",
-      "to": "PY24",
+      "from": "MR8",
+      "to": "MR7",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "SP"
+      "route": "MR"
+    },
+    {
+      "from": "MR8",
+      "to": "MR9",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "MR9",
+      "to": "MR8",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "MR9",
+      "to": "MR10",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "MR10",
+      "to": "MR9",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "MR10",
+      "to": "MR11",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "MR11",
+      "to": "MR10",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "MR"
+    },
+    {
+      "from": "SETIA_JAYA",
+      "to": "BRT1",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT1",
+      "to": "SETIA_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT1",
+      "to": "BRT2",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT2",
+      "to": "BRT1",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT2",
+      "to": "BRT3",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT3",
+      "to": "BRT2",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT3",
+      "to": "BRT4",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT4",
+      "to": "BRT3",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT4",
+      "to": "BRT5",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT5",
+      "to": "BRT4",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT5",
+      "to": "BRT6",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT6",
+      "to": "BRT5",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT6",
+      "to": "BRT7",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT7",
+      "to": "BRT6",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BANGI",
+      "to": "BATANG_BENAR",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATANG_BENAR",
+      "to": "BANGI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATANG_BENAR",
+      "to": "NILAI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "NILAI",
+      "to": "BATANG_BENAR",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "NILAI",
+      "to": "LABU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "LABU",
+      "to": "NILAI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "LABU",
+      "to": "TIROI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TIROI",
+      "to": "LABU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TIROI",
+      "to": "SEREMBAN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEREMBAN",
+      "to": "TIROI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEREMBAN",
+      "to": "SENAWANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENAWANG",
+      "to": "SEREMBAN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENAWANG",
+      "to": "SUNGAI_GADUT",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SUNGAI_GADUT",
+      "to": "SENAWANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SUNGAI_GADUT",
+      "to": "REMBAU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "REMBAU",
+      "to": "SUNGAI_GADUT",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "REMBAU",
+      "to": "PULAU_SEBANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "PULAU_SEBANG",
+      "to": "REMBAU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "PULAU_SEBANG",
+      "to": "UKM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "UKM",
+      "to": "PULAU_SEBANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "UKM",
+      "to": "SERDANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SERDANG",
+      "to": "UKM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SERDANG",
+      "to": "SEPUTEH",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEPUTEH",
+      "to": "SERDANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEPUTEH",
+      "to": "MID_VALLEY",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "MID_VALLEY",
+      "to": "SEPUTEH",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "MID_VALLEY",
+      "to": "BANK_NEGARA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BANK_NEGARA",
+      "to": "MID_VALLEY",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BANK_NEGARA",
+      "to": "PUTRA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "PUTRA",
+      "to": "BANK_NEGARA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "PUTRA",
+      "to": "TAMAN_WAHYU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TAMAN_WAHYU",
+      "to": "PUTRA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TAMAN_WAHYU",
+      "to": "BATU_CAVES",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATU_CAVES",
+      "to": "TAMAN_WAHYU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATU_CAVES",
+      "to": "SETIA_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SETIA_JAYA",
+      "to": "BATU_CAVES",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BANDAR_BUKIT_TINGGI",
+      "to": "SRI_ANDALAS",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SRI_ANDALAS",
+      "to": "BANDAR_BUKIT_TINGGI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SRI_ANDALAS",
+      "to": "KLANG_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG_JAYA",
+      "to": "SRI_ANDALAS",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG_JAYA",
+      "to": "TAMAN_SELATAN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TAMAN_SELATAN",
+      "to": "KLANG_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TAMAN_SELATAN",
+      "to": "KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG",
+      "to": "TAMAN_SELATAN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG",
+      "to": "BUKIT_BADAK",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BUKIT_BADAK",
+      "to": "KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BUKIT_BADAK",
+      "to": "PADANG_JAWA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PADANG_JAWA",
+      "to": "BUKIT_BADAK",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PADANG_JAWA",
+      "to": "SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SHAH_ALAM",
+      "to": "PADANG_JAWA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SHAH_ALAM",
+      "to": "BATU_TIGA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATU_TIGA",
+      "to": "SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATU_TIGA",
+      "to": "TELUK_PULAI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_PULAI",
+      "to": "BATU_TIGA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_PULAI",
+      "to": "TELUK_GADONG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_GADONG",
+      "to": "TELUK_PULAI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_GADONG",
+      "to": "KAMPUNG_RAJA_UDA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KAMPUNG_RAJA_UDA",
+      "to": "TELUK_GADONG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KAMPUNG_RAJA_UDA",
+      "to": "JALAN_KASTAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "JALAN_KASTAM",
+      "to": "KAMPUNG_RAJA_UDA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "JALAN_KASTAM",
+      "to": "PELABUHAN_KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PELABUHAN_KLANG",
+      "to": "JALAN_KASTAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PELABUHAN_KLANG",
+      "to": "PETALING",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PETALING",
+      "to": "PELABUHAN_KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PETALING",
+      "to": "KUALA_LUMPUR",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUALA_LUMPUR",
+      "to": "PETALING",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUALA_LUMPUR",
+      "to": "SEGAMBUT",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SEGAMBUT",
+      "to": "KUALA_LUMPUR",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SEGAMBUT",
+      "to": "KEPONG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KEPONG",
+      "to": "SEGAMBUT",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KEPONG",
+      "to": "KEPONG_SENTRAL",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KEPONG_SENTRAL",
+      "to": "KEPONG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KEPONG_SENTRAL",
+      "to": "TANJUNG_MALIM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TANJUNG_MALIM",
+      "to": "KEPONG_SENTRAL",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TANJUNG_MALIM",
+      "to": "KUALA_KUBU_BHARU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUALA_KUBU_BHARU",
+      "to": "TANJUNG_MALIM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUALA_KUBU_BHARU",
+      "to": "RASA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "RASA",
+      "to": "KUALA_KUBU_BHARU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "RASA",
+      "to": "BATANG_KALI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATANG_KALI",
+      "to": "RASA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATANG_KALI",
+      "to": "SERENDAH",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SERENDAH",
+      "to": "BATANG_KALI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SERENDAH",
+      "to": "RAWANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "RAWANG",
+      "to": "SERENDAH",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "RAWANG",
+      "to": "KUANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUANG",
+      "to": "RAWANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BANDAR_BARU_KLANG",
+      "to": "PASAR_BESAR_KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "PASAR_BESAR_KLANG",
+      "to": "BANDAR_BARU_KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "PASAR_BESAR_KLANG",
+      "to": "JALAN_MERU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "JALAN_MERU",
+      "to": "PASAR_BESAR_KLANG",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "JALAN_MERU",
+      "to": "UITM_SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "UITM_SHAH_ALAM",
+      "to": "JALAN_MERU",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "UITM_SHAH_ALAM",
+      "to": "DATO_MENTERI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "DATO_MENTERI",
+      "to": "UITM_SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "DATO_MENTERI",
+      "to": "STADIUM_SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "STADIUM_SHAH_ALAM",
+      "to": "DATO_MENTERI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "STADIUM_SHAH_ALAM",
+      "to": "SKYPARK_TERMINAL",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "SKYPARK_TERMINAL",
+      "to": "STADIUM_SHAH_ALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KS"
+    },
+    {
+      "from": "KLIA",
+      "to": "SALAK_TINGGI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "ER6"
+    },
+    {
+      "from": "SALAK_TINGGI",
+      "to": "KLIA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "ER6"
+    },
+    {
+      "from": "KLIA",
+      "to": "SALAK_TINGGI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "SALAK_TINGGI",
+      "to": "KLIA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "ER7"
     },
     {
       "from": "AG1",
