@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/education_service.dart';
 import '../services/location_privacy_service.dart';
 import '../services/profile_service.dart';
 import '../services/theme_controller.dart';
@@ -20,16 +21,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _accessibilityEnabled = false;
   bool _locationConsent = false;
   final AuthService _authService = AuthService();
+  MasteryStats? _mastery;
 
   @override
   void initState() {
     super.initState();
     _loadPrivacyConsent();
+    _loadMastery();
   }
 
   Future<void> _loadPrivacyConsent() async {
     final consented = await LocationPrivacyService.hasConsent();
     if (mounted) setState(() => _locationConsent = consented);
+  }
+
+  Future<void> _loadMastery() async {
+    final stats = await EducationService.instance.getMasteryStats();
+    if (mounted) setState(() => _mastery = stats);
   }
 
   @override
@@ -103,7 +111,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const SizedBox(height: 20),
+          if (_mastery != null) ...[
+            _MasteryPanel(stats: _mastery!),
+            const SizedBox(height: 20),
+          ],
           Text('Preferences', style: theme.textTheme.titleLarge),
           const SizedBox(height: 10),
           _Panel(
@@ -388,6 +399,55 @@ class _ActionRow extends StatelessWidget {
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
+    );
+  }
+}
+
+class _MasteryPanel extends StatelessWidget {
+  final MasteryStats stats;
+
+  const _MasteryPanel({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = stats.totalAttempts;
+    final independence = total == 0
+        ? 0
+        : (stats.correctAttempts / total * 100).round().clamp(0, 100);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.trending_up, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text('Your Rail Independence',
+                  style: theme.textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You know ${stats.stationsLearned} station${stats.stationsLearned == 1 ? '' : 's'} and answer '
+            '${stats.accuracyPct}% of trivia correctly. Keep going — the goal is '
+            'to not need us.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: independence / 100,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ],
+      ),
     );
   }
 }

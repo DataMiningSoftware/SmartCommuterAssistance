@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../screens/education_screen.dart';
 import '../services/navigation_state.dart';
 import '../services/race_service.dart';
 import '../services/social_service.dart';
@@ -178,6 +179,18 @@ class _PartySheetState extends State<PartySheet> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              final nav = Navigator.of(context, rootNavigator: true);
+              nav.pop();
+              nav.push(
+                MaterialPageRoute(builder: (_) => const EducationScreen()),
+              );
+            },
+            icon: const Icon(Icons.quiz_outlined),
+            label: const Text('Quick trivia round'),
           ),
         ],
       ),
