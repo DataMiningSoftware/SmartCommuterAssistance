@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import '../services/station_name_matcher.dart';
 import 'transit_graph.dart';
 
 class SchematicLayoutStation {
@@ -78,12 +76,11 @@ class SchematicLayout {
     }
     for (final entry in lineMap.entries) {
       final ids = byLine[entry.key]?.toList() ?? <String>[];
-      ids.sort();
       lineMap[entry.key] = SchematicLayoutLine(
         id: entry.key,
         color: entry.value.color,
         label: entry.value.label,
-        stationIds: ids,
+        stationIds: _orderLineStations(entry.key, ids),
       );
     }
 
@@ -107,143 +104,127 @@ class SchematicLayout {
     );
   }
 
-  void reorderUsingGraph(
-    TransitGraph graph, {
-    Map<String, List<String>>? orderedNamesByRoute,
-  }) {
-    const lineToGraphRoutes = <String, List<String>>{
-      '1': ['KT1', 'KC'],
-      '2': ['KT2', 'KD'],
-      '3': ['AG'],
-      '4': ['SP', 'PH'],
-      '5': ['KJ'],
-      '6': ['KLIA EKSPRES', 'KLIA_EKSPRES', 'KLIA_EXSPRES'],
-      '7': ['KLIA TRANSIT', 'KLIA_TRANSIT'],
-      '8': ['MR'],
-      '9': ['KG', 'MRT'],
-      '10': ['KS'],
-      '11': ['JS'],
-      '12': ['PY', 'PYL'],
-      'B1': ['BRT'],
-    };
-
-    final matcher = StationNameMatcher.instance;
-    final nameToSid = <String, String>{};
-    for (final entry in stations.entries) {
-      nameToSid[matcher.normalize(entry.value.name)] = entry.key;
-    }
-
+  void reorderUsingGraph(TransitGraph graph) {
     final updatedLines = <String, SchematicLayoutLine>{};
     for (final lineEntry in lines.entries) {
       final lineId = lineEntry.key;
       final schematicLine = lineEntry.value;
-      final routeIds = lineToGraphRoutes[lineId] ?? [];
-
-      final ordered = <String>[];
-      final seen = <String>{};
-      for (final routeId in routeIds) {
-        final orderedNames = orderedNamesByRoute?[routeId] ??
-            (graph.lineStationOrder[routeId] ?? const <String>[])
-                .map((id) => graph.stations[id]?.name ?? '')
-                .where((name) => name.isNotEmpty)
-                .toList();
-        for (final name in orderedNames) {
-          final normalized = matcher.normalize(name);
-          String? sid;
-          for (final e in nameToSid.entries) {
-            if (matcher.match(e.key, normalized)) {
-              sid = e.value;
-              break;
-            }
-          }
-          if (sid != null && schematicLine.stationIds.contains(sid) && seen.add(sid)) {
-            ordered.add(sid);
-          }
-        }
-      }
-
-      final appended = <String>[];
-      for (final sid in schematicLine.stationIds) {
-        if (seen.add(sid)) {
-          ordered.add(sid);
-          appended.add(sid);
-        }
-      }
-
-      if (appended.isNotEmpty) {
-        final names = appended.map((sid) => stations[sid]?.name ?? sid).toList();
-        debugPrint(
-          'reorderUsingGraph: Line $lineId (${schematicLine.label}): '
-          '${appended.length} station(s) unmatched, appended: $names',
-        );
-      }
-
       updatedLines[lineId] = SchematicLayoutLine(
         id: lineId,
         color: schematicLine.color,
         label: schematicLine.label,
-        stationIds: ordered,
+        stationIds: _orderLineStations(
+          lineId,
+          schematicLine.stationIds,
+          graph: graph,
+        ),
       );
     }
     lines..clear()..addAll(updatedLines);
   }
 
-  List<List<String>> computeLineOrders(TransitGraph graph) {
-    final orders = <List<String>>[];
-    final byLine = <String, Set<String>>{};
-    for (final station in stations.values) {
-      for (final line in station.lines) {
-        byLine.putIfAbsent(line, () => {}).add(station.id);
+  static const Map<String, String> _lineToGraphRoute = {
+    '1': 'KT1',
+    '2': 'KT2',
+    '3': 'AG',
+    '4': 'SP',
+    '5': 'KJ',
+    '6': 'ER6',
+    '7': 'ER7',
+    '8': 'MR',
+    '9': 'KG',
+    '10': 'KS',
+    '11': 'JS',
+    '12': 'PY',
+    'B1': 'BRT',
+  };
+
+  static const Map<String, List<String>> _lineStationPrefixes = {
+    '1': ['KT1'],
+    '2': ['KT2'],
+    '3': ['AG'],
+    '4': ['SP'],
+    '5': ['KJ'],
+    '6': ['ER6'],
+    '7': ['ER7'],
+    '8': ['MR'],
+    '9': ['KG'],
+    '10': ['KS'],
+    '11': ['JS'],
+    '12': ['PY'],
+    'B1': ['BRT'],
+  };
+
+  static List<String> _orderLineStations(
+    String lineId,
+    List<String> stationIds, {
+    TransitGraph? graph,
+  }) {
+    final prefixes = _lineStationPrefixes[lineId] ?? const <String>[];
+    final owned = <String>[];
+    for (final sid in stationIds) {
+      if (prefixes.any((p) => sid.startsWith(p))) owned.add(sid);
+    }
+
+    // Numeric-prefixed lines filter to their own stops; name-based lines
+    // (KTM / ERL) keep the full station set and rely on the graph order.
+    final candidateIds = owned.isNotEmpty ? owned : stationIds;
+
+    final routeId = _lineToGraphRoute[lineId];
+    if (graph != null && routeId != null && candidateIds.isNotEmpty) {
+      final graphOrder = graph.lineStationOrder[routeId] ?? const <String>[];
+      final candidateSet = candidateIds.toSet();
+      final ordered = <String>[];
+      final seen = <String>{};
+      for (final id in graphOrder) {
+        if (candidateSet.contains(id) && seen.add(id)) ordered.add(id);
       }
+      for (final id in candidateIds) {
+        if (seen.add(id)) ordered.add(id);
+      }
+      return ordered;
     }
-    for (final entry in byLine.entries) {
-      final line = entry.key;
-      if (line == 'INTERCHANGE') continue;
-      final stationsOnLine = entry.value;
-      orders.add(_topologicalOrder(graph, line, stationsOnLine));
-    }
-    return orders;
+
+    final result = List<String>.from(candidateIds);
+    result.sort(_compareStationIds);
+    return result;
   }
 
-  List<String> _topologicalOrder(TransitGraph graph, String line, Set<String> stationsOnLine) {
-    if (stationsOnLine.length < 2) return stationsOnLine.toList();
-    final adj = <String, List<String>>{};
-    for (final sid in stationsOnLine) {
-      for (final edge in (graph.adjacency[sid] ?? [])) {
-        if (edge.line == line && stationsOnLine.contains(edge.to)) {
-          adj.putIfAbsent(sid, () => []).add(edge.to);
-        }
-      }
+  static int _compareStationIds(String a, String b) {
+    final pa = _StationIdParts.tryParse(a);
+    final pb = _StationIdParts.tryParse(b);
+    if (pa != null && pb != null) {
+      final prefixCmp = pa.prefix.compareTo(pb.prefix);
+      if (prefixCmp != 0) return prefixCmp;
+      final numberCmp = pa.number.compareTo(pb.number);
+      if (numberCmp != 0) return numberCmp;
+      return pa.suffix.compareTo(pb.suffix);
     }
-    String? findTerminal() {
-      for (final sid in stationsOnLine) {
-        var outDeg = adj[sid]?.length ?? 0;
-        var inDeg = 0;
-        for (final other in stationsOnLine) {
-          if (adj[other]?.contains(sid) == true) inDeg++;
-        }
-        if (outDeg + inDeg == 1) return sid;
-      }
-      return null;
-    }
-    final start = findTerminal() ?? stationsOnLine.first;
-    final ordered = <String>[start];
-    final visited = <String>{start};
-    var current = start;
-    while (true) {
-      final next = (adj[current] ?? []).where((n) => !visited.contains(n));
-      if (next.isEmpty) {
-        final back = (stationsOnLine.where(
-            (s) => (adj[s]?.contains(current) == true) && !visited.contains(s)));
-        if (back.isEmpty) break;
-        current = back.first;
-      } else {
-        current = next.first;
-      }
-      visited.add(current);
-      ordered.add(current);
-      if (ordered.length >= stationsOnLine.length) break;
-    }
-    return ordered;
+    return a.compareTo(b);
+  }
+}
+
+class _StationIdParts {
+  final String prefix;
+  final int number;
+  final String suffix;
+
+  const _StationIdParts({
+    required this.prefix,
+    required this.number,
+    required this.suffix,
+  });
+
+  static _StationIdParts? tryParse(String stationId) {
+    final match = RegExp(r'^([A-Za-z]+)(\d+)([A-Za-z]*)$')
+        .firstMatch(stationId.trim().toUpperCase());
+    if (match == null) return null;
+    final number = int.tryParse(match.group(2) ?? '');
+    if (number == null) return null;
+    return _StationIdParts(
+      prefix: match.group(1) ?? '',
+      number: number,
+      suffix: match.group(3) ?? '',
+    );
   }
 }

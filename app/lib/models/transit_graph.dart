@@ -1,5 +1,3 @@
-import '../services/operating_hours_service.dart';
-
 class TransitStation {
   final String id;
   final String name;
@@ -99,18 +97,6 @@ class TransitGraph {
       }
     }
 
-    for (final entry in lineStations.entries) {
-      final sorted = entry.value.toList()
-        ..sort((a, b) {
-          final sa = graph.stations[a]!;
-          final sb = graph.stations[b]!;
-          final latComp = sa.lat.compareTo(sb.lat);
-          if (latComp != 0) return latComp;
-          return sa.lng.compareTo(sb.lng);
-        });
-      graph.lineStationOrder[entry.key] = sorted;
-    }
-
     for (final c in json['connections'] as List<dynamic>) {
       final conn = c as Map<String, dynamic>;
       final edge = TransitEdge(
@@ -123,7 +109,51 @@ class TransitGraph {
       graph.adjacency.putIfAbsent(edge.from, () => []).add(edge);
     }
 
+    for (final entry in lineStations.entries) {
+      graph.lineStationOrder[entry.key] =
+          graph.orderedStationIdsForLine(entry.key, entry.value);
+    }
+
     return graph;
+  }
+
+  List<String> orderedStationIdsForLine(String line, Set<String> stationIds) {
+    if (stationIds.length < 2) return stationIds.toList();
+
+    final neighbors = <String, Set<String>>{};
+    for (final sid in stationIds) {
+      for (final edge in adjacency[sid] ?? <TransitEdge>[]) {
+        if (edge.line == line && stationIds.contains(edge.to)) {
+          neighbors.putIfAbsent(sid, () => {}).add(edge.to);
+        }
+      }
+    }
+
+    String? findTerminal() {
+      for (final sid in stationIds) {
+        if ((neighbors[sid] ?? const <String>{}).length == 1) return sid;
+      }
+      return null;
+    }
+
+    final start = findTerminal() ?? stationIds.first;
+    final ordered = <String>[start];
+    final visited = <String>{start};
+    var current = start;
+
+    while (visited.length < stationIds.length) {
+      final next = (neighbors[current] ?? const <String>[])
+          .where((n) => !visited.contains(n));
+      if (next.isEmpty) break;
+      current = next.first;
+      visited.add(current);
+      ordered.add(current);
+    }
+
+    for (final sid in stationIds) {
+      if (visited.add(sid)) ordered.add(sid);
+    }
+    return ordered;
   }
 
   TransitPath? findShortestPath(String originId, String destinationId, {DateTime? departureTime}) {
@@ -148,7 +178,6 @@ class TransitGraph {
       final edges = adjacency[currentId] ?? [];
       for (final edge in edges) {
         if (!stations.containsKey(edge.to)) continue;
-        if (!OperatingHoursService.isLineRunning(edge.line, at: departureTime)) continue;
         final nextId = edge.to;
         final prev = previous[currentId];
         final switching = prev != null && prev.line != null && prev.line != edge.line;

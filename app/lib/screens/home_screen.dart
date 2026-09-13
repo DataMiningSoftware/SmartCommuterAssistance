@@ -13,7 +13,6 @@ import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/location_privacy_service.dart';
 import '../services/navigation_state.dart';
-import '../services/operating_hours_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
@@ -755,7 +754,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       for (final edge in adjacency[current] ?? const <_HomeRouteConnection>[]) {
         if (visited.contains(edge.toStopId)) continue;
-        if (!OperatingHoursService.isLineRunning(edge.routeId, at: _departureTime)) continue;
         final penalty = preferComfort
             ? _crowdPenaltyForStop(crowdByStopId, edge.toStopId)
             : 0;
@@ -1214,60 +1212,6 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
-    if (!OperatingHoursService.isAnyLineRunning(at: widget.departureTime)) {
-      final nextOpen = OperatingHoursService.nextOpeningTime(at: widget.departureTime);
-      final message = nextOpen != null
-          ? 'The trains are closed and will open at ${OperatingHoursService.formatTime(nextOpen)}.'
-          : 'The trains are currently closed.';
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF8F9FC),
-              Color(0xFFEEF0F7),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: const Color(0xFFD0D5DD),
-            width: 1,
-          ),
-          boxShadow: appCardShadows(context, prominent: true),
-        ),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.bedtime_rounded,
-              size: 64,
-              color: Color(0xFF667085),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Trains are closed',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF344054),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF667085),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 220),

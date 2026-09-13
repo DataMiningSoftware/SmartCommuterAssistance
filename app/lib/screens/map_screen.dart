@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../constants/route_colors.dart';
 import '../models/map_station.dart';
 import '../models/schematic_layout.dart';
 import '../models/transit_graph.dart';
@@ -28,13 +29,17 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen>
+    with SingleTickerProviderStateMixin {
   _MapMode _mode = _MapMode.schematic;
 
   SchematicLayout? _layout;
   TransitGraph? _graph;
   Map<String, LatLng> _stationCoords = {};
   final Map<String, String> _stationIdToGraphId = {};
+  final Map<String, String> _graphIdToStationId = {};
+  final Map<String, MapStation> _stationById = {};
+  final Map<String, String> _nameToStationId = {};
   List<MapStation> _allStations = [];
 
   MapSelectionController? _controller;
@@ -43,20 +48,22 @@ class _MapScreenState extends State<MapScreen> {
   bool _isLoading = true;
 
   static const Set<String> _hiddenLineIds = {
-    '1', '2',   // KTM Batu Caves and Tanjung Malim lines
-    '6', '7',   // KLIA Ekspres and KLIA Transit
-    '10',       // KTM Skypark
-    '11',       // Johan Setia (Coming Soon)
+    '11', // Johan Setia (Coming Soon)
   };
 
   static const LatLng _klCenter = LatLng(3.1390, 101.6869);
   static const double _labelZoomThreshold = 14.0;
   final MapController _mapController = MapController();
-  double _geoZoom = 12.0;
+  double _geoZoom = 11.6;
+  late final AnimationController _pulse;
 
   @override
   void initState() {
     super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
     _bootstrap();
   }
 
@@ -122,6 +129,20 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       _allStations = allStations;
+      _stationById.clear();
+      _nameToStationId.clear();
+      for (final ms in allStations) {
+        _stationById[ms.stationId] = ms;
+        _nameToStationId.putIfAbsent(
+          StationNameMatcher.instance.normalize(ms.name),
+          () => ms.stationId,
+        );
+      }
+      _graphIdToStationId.clear();
+      for (final entry in _stationIdToGraphId.entries) {
+        _graphIdToStationId[entry.value] = entry.key;
+      }
+
       final unmatchedCoords = <String>[];
       _stationCoords = <String, LatLng>{};
       for (final ms in allStations) {
@@ -139,19 +160,7 @@ class _MapScreenState extends State<MapScreen> {
         );
       }
 
-      final orderedNamesByRoute = <String, List<String>>{};
-      final stopsByRoute = <String, List<TransitStop>>{};
-      for (final stop in network.stopsById.values) {
-        stopsByRoute.putIfAbsent(stop.routeId, () => []).add(stop);
-      }
-      for (final entry in stopsByRoute.entries) {
-        final sorted = List<TransitStop>.from(entry.value)
-          ..sort((a, b) => a.sequenceOrder.compareTo(b.sequenceOrder));
-        orderedNamesByRoute[entry.key] =
-            sorted.map((s) => s.stopName).toList();
-      }
-
-      layout.reorderUsingGraph(graph, orderedNamesByRoute: orderedNamesByRoute);
+      layout.reorderUsingGraph(graph);
 
       final baseUrl = BackendConfigService().baseUrl.value;
       final planner = TransitPlannerService(
@@ -169,6 +178,8 @@ class _MapScreenState extends State<MapScreen> {
             _stationIdToGraphId[station.stationId] ?? station.stationId,
       );
       _controller!.addListener(_onControllerChanged);
+      ActiveTripService.instance.activeTrip.addListener(_onActiveTripChanged);
+      _hydrateFromActiveTrip();
 
       if (!mounted) return;
       setState(() {
@@ -187,13 +198,68 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    ActiveTripService.instance.activeTrip.removeListener(_onActiveTripChanged);
     _controller?.removeListener(_onControllerChanged);
     _controller?.dispose();
     _mapController.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
   void _onControllerChanged() => setState(() {});
+
+  void _onActiveTripChanged() {
+    if (!mounted) return;
+    _hydrateFromActiveTrip();
+  }
+
+  String? _schematicIdFor(String stopId, String name) {
+    final byId = _graphIdToStationId[stopId];
+    if (byId != null && _stationById.containsKey(byId)) return byId;
+    if (_stationById.containsKey(stopId)) return stopId;
+    return _nameToStationId[StationNameMatcher.instance.normalize(name)];
+  }
+
+  void _hydrateFromActiveTrip() {
+    final controller = _controller;
+    if (controller == null) return;
+    final trip = ActiveTripService.instance.activeTrip.value;
+    if (trip == null || trip.stops.isEmpty) {
+      controller.clearActiveTrip();
+      return;
+    }
+
+    final fromId = _schematicIdFor(trip.originStopId, trip.originName);
+    final toId = _schematicIdFor(trip.destinationStopId, trip.destinationName);
+    if (fromId == null || toId == null) {
+      controller.clearActiveTrip();
+      return;
+    }
+
+    final segments = <RouteSegment>[];
+    var prevId = fromId;
+    for (final stop in trip.stops) {
+      final sid = _schematicIdFor(stop.stopId, stop.stopName);
+      if (sid == null || sid == prevId) continue;
+      segments.add(RouteSegment(
+        fromStationId: prevId,
+        toStationId: sid,
+        line: normalizeRouteId(stop.routeId),
+      ));
+      prevId = sid;
+    }
+
+    if (segments.isEmpty) {
+      controller.clearActiveTrip();
+      return;
+    }
+
+    controller.showActiveTrip(
+      from: _stationById[fromId]!,
+      to: _stationById[toId]!,
+      segments: segments,
+    );
+  }
 
   void _onStationTapped(MapStation station) {
     _controller?.selectStation(station);
@@ -280,8 +346,11 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildGeographicView() {
     if (_controller == null) return const SizedBox.shrink();
-    final routeStationIds = _routeStationIds();
-    final hasRoute = routeStationIds.isNotEmpty;
+    final segments = _routeSegments();
+    final hasRoute = _controller!.isRouteActive;
+    final routeStationIds = <String>{
+      for (final s in segments) ...[s.fromStationId, s.toStationId],
+    };
 
     return Stack(
       children: [
@@ -306,8 +375,27 @@ class _MapScreenState extends State<MapScreen> {
                 urlTemplate: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
                 userAgentPackageName: 'com.nawfal.smartcommuter',
               ),
-              PolylineLayer(polylines: _buildLinePolylines(routeStationIds, hasRoute)),
-              MarkerLayer(markers: _buildStationMarkers(routeStationIds, hasRoute)),
+              PolylineLayer(
+                  polylines: _buildLinePolylines(segments, hasRoute)),
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, _) => MarkerLayer(
+                  markers: _buildStationMarkers(
+                      routeStationIds, hasRoute, _pulse.value),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          right: 12,
+          top: 12,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MapZoomButton(icon: Icons.add_rounded, onTap: _zoomIn),
+              const SizedBox(height: 8),
+              _MapZoomButton(icon: Icons.remove_rounded, onTap: _zoomOut),
             ],
           ),
         ),
@@ -321,33 +409,23 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Map<String, String>? _nameToSchematicId;
+  List<RouteSegment> _routeSegments() =>
+      _controller?.routeSegments ?? const <RouteSegment>[];
 
-  Map<String, String> _getNameToSchematicId() {
-    if (_nameToSchematicId == null && _layout != null) {
-      _nameToSchematicId = {};
-      final matcher = StationNameMatcher.instance;
-      for (final entry in _layout!.stations.entries) {
-        _nameToSchematicId![matcher.normalize(entry.value.name)] = entry.key;
-      }
-    }
-    return _nameToSchematicId ?? const {};
+  void _zoomIn() {
+    final target = (_geoZoom + 1).clamp(9.0, 18.0);
+    _mapController.move(_mapController.camera.center, target);
+    setState(() => _geoZoom = target);
   }
 
-  Set<String> _routeStationIds() {
-    final route = _controller?.confirmedRoute ?? _controller?.candidateRoute;
-    if (route == null) return {};
-    final nameMap = _getNameToSchematicId();
-    if (nameMap.isEmpty) return {};
-    final matcher = StationNameMatcher.instance;
-    return route.steps
-        .map((s) => nameMap[matcher.normalize(s.station)])
-        .where((id) => id != null && id.isNotEmpty)
-        .map((id) => id!)
-        .toSet();
+  void _zoomOut() {
+    final target = (_geoZoom - 1).clamp(9.0, 18.0);
+    _mapController.move(_mapController.camera.center, target);
+    setState(() => _geoZoom = target);
   }
 
-  List<Polyline> _buildLinePolylines(Set<String> routeIds, bool hasRoute) {
+  List<Polyline> _buildLinePolylines(
+      List<RouteSegment> segments, bool hasRoute) {
     final polylines = <Polyline>[];
     if (_layout == null) return polylines;
 
@@ -359,19 +437,33 @@ class _MapScreenState extends State<MapScreen> {
           .toList();
       if (points.length < 2) continue;
 
-      final idsOnRoute = line.stationIds.where(routeIds.contains).toSet();
-      final isOnRoute = !hasRoute || idsOnRoute.length >= 2;
-
       polylines.add(Polyline(
         points: points,
-        strokeWidth: isOnRoute && hasRoute ? 5.0 : 3.0,
-        color: line.color.withValues(alpha: isOnRoute ? (hasRoute ? 1.0 : 0.7) : 0.15),
+        strokeWidth: hasRoute ? 2.5 : 3.0,
+        color: hasRoute
+            ? kMapDisabledGrey.withValues(alpha: 0.3)
+            : line.color.withValues(alpha: 0.85),
       ));
+    }
+
+    if (hasRoute) {
+      for (final segment in segments) {
+        if (segment.isTransfer) continue;
+        final a = _stationCoords[segment.fromStationId];
+        final b = _stationCoords[segment.toStationId];
+        if (a == null || b == null) continue;
+        polylines.add(Polyline(
+          points: [a, b],
+          strokeWidth: 5.0,
+          color: getRouteColor(segment.line),
+        ));
+      }
     }
     return polylines;
   }
 
-  List<Marker> _buildStationMarkers(Set<String> routeIds, bool hasRoute) {
+  List<Marker> _buildStationMarkers(
+      Set<String> routeStationIds, bool hasRoute, double blink) {
     final showLabels = _geoZoom >= _labelZoomThreshold;
     final markers = <Marker>[];
 
@@ -380,48 +472,73 @@ class _MapScreenState extends State<MapScreen> {
       final coord = _stationCoords[station.stationId];
       if (coord == null) continue;
 
-      final isSelected = station.stationId == _controller?.from?.stationId ||
-          station.stationId == _controller?.to?.stationId ||
-          routeIds.contains(station.stationId);
+      final isCurrent = station.stationId == _controller?.from?.stationId;
+      final isDestination = station.stationId == _controller?.to?.stationId;
+      final onRoute = routeStationIds.contains(station.stationId);
+
+      final Color dotColor;
+      if (hasRoute && !onRoute) {
+        dotColor = kMapDisabledGrey;
+      } else if (isCurrent) {
+        dotColor = Color.lerp(Colors.amber, Colors.deepOrangeAccent, blink)!;
+      } else if (isDestination) {
+        dotColor = Colors.amber;
+      } else {
+        dotColor = Colors.white;
+      }
+
+      final double dotSize =
+          isCurrent ? 14 + 4 * blink : (isDestination || onRoute ? 12 : 8);
+
+      final dot = Container(
+        width: dotSize,
+        height: dotSize,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: dotColor,
+          border: Border.all(color: Colors.black87, width: 1.2),
+        ),
+      );
 
       markers.add(Marker(
         point: coord,
-        width: showLabels ? 150 : 30,
-        height: 30,
-        alignment: Alignment.centerLeft,
+        width: showLabels ? 150 : 44,
+        height: 44,
+        alignment: Alignment.center,
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => _controller?.selectStation(station),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: isSelected ? 14 : 8,
-                height: isSelected ? 14 : 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? Colors.amber : Colors.white,
-                  border: Border.all(color: Colors.black87, width: 1.2),
-                ),
-              ),
-              if (showLabels) ...[
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    StationNameMatcher.instance.displayName(station.name),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: Colors.black87,
-                      shadows: const [
-                        Shadow(color: Colors.white, blurRadius: 2),
-                      ],
+          child: showLabels
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Center(child: dot),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ],
-          ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        StationNameMatcher.instance.displayName(station.name),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isCurrent || isDestination
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: hasRoute && !onRoute
+                              ? kMapDisabledGrey
+                              : Colors.black87,
+                          shadows: const [
+                            Shadow(color: Colors.white, blurRadius: 2),
+                          ],
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                )
+              : Center(child: dot),
         ),
       ));
     }
@@ -447,5 +564,31 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
     return closestMeters <= 150 ? closest : null;
+  }
+}
+
+class _MapZoomButton extends StatelessWidget {
+  const _MapZoomButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface,
+      elevation: 3,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, size: 22, color: scheme.onSurface),
+        ),
+      ),
+    );
   }
 }

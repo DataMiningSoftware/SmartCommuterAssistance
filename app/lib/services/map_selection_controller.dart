@@ -1,11 +1,30 @@
 import 'package:flutter/foundation.dart';
 
+import '../constants/route_colors.dart';
 import '../models/map_station.dart';
 import '../models/route_info.dart';
 import '../services/transit_planner_service.dart';
 import '../services/active_trip_service.dart';
 
 enum SelectionStage { none, fromSelected, routePreview, confirmed }
+
+/// A single consecutive hop along the selected route, from one schematic
+/// station to the next, carrying the line that serves that hop. The route is
+/// rendered as the ordered list of these segments so each segment keeps its
+/// own line colour right up to an interchange.
+class RouteSegment {
+  final String fromStationId;
+  final String toStationId;
+  final String line;
+
+  const RouteSegment({
+    required this.fromStationId,
+    required this.toStationId,
+    required this.line,
+  });
+
+  bool get isTransfer => line == 'INTERCHANGE' || line.isEmpty;
+}
 
 class MapSelectionController extends ChangeNotifier {
   MapSelectionController({
@@ -30,6 +49,7 @@ class MapSelectionController extends ChangeNotifier {
   MapStation? to;
   RouteInfo? candidateRoute;
   RouteInfo? confirmedRoute;
+  List<RouteSegment>? _segmentsOverride;
   bool isLoadingRoute = false;
   String? errorMessage;
 
@@ -37,6 +57,66 @@ class MapSelectionController extends ChangeNotifier {
   int get transferCount {
     if (candidateRoute == null) return 0;
     return candidateRoute!.steps.where((s) => s.type == RouteStepType.transfer).length;
+  }
+
+  bool get isRouteActive =>
+      _segmentsOverride != null ||
+      confirmedRoute != null ||
+      candidateRoute != null;
+
+  /// The currently-selected route as an ordered list of consecutive hops.
+  ///
+  /// Each segment is `from -> to` with the line serving that hop, so the map
+  /// can colour each hop in its own line colour (changing at interchanges)
+  /// instead of tinting a whole line.
+  List<RouteSegment> get routeSegments {
+    final override = _segmentsOverride;
+    if (override != null) return override;
+
+    final route = confirmedRoute ?? candidateRoute;
+    if (route == null || from == null) return const <RouteSegment>[];
+
+    final segments = <RouteSegment>[];
+    var prevId = from!.stationId;
+    for (final step in route.steps) {
+      final sid = step.stationId;
+      if (sid.isEmpty) continue;
+      segments.add(RouteSegment(
+        fromStationId: prevId,
+        toStationId: sid,
+        line: normalizeRouteId(step.line),
+      ));
+      prevId = sid;
+    }
+    return segments;
+  }
+
+  /// Displays an already-planned journey (e.g. one created on the home or
+  /// track page) as the active highlighted route on the map.
+  void showActiveTrip({
+    required MapStation from,
+    required MapStation to,
+    required List<RouteSegment> segments,
+  }) {
+    this.from = from;
+    this.to = to;
+    _segmentsOverride = segments;
+    candidateRoute = null;
+    confirmedRoute = null;
+    errorMessage = null;
+    stage = SelectionStage.confirmed;
+    notifyListeners();
+  }
+
+  void clearActiveTrip() {
+    _segmentsOverride = null;
+    from = null;
+    to = null;
+    candidateRoute = null;
+    confirmedRoute = null;
+    errorMessage = null;
+    stage = SelectionStage.none;
+    notifyListeners();
   }
 
   Future<void> selectStation(MapStation station) async {
@@ -156,6 +236,7 @@ class MapSelectionController extends ChangeNotifier {
   }
 
   void clearSelection() {
+    _segmentsOverride = null;
     from = null;
     to = null;
     candidateRoute = null;

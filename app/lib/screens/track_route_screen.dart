@@ -12,7 +12,6 @@ import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/navigation_state.dart';
 import '../services/notification_service.dart';
-import '../services/operating_hours_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 
@@ -1819,9 +1818,21 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       totalMinutes += movementMinutes + waitMinutes;
     }
 
-    final arrivalTime = DateTime.now().add(Duration(minutes: totalMinutes));
+    final primaryRoute = _routeStops.isEmpty ? '' : _routeStops.last.routeId;
+    double historicalCorrection = 0;
+    try {
+      historicalCorrection = await _crowdReportsService.fetchEtaCorrection(
+        routeId: primaryRoute,
+      );
+    } catch (_) {
+      historicalCorrection = 0;
+    }
+
+    final correctedMinutes =
+        math.max(1, (totalMinutes + historicalCorrection).round());
+    final arrivalTime = DateTime.now().add(Duration(minutes: correctedMinutes));
     ActiveTripService.instance.pinEta(
-      remainingMinutes: totalMinutes,
+      remainingMinutes: correctedMinutes,
       arrivalTime: arrivalTime,
     );
     if (!mounted) return;
@@ -2366,10 +2377,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           subtitle: 'Tracking',
         ),
       ),
-      body: trip == null && !OperatingHoursService.isAnyLineRunning()
-              ? _buildSleepingTrain()
-              : trip == null
-                  ? _EmptyTrackState(
+      body: trip == null
+              ? _EmptyTrackState(
                   controller: _emptyTripSearchController,
                   stationOptions: _stationOptions,
                   closedByStopId: _closedByStopId,
@@ -2407,37 +2416,6 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   },
                 )
               : _buildTrackingBody(trip),
-    );
-  }
-
-  Widget _buildSleepingTrain() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.bedtime_rounded, size: 64, color: Color(0xFF9E9E9E)),
-            const SizedBox(height: 16),
-            Text(
-              'System Unavailable',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'All trains have stopped for the night.\n'
-              'Service resumes at '
-              '${OperatingHoursService.formatTime(OperatingHoursService.nextOpeningTime() ?? DateTime.now())}.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

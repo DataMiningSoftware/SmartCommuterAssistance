@@ -922,6 +922,51 @@ class CrowdReportsService {
     }
   }
 
+  Future<double> fetchEtaCorrection({
+    required String routeId,
+    DateTime? at,
+  }) async {
+    final time = at ?? DateTime.now();
+    final normalizedRoute = routeId.trim().toUpperCase();
+    if (normalizedRoute.isEmpty) return 0;
+
+    final isWeekend = time.weekday == DateTime.saturday ||
+        time.weekday == DateTime.sunday;
+
+    Future<double> averageFor({required bool useHour}) async {
+      try {
+        var query = _client
+            .from('trip_feedback')
+            .select('deviation_min')
+            .eq('route_id', normalizedRoute)
+            .eq('is_weekend', isWeekend);
+        if (useHour) {
+          query = query.eq('time_of_day', time.hour);
+        }
+        final rows =
+            await query.limit(100).timeout(const Duration(seconds: 5));
+        final values = <double>[];
+        for (final row in rows.whereType<Map>()) {
+          final raw = row['deviation_min'];
+          final value = raw is num
+              ? raw.toDouble()
+              : double.tryParse(raw?.toString() ?? '');
+          if (value != null) values.add(value);
+        }
+        if (values.isEmpty) return 0.0;
+        return values.reduce((a, b) => a + b) / values.length;
+      } catch (_) {
+        return 0.0;
+      }
+    }
+
+    var correction = await averageFor(useHour: true);
+    if (correction == 0) {
+      correction = await averageFor(useHour: false);
+    }
+    return correction.clamp(-15.0, 15.0).toDouble();
+  }
+
   CrowdReport? _toCrowdReport(Map<String, dynamic> map) {
     final stopId = map['stop_id']?.toString() ?? '';
     if (stopId.isEmpty) return null;

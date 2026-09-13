@@ -11,6 +11,7 @@ class ScheduledTrainArrival {
   final String routeShortName;
   final String routeLongName;
   final String destination;
+  final String directionId;
   final DateTime arrivalTime;
   final int minutesUntil;
   final String source;
@@ -22,6 +23,7 @@ class ScheduledTrainArrival {
     required this.routeShortName,
     required this.routeLongName,
     required this.destination,
+    required this.directionId,
     required this.arrivalTime,
     required this.minutesUntil,
     required this.source,
@@ -35,6 +37,7 @@ class ScheduledTrainArrival {
       routeShortName: json['routeShortName']?.toString() ?? '',
       routeLongName: json['routeLongName']?.toString() ?? '',
       destination: json['destination']?.toString() ?? '',
+      directionId: json['directionId']?.toString() ?? '',
       arrivalTime: DateTime.tryParse(json['arrivalTime']?.toString() ?? '') ??
           DateTime.now(),
       minutesUntil: _toInt(json['minutesUntil']),

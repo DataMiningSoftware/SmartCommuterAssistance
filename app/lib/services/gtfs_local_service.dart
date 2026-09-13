@@ -85,6 +85,7 @@ class GtfsLocalService {
           routeShortName: group.routeShortName,
           routeLongName: group.routeLongName,
           destination: group.destination,
+          directionId: '',
           arrivalTime: arrivalDt,
           minutesUntil: (t - secs) ~/ 60,
           source: 'gtfs_static_schedule',

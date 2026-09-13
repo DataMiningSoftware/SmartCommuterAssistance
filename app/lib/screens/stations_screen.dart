@@ -9,7 +9,6 @@ import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
-import '../services/operating_hours_service.dart';
 import '../services/station_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
@@ -1200,10 +1199,6 @@ class _StationsScreenState extends State<StationsScreen> {
       return const SizedBox.shrink();
     }
 
-    if (!OperatingHoursService.isAnyLineRunning()) {
-      return _buildSleepingTrain();
-    }
-
     return Column(
       children: [
         Padding(
@@ -1235,37 +1230,6 @@ class _StationsScreenState extends State<StationsScreen> {
               : _buildLoadedBody(),
         ),
       ],
-    );
-  }
-
-  Widget _buildSleepingTrain() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.bedtime_rounded, size: 64, color: Color(0xFF9E9E9E)),
-            const SizedBox(height: 16),
-            Text(
-              'System Unavailable',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'All trains have stopped for the night.\n'
-              'Service resumes at '
-              '${OperatingHoursService.formatTime(OperatingHoursService.nextOpeningTime() ?? DateTime.now())}.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
