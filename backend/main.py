@@ -263,11 +263,16 @@ def list_stations() -> StationListResponse:
 def submit_crowd_report(
     body: CrowdReportRequest,
     x_user_id: str | None = Header(None),
+    authorization: str | None = Header(None),
 ) -> CrowdReportResponse:
+    try:
+        resolved_user_id = _resolve_user_id(authorization, x_user_id)
+    except HTTPException:
+        resolved_user_id = x_user_id
     result = crowd_service.submit_report(
         stop_id=body.stop_id,
         occupancy_level=body.occupancy_level,
-        user_id=x_user_id,
+        user_id=resolved_user_id,
         latitude=body.latitude,
         longitude=body.longitude,
         session_id=body.session_id,
@@ -478,13 +483,30 @@ def plan_trip(
     )
 
 
+def _resolve_user_id(authorization: str | None, x_user_id: str | None) -> str:
+    token = None
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization[7:].strip()
+    if token:
+        try:
+            response = crowd_service._get_supabase().auth.get_user(jwt=token)
+            if response is not None and response.user is not None and response.user.id:
+                return response.user.id
+        except Exception:
+            pass
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if x_user_id:
+        return x_user_id
+    raise HTTPException(status_code=401, detail="User id required")
+
+
 @app.post("/race/start", response_model=RaceStartResponse)
 def start_race(
     body: RaceStartRequest,
     x_user_id: str | None = Header(None),
+    authorization: str | None = Header(None),
 ) -> RaceStartResponse:
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="User id required")
+    x_user_id = _resolve_user_id(authorization, x_user_id)
 
     supabase = crowd_service._get_supabase()
     party = (
@@ -675,9 +697,9 @@ def _finalize_race(race_id: str) -> list[dict]:
 def submit_race_checkpoint(
     body: RaceCheckpointRequest,
     x_user_id: str | None = Header(None),
+    authorization: str | None = Header(None),
 ) -> RaceCheckpointResponse:
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="User id required")
+    x_user_id = _resolve_user_id(authorization, x_user_id)
 
     supabase = crowd_service._get_supabase()
     race = (
@@ -761,9 +783,9 @@ def submit_race_checkpoint(
 def finalize_race(
     body: RaceFinalizeRequest,
     x_user_id: str | None = Header(None),
+    authorization: str | None = Header(None),
 ) -> RaceFinalizeResponse:
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="User id required")
+    x_user_id = _resolve_user_id(authorization, x_user_id)
     results = _finalize_race(body.race_id)
     return RaceFinalizeResponse(accepted=True, results=results)
 

@@ -257,9 +257,9 @@ class CrowdService:
             if user_id:
                 data["user_id"] = user_id
             if latitude is not None:
-                data["latitude"] = latitude
+                data["latitude"] = round(latitude, 2)
             if longitude is not None:
-                data["longitude"] = longitude
+                data["longitude"] = round(longitude, 2)
             if session_id is not None:
                 data["session_id"] = session_id
 

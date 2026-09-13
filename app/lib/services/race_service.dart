@@ -125,9 +125,11 @@ class RaceService {
   RealtimeChannel? _checkpointsChannel;
 
   String? get userId => _client.auth.currentUser?.id;
+  String? get _accessToken => _client.auth.currentSession?.accessToken;
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
+        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         if (userId != null) 'x-user-id': userId!,
       };
 

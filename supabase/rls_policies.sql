@@ -9,11 +9,12 @@ DO $$ BEGIN
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'crowd_reports') THEN
     EXECUTE 'ALTER TABLE crowd_reports ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Anyone can read crowd_reports" ON crowd_reports';
+    EXECUTE 'DROP POLICY IF EXISTS "Authenticated users can read crowd_reports" ON crowd_reports';
     EXECUTE 'DROP POLICY IF EXISTS "Authenticated users can insert crowd_reports" ON crowd_reports';
     EXECUTE 'DROP POLICY IF EXISTS "Users can update their own crowd_reports" ON crowd_reports';
 
-    EXECUTE 'CREATE POLICY "Anyone can read crowd_reports"
-      ON crowd_reports FOR SELECT USING (true)';
+    EXECUTE 'CREATE POLICY "Authenticated users can read crowd_reports"
+      ON crowd_reports FOR SELECT TO authenticated USING (true)';
     EXECUTE 'CREATE POLICY "Authenticated users can insert crowd_reports"
       ON crowd_reports FOR INSERT WITH CHECK (auth.role() = ''authenticated'')';
     EXECUTE 'CREATE POLICY "Users can update their own crowd_reports"
