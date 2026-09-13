@@ -88,6 +88,20 @@ def pull_trip_feedback(supabase, days: int = 90) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def pull_route_choice_feedback(supabase, days: int = 90) -> pd.DataFrame:
+    cutoff = (datetime.now(tz=KL_TZ) - timedelta(days=days)).isoformat()
+    rows = _paginated_select(
+        supabase,
+        "route_choice_feedback",
+        (
+            "user_id,route_id,origin_stop,dest_stop,agent_path,chosen_path,"
+            "agent_predicted_min,chosen_actual_min,route_source,created_at"
+        ),
+        cutoff,
+    )
+    return pd.DataFrame(rows)
+
+
 def build_training_dataframe(
     reports_df: pd.DataFrame,
     stop_metadata: dict,
@@ -206,6 +220,29 @@ def main():
         print(f"  Saved {len(summary)} trip deviation summaries to {deviation_path}")
     else:
         print("  No trip_feedback data yet (no completed trips).")
+
+    choice_df = pull_route_choice_feedback(supabase, days=90)
+    if not choice_df.empty:
+        choice_df["chosen_actual_min"] = pd.to_numeric(
+            choice_df["chosen_actual_min"], errors="coerce"
+        )
+        choice_df["agent_predicted_min"] = pd.to_numeric(
+            choice_df["agent_predicted_min"], errors="coerce"
+        )
+        choice_df["human_beat_agent"] = (
+            choice_df["chosen_actual_min"] < choice_df["agent_predicted_min"]
+        ).astype(int)
+        choice_path = script_dir / "route_choice_summary.csv"
+        summary = choice_df.groupby(["route_id", "route_source"], as_index=False).agg(
+            beat_agent_count=("human_beat_agent", "sum"),
+            avg_actual_min=("chosen_actual_min", "mean"),
+            avg_predicted_min=("agent_predicted_min", "mean"),
+            sample_count=("chosen_actual_min", "count"),
+        )
+        summary.to_csv(choice_path, index=False)
+        print(f"  Saved {len(summary)} route choice summaries to {choice_path}")
+    else:
+        print("  No route_choice_feedback data yet.")
 
 
 if __name__ == "__main__":

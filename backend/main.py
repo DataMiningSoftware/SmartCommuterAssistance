@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import csv
+import json
 import logging
 import os
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -170,6 +172,41 @@ class CrowdBlendResponse(BaseModel):
     occupancy_level: int
     source_type: str
     user_reports_count: int
+
+
+class RaceStartRequest(BaseModel):
+    party_id: str
+    category: str
+    target_mode: str = "shared_destination"
+    destination_stop_id: Optional[str] = None
+
+
+class RaceStartResponse(BaseModel):
+    race_id: str
+
+
+class RaceCheckpointRequest(BaseModel):
+    race_id: str
+    station_id: str
+    seq: int
+    crowd_level: Optional[int] = None
+
+
+class RaceCheckpointResponse(BaseModel):
+    accepted: bool
+    plausibility: str
+    station_id: str
+    seq: int
+    message: str = ""
+
+
+class RaceFinalizeRequest(BaseModel):
+    race_id: str
+
+
+class RaceFinalizeResponse(BaseModel):
+    accepted: bool
+    results: list[dict]
 
 
 app = FastAPI(title="Smart Commuter Backend", version="0.3.0")
@@ -439,6 +476,296 @@ def plan_trip(
         routes=candidates,
         generatedAt=utc_now_iso(),
     )
+
+
+@app.post("/race/start", response_model=RaceStartResponse)
+def start_race(
+    body: RaceStartRequest,
+    x_user_id: str | None = Header(None),
+) -> RaceStartResponse:
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="User id required")
+
+    supabase = crowd_service._get_supabase()
+    party = (
+        supabase.table("parties")
+        .select("id,owner_id,state")
+        .eq("id", body.party_id)
+        .limit(1)
+        .execute()
+    )
+    if not party.data:
+        raise HTTPException(status_code=404, detail="Party not found")
+    owner_id = party.data[0]["owner_id"]
+    if owner_id != x_user_id:
+        raise HTTPException(status_code=403, detail="Only the party owner can start a race")
+    if party.data[0]["state"] not in ("open", "active"):
+        raise HTTPException(status_code=409, detail="Party is not active")
+
+    members = (
+        supabase.table("party_members")
+        .select("user_id")
+        .eq("party_id", body.party_id)
+        .execute()
+    )
+    if not members.data:
+        raise HTTPException(status_code=409, detail="Party has no members")
+
+    race_id = str(uuid.uuid4())
+    supabase.table("races").insert(
+        {
+            "id": race_id,
+            "party_id": body.party_id,
+            "category": body.category,
+            "target_mode": body.target_mode,
+            "destination_stop_id": body.destination_stop_id,
+            "status": "active",
+            "started_at": datetime.now(timezone.utc).isoformat(),
+        }
+    ).execute()
+
+    participant_rows = [
+        {
+            "race_id": race_id,
+            "user_id": row["user_id"],
+            "destination_stop_id": body.destination_stop_id,
+            "status": "racing",
+        }
+        for row in members.data
+    ]
+    supabase.table("race_participants").insert(participant_rows).execute()
+
+    supabase.table("parties").update({"state": "active"}).eq(
+        "id", body.party_id
+    ).execute()
+
+    return RaceStartResponse(race_id=race_id)
+
+
+def _minimum_travel_minutes(from_stop: str, to_stop: str) -> int:
+    network = load_network()
+    candidate = shortest_path(
+        origin_stop_id=from_stop.upper(),
+        destination_stop_id=to_stop.upper(),
+        adjacency=network["adjacency"],
+        profile=_RouteProfile("fastest", transfer_penalty=0, crowd_penalty=0),
+    )
+    if candidate is None:
+        return 60
+    return max(candidate.total_minutes, 1)
+
+
+def _count_transfers(network: dict, path_station_ids: list[str]) -> int:
+    transfers = 0
+    prev_line: str | None = None
+    for i in range(len(path_station_ids) - 1):
+        a = path_station_ids[i].upper()
+        b = path_station_ids[i + 1].upper()
+        edge = next(
+            (e for e in network["adjacency"].get(a, []) if e.to_stop_id == b),
+            None,
+        )
+        if edge is None or edge.is_transfer:
+            continue
+        if prev_line is not None and edge.route_id != prev_line:
+            transfers += 1
+        prev_line = edge.route_id
+    return transfers
+
+
+def _finalize_race(race_id: str) -> list[dict]:
+    supabase = crowd_service._get_supabase()
+    race = (
+        supabase.table("races")
+        .select("id,category,started_at")
+        .eq("id", race_id)
+        .limit(1)
+        .execute()
+    )
+    if not race.data:
+        return []
+    race_row = race.data[0]
+    category = race_row["category"]
+
+    participants = (
+        supabase.table("race_participants")
+        .select("*")
+        .eq("race_id", race_id)
+        .execute()
+    )
+    checkpoints = (
+        supabase.table("race_checkpoints")
+        .select("user_id,seq,crowd_level,plausibility")
+        .eq("race_id", race_id)
+        .order("seq")
+        .execute()
+    )
+    checkpoints_by_user: dict[str, list[dict]] = {}
+    for cp in checkpoints.data:
+        checkpoints_by_user.setdefault(cp["user_id"], []).append(cp)
+
+    network = load_network()
+    results: list[dict] = []
+    for p in participants.data:
+        user_id = p["user_id"]
+        user_cps = checkpoints_by_user.get(user_id, [])
+        value: float | None = None
+        if category == "fastest":
+            if p.get("status") == "finished" and p.get("finished_at"):
+                started = datetime.fromisoformat(
+                    race_row["started_at"].replace("Z", "+00:00")
+                )
+                finished = datetime.fromisoformat(
+                    p["finished_at"].replace("Z", "+00:00")
+                )
+                value = round((finished - started).total_seconds() / 60.0, 1)
+        elif category == "comfort":
+            verified = [
+                cp for cp in user_cps if cp.get("plausibility") != "disputed"
+            ]
+            if verified:
+                value = round(
+                    sum(cp.get("crowd_level") or 0 for cp in verified)
+                    / len(verified),
+                    1,
+                )
+        elif category == "efficient":
+            chosen_path = p.get("chosen_path") or p.get("agent_path")
+            path_ids: list[str] = []
+            if chosen_path:
+                try:
+                    decoded = json.loads(chosen_path)
+                    if isinstance(decoded, list):
+                        path_ids = [str(x) for x in decoded]
+                except (ValueError, TypeError):
+                    path_ids = []
+            value = float(_count_transfers(network, path_ids)) if path_ids else None
+
+        results.append(
+            {
+                "user_id": user_id,
+                "status": p.get("status"),
+                "result_value": value,
+            }
+        )
+
+    ranked = [r for r in results if r["result_value"] is not None]
+    ranked.sort(key=lambda r: r["result_value"])
+    for index, r in enumerate(ranked, start=1):
+        supabase.table("race_participants").update(
+            {"result_value": r["result_value"], "rank": index}
+        ).eq("race_id", race_id).eq("user_id", r["user_id"]).execute()
+        r["rank"] = index
+
+    for r in results:
+        if r["result_value"] is None:
+            supabase.table("race_participants").update(
+                {"status": "dnf"}
+            ).eq("race_id", race_id).eq("user_id", r["user_id"]).execute()
+            r["rank"] = None
+
+    supabase.table("races").update(
+        {"status": "finished", "ended_at": datetime.now(timezone.utc).isoformat()}
+    ).eq("id", race_id).execute()
+
+    return ranked
+
+
+@app.post("/race/checkpoint", response_model=RaceCheckpointResponse)
+def submit_race_checkpoint(
+    body: RaceCheckpointRequest,
+    x_user_id: str | None = Header(None),
+) -> RaceCheckpointResponse:
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="User id required")
+
+    supabase = crowd_service._get_supabase()
+    race = (
+        supabase.table("races")
+        .select("id,status,party_id,target_mode,destination_stop_id")
+        .eq("id", body.race_id)
+        .limit(1)
+        .execute()
+    )
+    if not race.data:
+        raise HTTPException(status_code=404, detail="Race not found")
+    race_row = race.data[0]
+    if race_row["status"] != "active":
+        raise HTTPException(status_code=409, detail="Race is not active")
+
+    participant = (
+        supabase.table("race_participants")
+        .select("*")
+        .eq("race_id", body.race_id)
+        .eq("user_id", x_user_id)
+        .limit(1)
+        .execute()
+    )
+    if not participant.data:
+        raise HTTPException(status_code=403, detail="Not a participant in this race")
+    part = participant.data[0]
+
+    station_id = body.station_id.strip().upper()
+    plausibility = "ok"
+    previous = (
+        supabase.table("race_checkpoints")
+        .select("station_id,reached_at")
+        .eq("race_id", body.race_id)
+        .eq("user_id", x_user_id)
+        .eq("seq", body.seq - 1)
+        .limit(1)
+        .execute()
+    )
+    if previous.data:
+        prev_station = previous.data[0]["station_id"]
+        prev_at = previous.data[0]["reached_at"]
+        elapsed_seconds = (
+            datetime.now(timezone.utc)
+            - datetime.fromisoformat(prev_at.replace("Z", "+00:00"))
+        ).total_seconds()
+        allowed_minutes = _minimum_travel_minutes(prev_station, station_id) * 1.5 + 1.5
+        if elapsed_seconds < allowed_minutes * 60:
+            plausibility = "disputed"
+
+    supabase.table("race_checkpoints").upsert(
+        {
+            "race_id": body.race_id,
+            "user_id": x_user_id,
+            "station_id": station_id,
+            "seq": body.seq,
+            "crowd_level": body.crowd_level,
+            "plausibility": plausibility,
+        },
+        on_conflict="race_id,user_id,seq",
+    ).execute()
+
+    destination = part.get("destination_stop_id") or race_row.get("destination_stop_id")
+    message = ""
+    if destination and station_id == destination.upper():
+        supabase.table("race_participants").update(
+            {"status": "finished", "finished_at": datetime.now(timezone.utc).isoformat()}
+        ).eq("race_id", body.race_id).eq("user_id", x_user_id).execute()
+        _finalize_race(body.race_id)
+        message = "Finish recorded; race finalized."
+
+    return RaceCheckpointResponse(
+        accepted=True,
+        plausibility=plausibility,
+        station_id=station_id,
+        seq=body.seq,
+        message=message,
+    )
+
+
+@app.post("/race/finalize", response_model=RaceFinalizeResponse)
+def finalize_race(
+    body: RaceFinalizeRequest,
+    x_user_id: str | None = Header(None),
+) -> RaceFinalizeResponse:
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="User id required")
+    results = _finalize_race(body.race_id)
+    return RaceFinalizeResponse(accepted=True, results=results)
 
 
 @lru_cache(maxsize=1)
