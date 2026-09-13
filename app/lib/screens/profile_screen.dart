@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/location_privacy_service.dart';
+import '../services/profile_service.dart';
 import '../services/theme_controller.dart';
 import '../widgets/app_page_title.dart';
+import 'education_screen.dart';
+import 'friends_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -91,6 +94,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+                IconButton(
+                  onPressed: () => _showEditProfile(context),
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Edit profile',
+                ),
               ],
             ),
           ),
@@ -178,6 +186,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _Panel(
             children: [
               _ActionRow(
+                  icon: Icons.people_outline,
+                  title: 'Friends',
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const FriendsScreen()))),
+              const Divider(height: 1),
+              _ActionRow(
+                  icon: Icons.school_outlined,
+                  title: 'Learn the Rails',
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const EducationScreen()))),
+              const Divider(height: 1),
+              _ActionRow(
                   icon: Icons.favorite_outline,
                   title: 'Favorite Routes',
                   onTap: () {}),
@@ -209,6 +233,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditProfile(BuildContext context) {
+    final profileService = ProfileService.instance;
+    final profile = profileService.currentProfile.value;
+    final handleController = TextEditingController(text: profile?.handle ?? '');
+    final nameController =
+        TextEditingController(text: profile?.displayName ?? '');
+    final bioController = TextEditingController(text: profile?.bio ?? '');
+    final colorController =
+        TextEditingController(text: profile?.avatarColor ?? '');
+    final homeController =
+        TextEditingController(text: profile?.homeStationId ?? '');
+    final lineController =
+        TextEditingController(text: profile?.favoriteLine ?? '');
+    bool allowSearch = profile?.allowHandleSearch ?? true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Edit Profile', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: handleController,
+                  decoration: const InputDecoration(labelText: 'Handle'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Display name'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: bioController,
+                  decoration: const InputDecoration(labelText: 'Bio'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: colorController,
+                  decoration: const InputDecoration(
+                      labelText: 'Avatar color (hex, optional)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: homeController,
+                  decoration:
+                      const InputDecoration(labelText: 'Home station ID (optional)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: lineController,
+                  decoration:
+                      const InputDecoration(labelText: 'Favorite line (optional)'),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: allowSearch,
+                  onChanged: (v) => setModalState(() => allowSearch = v),
+                  title: const Text('Allow others to find me by handle'),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: () async {
+                    await profileService.updateProfile({
+                      'handle': handleController.text.trim(),
+                      'display_name': nameController.text.trim(),
+                      'bio': bioController.text.trim(),
+                      'avatar_color': colorController.text.trim(),
+                      'home_station_id': homeController.text.trim(),
+                      'favorite_line': lineController.text.trim(),
+                      'allow_handle_search': allowSearch,
+                    });
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

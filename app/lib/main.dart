@@ -10,6 +10,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/race_screen.dart';
 import 'screens/track_route_screen.dart';
 import 'services/active_trip_service.dart';
 import 'services/auth_service.dart';
@@ -20,6 +21,7 @@ import 'services/database_health_service.dart';
 import 'services/navigation_state.dart';
 import 'services/notification_service.dart';
 import 'services/theme_controller.dart';
+import 'widgets/party_sheet.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -443,7 +445,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Timer? _tabSwitchTimer;
 
   int currentIndex = 0;
-  final List<int> screenGenerations = <int>[0, 0, 0, 0];
+  final List<int> screenGenerations = <int>[0, 0, 0, 0, 0];
   bool isConnected = true;
   _NetworkBannerType bannerType = _NetworkBannerType.hidden;
 
@@ -547,7 +549,8 @@ class _MainNavigationState extends State<MainNavigation> {
       HomeScreen(key: ValueKey('home_${screenGenerations[0]}')),
       MapScreen(key: ValueKey('map_${screenGenerations[1]}')),
       TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}')),
-      ProfileScreen(key: ValueKey('profile_${screenGenerations[3]}')),
+      RaceScreen(key: ValueKey('race_${screenGenerations[3]}')),
+      ProfileScreen(key: ValueKey('profile_${screenGenerations[4]}')),
     ];
   }
 
@@ -621,6 +624,11 @@ class _MainNavigationState extends State<MainNavigation> {
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showPartySheet(context),
+        tooltip: 'Party',
+        child: const Icon(Icons.groups_rounded),
       ),
       bottomNavigationBar: Stack(
         clipBehavior: Clip.none,
@@ -713,6 +721,11 @@ class _MainNavigationState extends State<MainNavigation> {
                       label: 'Track',
                     ),
                     NavigationDestination(
+                      icon: Icon(Icons.emoji_events_outlined),
+                      selectedIcon: Icon(Icons.emoji_events_rounded),
+                      label: 'Race',
+                    ),
+                    NavigationDestination(
                       icon: Icon(Icons.person_outline_rounded),
                       selectedIcon: Icon(Icons.person_rounded),
                       label: 'Profile',
@@ -724,7 +737,7 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
           const Positioned(
             right: 18,
-            bottom: 10,
+            top: 10,
             child: _DataModeIndicator(),
           ),
         ],

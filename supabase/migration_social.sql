@@ -107,7 +107,7 @@ $$;
 -- Create a party (caller becomes owner + first member). Closes any
 -- existing open/active party the caller owns or belongs to.
 CREATE OR REPLACE FUNCTION public.create_party(p_join_code TEXT)
-RETURNS UUID
+RETURNS TABLE (party_id UUID)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -136,13 +136,13 @@ BEGIN
   INSERT INTO public.party_members (party_id, user_id)
   VALUES (v_party_id, auth.uid());
 
-  RETURN v_party_id;
+  RETURN QUERY SELECT v_party_id;
 END;
 $$;
 
 -- Join a party by code (enforces open state + expiry + one-active-party).
 CREATE OR REPLACE FUNCTION public.join_party(p_join_code TEXT)
-RETURNS UUID
+RETURNS TABLE (party_id UUID)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -181,7 +181,7 @@ BEGIN
   VALUES (v_party.id, auth.uid())
   ON CONFLICT (party_id, user_id) DO NOTHING;
 
-  RETURN v_party.id;
+  RETURN QUERY SELECT v_party.id;
 END;
 $$;
 
