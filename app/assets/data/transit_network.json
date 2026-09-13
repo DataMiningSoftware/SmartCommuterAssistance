@@ -2882,33 +2882,19 @@
     },
     {
       "from": "SP1",
-      "to": "BATU_KENTONMEN_LRT",
+      "to": "SP2",
       "minutes": 2,
       "type": "standard_stop",
       "route": "SP"
     },
     {
-      "from": "BATU_KENTONMEN_LRT",
+      "from": "SP2",
       "to": "SP1",
       "minutes": 2,
       "type": "standard_stop",
       "route": "SP"
     },
     {
-      "from": "BATU_KENTONMEN_LRT",
-      "to": "SP2",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP2",
-      "to": "BATU_KENTONMEN_LRT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
       "from": "SP2",
       "to": "SP3",
       "minutes": 2,
@@ -3204,20 +3190,6 @@
     },
     {
       "from": "SP24",
-      "to": "PUCHONG_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "PUCHONG_JAYA",
-      "to": "SP24",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "PUCHONG_JAYA",
       "to": "SP25",
       "minutes": 2,
       "type": "standard_stop",
@@ -3225,7 +3197,7 @@
     },
     {
       "from": "SP25",
-      "to": "PUCHONG_JAYA",
+      "to": "SP24",
       "minutes": 2,
       "type": "standard_stop",
       "route": "SP"
@@ -3296,6 +3268,34 @@
     {
       "from": "SP31",
       "to": "SP29",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "SP"
+    },
+    {
+      "from": "SP31",
+      "to": "BATU_KENTONMEN_LRT",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "SP"
+    },
+    {
+      "from": "BATU_KENTONMEN_LRT",
+      "to": "SP31",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "SP"
+    },
+    {
+      "from": "BATU_KENTONMEN_LRT",
+      "to": "PUCHONG_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "SP"
+    },
+    {
+      "from": "PUCHONG_JAYA",
+      "to": "BATU_KENTONMEN_LRT",
       "minutes": 2,
       "type": "standard_stop",
       "route": "SP"
@@ -3512,47 +3512,19 @@
     },
     {
       "from": "KJ16",
-      "to": "PANTAI_DALAM",
+      "to": "KJ17",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
-      "from": "PANTAI_DALAM",
+      "from": "KJ17",
       "to": "KJ16",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
-      "from": "PANTAI_DALAM",
-      "to": "ANGKASAPURI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "ANGKASAPURI",
-      "to": "PANTAI_DALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "ANGKASAPURI",
-      "to": "KJ17",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "KJ17",
-      "to": "ANGKASAPURI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
       "from": "KJ17",
       "to": "KJ18",
       "minutes": 2,
@@ -3638,48 +3610,6 @@
     },
     {
       "from": "KJ23",
-      "to": "JALAN_TEMPLER",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "JALAN_TEMPLER",
-      "to": "KJ23",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "JALAN_TEMPLER",
-      "to": "SERI_SETIA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SERI_SETIA",
-      "to": "JALAN_TEMPLER",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "SERI_SETIA",
-      "to": "KAMPUNG_DATO_HARUN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "KAMPUNG_DATO_HARUN",
-      "to": "SERI_SETIA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KJ"
-    },
-    {
-      "from": "KAMPUNG_DATO_HARUN",
       "to": "KJ24",
       "minutes": 2,
       "type": "standard_stop",
@@ -3687,7 +3617,7 @@
     },
     {
       "from": "KJ24",
-      "to": "KAMPUNG_DATO_HARUN",
+      "to": "KJ23",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
@@ -3870,6 +3800,76 @@
     {
       "from": "KJ37",
       "to": "KJ36",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KJ37",
+      "to": "ANGKASAPURI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "KJ37",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "JALAN_TEMPLER",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "JALAN_TEMPLER",
+      "to": "ANGKASAPURI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "JALAN_TEMPLER",
+      "to": "KAMPUNG_DATO_HARUN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "JALAN_TEMPLER",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "PANTAI_DALAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "PANTAI_DALAM",
+      "to": "KAMPUNG_DATO_HARUN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "PANTAI_DALAM",
+      "to": "SERI_SETIA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KJ"
+    },
+    {
+      "from": "SERI_SETIA",
+      "to": "PANTAI_DALAM",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KJ"
@@ -4897,20 +4897,6 @@
       "route": "MR"
     },
     {
-      "from": "SETIA_JAYA",
-      "to": "BRT1",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "BRT"
-    },
-    {
-      "from": "BRT1",
-      "to": "SETIA_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "BRT"
-    },
-    {
       "from": "BRT1",
       "to": "BRT2",
       "minutes": 2,
@@ -4990,6 +4976,20 @@
     {
       "from": "BRT7",
       "to": "BRT6",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "BRT7",
+      "to": "SETIA_JAYA",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "BRT"
+    },
+    {
+      "from": "SETIA_JAYA",
+      "to": "BRT7",
       "minutes": 2,
       "type": "standard_stop",
       "route": "BRT"

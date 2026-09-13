@@ -100,10 +100,10 @@ def order_line(line: str, stations: dict) -> list:
     name_based = [sid for sid in ids if _num(sid) is None]
     if not numeric:
         return _chain_by_grid(name_based, stations)
-    ordered = list(numeric)
-    for nb in name_based:
-        _insert_by_grid(nb, ordered, stations)
-    return ordered
+    # Numeric stations form a reliable backbone. Name-based stations (which
+    # have no trustworthy position) are appended after it so the backbone
+    # stays physically adjacent.
+    return list(numeric) + name_based
 
 
 def regenerate(data: dict) -> list:
