@@ -13,6 +13,12 @@ backend/uvicorn.err.log
 # Local secrets (any depth)
 .env
 
+# Android signing keys (never commit)
+*.jks
+*.keystore
+key.properties
+app/android/key.properties
+
 # Generated model & training artifacts
 *.pkl
 *.pkl.*
