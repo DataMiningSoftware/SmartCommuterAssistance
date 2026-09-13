@@ -33,14 +33,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => _loading = true);
 
     try {
-      await _authService.signUp(
+      final needsVerification = await _authService.signUp(
         name: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
       );
-      if (mounted) {
-        Navigator.pop(context);
+      if (!mounted) return;
+      if (needsVerification) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Account created! Check your email to verify it, then log in.',
+            ),
+          ),
+        );
       }
+      Navigator.pop(context);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

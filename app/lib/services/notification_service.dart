@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 import '../constants/crowd_levels.dart';
 
@@ -11,6 +14,14 @@ class NotificationService {
 
   NotificationService._internal();
 
+  static const String _channelId = 'transit_alerts';
+  static const String _channelName = 'Transit Alerts';
+  static const String _channelDescription =
+      'Train arrivals, delays and crowd updates';
+
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+
   bool _isInitialized = false;
   final List<NotificationSubscription> _subscriptions =
       <NotificationSubscription>[];
@@ -18,16 +29,61 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // TODO: Initialize local notifications plugin.
-    debugPrint('NotificationService: Initialized');
+    tzdata.initializeTimeZones();
+    const settings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    );
+    await _plugin.initialize(settings);
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _channelId,
+            _channelName,
+            description: _channelDescription,
+            importance: Importance.high,
+          ),
+        );
+
     _isInitialized = true;
   }
 
   Future<bool> requestPermissions() async {
-    // TODO: Request notification permissions.
-    debugPrint('NotificationService: Permissions requested');
+    await initialize();
+
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
+
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      return await ios.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
+    }
+
     return true;
   }
+
+  NotificationDetails get _details => const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      );
 
   Future<void> showNotification({
     required String title,
@@ -36,9 +92,7 @@ class NotificationService {
     NotificationType type = NotificationType.info,
   }) async {
     if (!_isInitialized) await initialize();
-
-    // TODO: Show actual notification.
-    debugPrint('NotificationService: Showing notification - $title: $body');
+    await _plugin.show(type.index + 1, title, body, _details, payload: payload);
   }
 
   Future<void> scheduleNotification({
@@ -50,10 +104,20 @@ class NotificationService {
   }) async {
     if (!_isInitialized) await initialize();
 
-    // TODO: Schedule actual notification.
-    debugPrint(
-      'NotificationService: Scheduled notification for $scheduledTime - '
-      '$title: $body',
+    final when = scheduledTime.isAfter(DateTime.now())
+        ? scheduledTime
+        : DateTime.now().add(const Duration(seconds: 1));
+
+    await _plugin.zonedSchedule(
+      type.index + 1,
+      title,
+      body,
+      tz.TZDateTime.from(when, tz.UTC),
+      _details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: payload,
     );
   }
 
@@ -144,8 +208,8 @@ class NotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
-    // TODO: Cancel all scheduled notifications.
-    debugPrint('NotificationService: All notifications cancelled');
+    if (!_isInitialized) await initialize();
+    await _plugin.cancelAll();
   }
 }
 

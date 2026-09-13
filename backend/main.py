@@ -790,6 +790,20 @@ def finalize_race(
     return RaceFinalizeResponse(accepted=True, results=results)
 
 
+@app.post("/account/delete")
+def delete_account(
+    x_user_id: str | None = Header(None),
+    authorization: str | None = Header(None),
+) -> dict:
+    user_id = _resolve_user_id(authorization, x_user_id)
+    supabase = crowd_service._get_supabase()
+    supabase.table("crowd_reports").update({"user_id": None}).eq(
+        "user_id", user_id
+    ).execute()
+    supabase.auth.admin.delete_user(user_id)
+    return {"deleted": True}
+
+
 @lru_cache(maxsize=1)
 def load_network() -> dict:
     repo_root = Path(__file__).resolve().parents[1]

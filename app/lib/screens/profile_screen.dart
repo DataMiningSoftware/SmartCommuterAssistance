@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/education_service.dart';
 import '../services/location_privacy_service.dart';
+import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../services/theme_controller.dart';
 import '../widgets/app_page_title.dart';
@@ -230,6 +231,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.history, title: 'Travel History', onTap: () {}),
               const Divider(height: 1),
               _ActionRow(
+                  icon: Icons.notifications_active_outlined,
+                  title: 'Test notification',
+                  onTap: () async {
+                    final service = NotificationService();
+                    await service.requestPermissions();
+                    await service.showNotification(
+                      title: 'Smart Commuter Assistant+',
+                      body: 'This is a test notification. 🚆',
+                      type: NotificationType.info,
+                    );
+                  }),
+              const Divider(height: 1),
+              _ActionRow(
                   icon: Icons.help_outline,
                   title: 'Help & Support',
                   onTap: () {}),
@@ -250,6 +264,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: const Text('Logout'),
             style: OutlinedButton.styleFrom(
               foregroundColor: theme.colorScheme.secondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => _confirmDeleteAccount(context),
+            child: const Text(
+              'Delete Account',
+              style: TextStyle(color: Colors.red),
             ),
           ),
         ],
@@ -345,6 +367,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete account?'),
+        content: const Text(
+          'This permanently deletes your account, profile, and travel history. '
+          'This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final deleted = await _authService.deleteAccount();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          deleted
+              ? 'Account deleted.'
+              : 'Could not delete account automatically. Please use the account deletion link in the privacy policy.',
         ),
       ),
     );

@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/app_user.dart';
+import 'backend_config_service.dart';
 import 'database_service.dart';
 
 class AuthService {
@@ -46,7 +48,7 @@ class AuthService {
     _isInitialized = true;
   }
 
-  Future<void> signUp({
+  Future<bool> signUp({
     required String name,
     required String email,
     required String password,
@@ -54,27 +56,34 @@ class AuthService {
     final cleanEmail = email.trim().toLowerCase();
     final cleanName = name.trim();
 
-    try {
-      final response = await Supabase.instance.client.auth.signUp(
+    final response = await Supabase.instance.client.auth.signUp(
+      email: cleanEmail,
+      password: password,
+      data: <String, dynamic>{
+        'name': cleanName,
+      },
+    );
+
+    if (response.user != null) {
+      await _databaseService.upsertUserProfile(
+        name: cleanName,
         email: cleanEmail,
-        password: password,
-        data: <String, dynamic>{
-          'name': cleanName,
-        },
       );
-
-      if (response.user != null) {
-        await _databaseService.upsertUserProfile(
-          name: cleanName,
-          email: cleanEmail,
-        );
-      }
-
-      await _syncCurrentUserFromSession(response.session);
-    } catch (error) {
-      debugPrint('Sign-up unavailable, falling back to guest mode: $error');
-      await _activateGuestMode();
     }
+
+    if (response.session != null) {
+      await _syncCurrentUserFromSession(response.session);
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> resendEmailVerification(String email) async {
+    await Supabase.instance.client.auth.resend(
+      type: OtpType.signup,
+      email: email.trim().toLowerCase(),
+    );
   }
 
   Future<void> login({
@@ -102,6 +111,32 @@ class AuthService {
       debugPrint('Logout fallback: $error');
     }
     await _activateGuestMode();
+  }
+
+  Future<bool> deleteAccount() async {
+    final baseUrl =
+        BackendConfigService().baseUrl.value.replaceAll(RegExp(r'/+$'), '');
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/account/delete'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+              if (uid != null) 'x-user-id': uid,
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        await logout();
+        return true;
+      }
+    } catch (error) {
+      debugPrint('Delete account fallback: $error');
+    }
+    return false;
   }
 
   Future<void> enterGuestMode() async {
