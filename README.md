@@ -123,9 +123,6 @@ Plan a route with assisted suggestions or full manual control over every waypoin
 ### Crowd Pulse (`lib/screens/station_crowd_board_screen.dart`)
 A per-station crowd board — the 1–5 occupancy level for a station, its source (forecast vs live rider report), and recent activity.
 
-<!-- ![Crowd Pulse](docs/screenshots/station_crowd_board_screen.png) -->
-> *Placeholder:* `docs/screenshots/station_crowd_board_screen.png`
-
 ### Crowd Outlook (`lib/screens/crowd_forecast_screen.dart`)
 The hourly forecast view — what the model thinks each station will look like hour by hour, so you can pick a commute time that doesn't involve being a sardine.
 
@@ -153,16 +150,10 @@ Find friends by handle and see who's commuting alongside you.
 > **Work in progress** — social features are still being built out.
 
 ### Login (`lib/screens/login_screen.dart`)
-Email/password sign-in, plus **Continue as guest** and a link to **Create account**. Because not everyone wants a relationship with an app.
-
-<!-- ![Login](docs/screenshots/login_screen.png) -->
-> *Placeholder:* `docs/screenshots/login_screen.png`
+Email/password sign-in, **Sign in with Google**, **Continue as guest**, and a link to **Create account**. Because not everyone wants a relationship with an app.
 
 ### Sign Up (`lib/screens/signup_screen.dart`)
 "Create Your Pass" — the account creation flow. No loyalty points yet, but your favourites sync.
-
-<!-- ![Sign Up](docs/screenshots/signup_screen.png) -->
-> *Placeholder:* `docs/screenshots/signup_screen.png`
 
 ### Profile (`lib/screens/profile_screen.dart`)
 Preferences (push notifications, offline mode, location sharing, accessibility, dark mode), data attributions (map tiles, weather, transit schedule), quick actions, and logout.
@@ -309,33 +300,70 @@ The full file-by-file index lives in [`PROJECT_FILES.txt`](PROJECT_FILES.txt). T
 
 ---
 
-## Local development
+## Run it yourself
 
-**Flutter app**
+Get the app running on your own machine in a few steps. The app runs even with no backend or Supabase — it falls back to local "guest" mode and local graph routing.
+
+### Prerequisites
+- **Flutter SDK 3.x** — [install guide](https://docs.flutter.dev/get-started/install)
+- **Android Studio** (for the emulator) or a physical Android device with USB debugging
+- **Python 3.10+** — only needed for the FastAPI backend or the ML pipeline
+- **Git**
+
+### 1. Clone & install Flutter deps
+```bash
+git clone https://github.com/DataMiningSoftware/SmartCommuterAssistance.git
+cd SmartCommuterAssistance/app
+flutter pub get
+```
+
+### 2. Configure the app
 ```bash
 cd app
-flutter pub get
+Copy-Item env/dev.template.json env/dev.json
+```
+Fill in `env/dev.json`:
+
+| Key | Value |
+|---|---|
+| `SUPABASE_URL` | your Supabase project URL |
+| `SUPABASE_ANON_KEY` | your Supabase anon/publishable key |
+| `BACKEND_URL` | `http://127.0.0.1:8000` (local) or your deployed backend URL |
+| `SENTRY_DSN` | `""` for local development |
+
+> `env/dev.json` is gitignored — don't commit real keys.
+
+### 3. Run it
+```bash
+cd app
 flutter run --dart-define-from-file=env/dev.json
 ```
+Then pick an emulator or plug in a phone. From the Android emulator, a local backend is reachable at `http://10.0.2.2:8000` (set `BACKEND_URL` accordingly).
 
-**Backend**
+### 4. Set up Supabase (for accounts, crowd reports & sync)
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Import the station catalog: **Table Editor → Import data** → upload `scripts/train_stops_kl.csv` as table `train_stops_kl`.
+3. Run the SQL setup in order: the base schema files in `scripts/`, then the migrations in `supabase/`. The full ordered list is in [`app/README.md`](app/README.md#supabase-setup).
+4. **Authentication → Sign In / Providers → Email** → enable it, and turn **OFF** "Confirm email" if you want instant sign-ups while developing.
+
+### 5. (Optional) Run the FastAPI backend
 ```bash
 cd backend
-python -m uvicorn main:app --reload
-# or: .\run_backend.ps1
+Copy-Item ..\.env.example .env   # fill SUPABASE_URL + SUPABASE_SERVICE_KEY
+pip install -r requirements.txt
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+Health check → `http://127.0.0.1:8000/health` · Swagger docs → `http://127.0.0.1:8000/docs`
 
-**Tests**
-```bash
-pytest tests/            # Python
-cd app && flutter test   # Flutter
-cd app && dart analyze lib/  # Dart static analysis
-```
+### 6. (Optional) Enable Google sign-in
+1. **Authentication → Sign In / Providers → Google** → enable it with your Google OAuth **Client ID** and **Client secret** (from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)).
+2. **Authentication → URL Configuration** → add redirect URL `com.nawfal.smartcommuter://login-callback`.
 
-**Daily retrain (manual)**
+### Tests
 ```bash
-cd scripts && python run_daily_pipeline.py
-# requires SUPABASE_URL and SUPABASE_SERVICE_KEY
+pytest tests/              # Python (from repo root)
+cd app && flutter test     # Flutter
+cd app && dart analyze lib/
 ```
 
 ---
