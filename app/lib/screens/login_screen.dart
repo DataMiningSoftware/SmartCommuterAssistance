@@ -45,6 +45,20 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _googleSignIn() async {
+    setState(() => _loading = true);
+    try {
+      await _authService.signInWithGoogle();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(formatDatabaseException(error))),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,6 +113,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       onPressed: _loading ? null : _login,
                       child: Text(_loading ? 'Signing in…' : 'Login'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _loading ? null : _googleSignIn,
+                      icon: const Icon(Icons.g_mobiledata, size: 26),
+                      label: const Text('Sign in with Google'),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(

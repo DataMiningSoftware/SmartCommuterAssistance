@@ -120,13 +120,21 @@ class AuthService {
     await _syncCurrentUserFromSession(response.session);
   }
 
+  Future<void> signInWithGoogle() async {
+    await Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'com.nawfal.smartcommuter://login-callback',
+    );
+  }
+
   Future<void> logout() async {
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (error) {
       debugPrint('Logout fallback: $error');
     }
-    await _activateGuestMode();
+    _isGuestMode = false;
+    currentUser.value = null;
   }
 
   Future<bool> deleteAccount() async {
@@ -162,7 +170,8 @@ class AuthService {
   Future<void> _syncCurrentUserFromSession(Session? session) async {
     final authUser = session?.user;
     if (authUser == null) {
-      await _activateGuestMode();
+      _isGuestMode = false;
+      currentUser.value = null;
       return;
     }
 
