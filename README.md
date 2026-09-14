@@ -123,6 +123,8 @@ Plan a route with assisted suggestions or full manual control over every waypoin
 ### Crowd Pulse (`lib/screens/station_crowd_board_screen.dart`)
 A per-station crowd board — the 1–5 occupancy level for a station, its source (forecast vs live rider report), and recent activity.
 
+![Crowd Pulse](docs/screenshots/station_crowd_board.png)
+
 ### Crowd Outlook (`lib/screens/crowd_forecast_screen.dart`)
 The hourly forecast view — what the model thinks each station will look like hour by hour, so you can pick a commute time that doesn't involve being a sardine.
 
@@ -152,8 +154,12 @@ Find friends by handle and see who's commuting alongside you.
 ### Login (`lib/screens/login_screen.dart`)
 Email/password sign-in, **Sign in with Google**, **Continue as guest**, and a link to **Create account**. Because not everyone wants a relationship with an app.
 
+![Login](docs/screenshots/login_screen.png)
+
 ### Sign Up (`lib/screens/signup_screen.dart`)
 "Create Your Pass" — the account creation flow. No loyalty points yet, but your favourites sync.
+
+![Sign Up](docs/screenshots/register_page.png)
 
 ### Profile (`lib/screens/profile_screen.dart`)
 Preferences (push notifications, offline mode, location sharing, accessibility, dark mode), data attributions (map tiles, weather, transit schedule), quick actions, and logout.
