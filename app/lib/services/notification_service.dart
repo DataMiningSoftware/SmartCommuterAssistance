@@ -29,6 +29,11 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
+    if (kIsWeb) {
+      _isInitialized = true;
+      return;
+    }
+
     tzdata.initializeTimeZones();
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -52,6 +57,7 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
+    if (kIsWeb) return true;
     await initialize();
 
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -91,6 +97,7 @@ class NotificationService {
     String? payload,
     NotificationType type = NotificationType.info,
   }) async {
+    if (kIsWeb) return;
     if (!_isInitialized) await initialize();
     await _plugin.show(type.index + 1, title, body, _details, payload: payload);
   }
@@ -102,6 +109,7 @@ class NotificationService {
     String? payload,
     NotificationType type = NotificationType.info,
   }) async {
+    if (kIsWeb) return;
     if (!_isInitialized) await initialize();
 
     final when = scheduledTime.isAfter(DateTime.now())
@@ -208,6 +216,7 @@ class NotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
+    if (kIsWeb) return;
     if (!_isInitialized) await initialize();
     await _plugin.cancelAll();
   }

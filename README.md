@@ -18,6 +18,16 @@ It runs on Flutter (phone), talks to a FastAPI backend, and leans on Supabase/Po
 
 ---
 
+## Demo — try it without cloning
+
+**Live web demo** (Flutter compiled to WebAssembly/JS, runs in guest mode with local routing): https://dataminingsoftware.github.io/SmartCommuterAssistance/
+
+**Android APK**: download the latest build from [Releases](https://github.com/DataMiningSoftware/SmartCommuterAssistance/releases/latest).
+
+![Smart Commuter Assistant+ demo](docs/screenshots/demo.gif)
+
+---
+
 ## The big picture (how it all fits together)
 
 ```
