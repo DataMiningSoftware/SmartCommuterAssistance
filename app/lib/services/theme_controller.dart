@@ -5,13 +5,13 @@ class ThemeController {
   ThemeController._();
   static final ThemeController instance = ThemeController._();
 
-  final ValueNotifier<ThemeMode> mode = ValueNotifier(ThemeMode.system);
+  final ValueNotifier<ThemeMode> mode = ValueNotifier(ThemeMode.light);
 
   static const _key = 'theme_mode';
 
   static Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key) ?? 'system';
+    final raw = prefs.getString(_key) ?? 'light';
     instance.mode.value = _themeModeFromString(raw);
   }
 
@@ -22,7 +22,7 @@ class ThemeController {
       case 'light':
         return ThemeMode.light;
       default:
-        return ThemeMode.system;
+        return ThemeMode.light;
     }
   }
 

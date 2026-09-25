@@ -32,7 +32,13 @@ jobs:
         run: test -f web/sqlite3.wasm
       - name: Build web demo
         working-directory: app
-        run: flutter build web --release --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY= --dart-define=SENTRY_DSN= --base-href /SmartCommuterAssistance/
+        run: >
+          flutter build web --release
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          --dart-define=BACKEND_URL=${{ vars.BACKEND_URL }}
+          --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          --base-href /SmartCommuterAssistance/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

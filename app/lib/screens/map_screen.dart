@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/route_colors.dart';
 import '../models/map_station.dart';
@@ -375,8 +376,22 @@ class _MapScreenState extends State<MapScreen>
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                fallbackUrl:
+                    'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
                 userAgentPackageName: 'com.nawfal.smartcommuter',
+                maxZoom: 19,
+              ),
+              RichAttributionWidget(
+                attributions: [
+                  TextSourceAttribution(
+                    'OpenStreetMap contributors',
+                    onTap: () => launchUrl(
+                      Uri.parse('https://www.openstreetmap.org/copyright'),
+                    ),
+                  ),
+                  const TextSourceAttribution('Esri Light Gray Canvas'),
+                ],
               ),
               PolylineLayer(
                   polylines: _buildLinePolylines(segments, hasRoute)),

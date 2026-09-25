@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../models/transit_graph.dart';
+import '../services/race_service.dart';
 import '../services/route_choice_service.dart';
 import '../services/transit_data_service.dart';
 import '../widgets/app_page_title.dart';
@@ -135,9 +138,26 @@ class _RouteBuilderScreenState extends State<RouteBuilderScreen> {
       chosenMinutes: _manualMinutes,
     );
     final ok = await _routeChoice.submitFeedback(choice);
+    await _publishRacePlan(chosenPath, agentPath);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(ok ? 'Comparison logged for retraining.' : 'Log in to save comparisons.')),
+    );
+  }
+
+  Future<void> _publishRacePlan(
+    List<String> chosenPath,
+    List<String>? agentPath,
+  ) async {
+    final race = RaceService.instance.currentRace.value;
+    if (race == null || race.status != 'active') return;
+    await RaceService.instance.setPlan(
+      raceId: race.id,
+      destinationStopId: _destinationId,
+      routeSource: 'user',
+      chosenPath: jsonEncode(chosenPath),
+      agentPath: agentPath == null ? null : jsonEncode(agentPath),
+      agentPredictedMin: _agentMinutes,
     );
   }
 
@@ -185,7 +205,11 @@ class _RouteBuilderScreenState extends State<RouteBuilderScreen> {
             Row(
               children: [
                 Expanded(child: Text('Waypoints (your own path)', style: Theme.of(context).textTheme.titleMedium)),
-                IconButton(onPressed: _addWaypoint, icon: const Icon(Icons.add_circle_outline)),
+                IconButton(
+                  onPressed: _addWaypoint,
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: 'Add waypoint',
+                ),
               ],
             ),
             if (_waypoints.isEmpty)
@@ -200,6 +224,7 @@ class _RouteBuilderScreenState extends State<RouteBuilderScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => setState(() => _waypoints.removeAt(i)),
+                    tooltip: 'Remove waypoint',
                   ),
                 );
               }),
