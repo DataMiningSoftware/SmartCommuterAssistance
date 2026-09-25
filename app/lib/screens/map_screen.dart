@@ -48,6 +48,9 @@ class _MapScreenState extends State<MapScreen>
   bool _isLoading = true;
 
   static const Set<String> _hiddenLineIds = {
+    '1', '2', // KTM Batu Caves and Tanjung Malim lines
+    '6', '7', // KLIA Ekspres and KLIA Transit
+    '10', // KTM Skypark
     '11', // Johan Setia (Coming Soon)
   };
 
