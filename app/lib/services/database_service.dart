@@ -24,7 +24,7 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     if (kIsWeb) {
-      databaseFactory = databaseFactoryFfiWeb;
+      databaseFactory = databaseFactoryFfiWebNoWebWorker;
     }
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'smart_commuter.db');

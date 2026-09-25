@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         working-directory: app
         run: flutter pub get
+      - name: Verify web database runtime assets
+        working-directory: app
+        run: test -f web/sqlite3.wasm
       - name: Build web demo
         working-directory: app
         run: flutter build web --release --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY= --dart-define=SENTRY_DSN= --base-href /SmartCommuterAssistance/
