@@ -42,8 +42,7 @@
 ## Map Page Architecture
 - Two views: **Transit map** (default) and **Geographic map**, toggled via SegmentedButton
 - **Transit map** (`InteractiveSchematicMap` in `lib/widgets/interactive_schematic_map.dart`):
-  - Background: `assets/images/klang_valley_map.jpeg` (1692x2400) drawn scaled-to-fit
-  - Fallback: gray canvas with colored transit lines always rendered on top
+  - Background: grid canvas (640x896 logical) with colored transit lines; no bitmap asset
   - Station dots: white circles with black border, interchanges slightly larger
   - Selected stations: amber/orange pulsing via 900ms AnimationController
   - Route highlight: thick (6px) colored polylines with blinking alpha (0.6→1.0), drawn on top of dimmed (0.3 alpha) background lines
