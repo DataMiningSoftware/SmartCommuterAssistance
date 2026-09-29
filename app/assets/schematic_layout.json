@@ -275,7 +275,7 @@
       ]
     },
     "BRT1": {
-      "name": "SUNWAY-SETIA JAYA",
+      "name": "SUNWAY - SETIA JAYA",
       "x": 30.0,
       "y": 79.0,
       "lines": [
@@ -315,7 +315,7 @@
       ]
     },
     "BRT6": {
-      "name": "SOUTH QUAY-USJ 1",
+      "name": "SOUTH QUAY - USJ 1",
       "x": 28.0,
       "y": 89.0,
       "lines": [
@@ -1263,7 +1263,7 @@
       ]
     },
     "PY14": {
-      "name": "KENTOMEN",
+      "name": "KENTONMEN",
       "x": 49.0,
       "y": 30.5,
       "lines": [

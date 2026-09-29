@@ -168,7 +168,7 @@
     },
     {
       "id": "AG6",
-      "name": "BANDARAYA - UOB",
+      "name": "BANDARAYA",
       "lat": 3.155567,
       "lng": 101.694485,
       "gridX": 56.0,
@@ -297,7 +297,7 @@
     },
     {
       "id": "BRT1",
-      "name": "SUNWAY-SETIA JAYA",
+      "name": "SUNWAY - SETIA JAYA",
       "lat": 3.0885,
       "lng": 101.6083,
       "gridX": 30.0,
@@ -352,7 +352,7 @@
     },
     {
       "id": "BRT6",
-      "name": "SOUTH QUAY-USJ 1",
+      "name": "SOUTH QUAY - USJ 1",
       "lat": 3.0765,
       "lng": 101.592,
       "gridX": 28.0,
@@ -823,7 +823,7 @@
     },
     {
       "id": "KJ11",
-      "name": "KAMPUNG BARU - CBP COOPBANK PERTAMA",
+      "name": "KAMPUNG BARU",
       "lat": 3.1567,
       "lng": 101.7085,
       "gridX": 71.0,
@@ -886,7 +886,7 @@
     },
     {
       "id": "KJ16",
-      "name": "BANK RAKYAT BANGSAR",
+      "name": "BANGSAR",
       "lat": 3.1306,
       "lng": 101.6753,
       "gridX": 47.5,
@@ -1019,7 +1019,7 @@
     },
     {
       "id": "KJ27",
-      "name": "CGC GLENMARIE",
+      "name": "GLENMARIE",
       "lat": 3.0807,
       "lng": 101.5691,
       "gridX": 20.0,
@@ -1653,7 +1653,7 @@
     },
     {
       "id": "PY14",
-      "name": "KENTOMEN",
+      "name": "KENTONMEN",
       "lat": 3.19563,
       "lng": 101.6797,
       "gridX": 49.0,
@@ -2048,7 +2048,7 @@
     },
     {
       "id": "SETIA_JAYA",
-      "name": "Sunway-Setia Jaya",
+      "name": "Sunway - Setia Jaya",
       "lat": 3.083373,
       "lng": 101.61143,
       "gridX": 26.5,
@@ -2359,7 +2359,7 @@
     },
     {
       "id": "SP6",
-      "name": "BANDARAYA - UOB",
+      "name": "BANDARAYA",
       "lat": 3.155567,
       "lng": 101.694485,
       "gridX": 56.0,
