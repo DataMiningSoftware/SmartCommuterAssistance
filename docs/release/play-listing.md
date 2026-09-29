@@ -67,11 +67,20 @@ Independent, unofficial app — not affiliated with Rapid KL or Prasarana.
 
 ## Store assets checklist
 
-- [x] App icon (512×512) — from `app/assets/images/logo.png`
-- [ ] Feature graphic 1024×500
-- [ ] Phone screenshots (min 2, max 8) — use `docs/screenshots/`
-- [ ] Privacy policy URL: https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html
-- [ ] Release notes for v1.0.0
+- [x] App icon (512×512) — `docs/release/play-icon-512.png`
+- [x] Feature graphic 1024×500 — `docs/release/feature-graphic-1024x500.png`
+- [x] Phone screenshots (1080×1920) — `docs/release/screenshots/` (3 of 8; add geographic map, track and profile shots when convenient)
+- [x] Privacy policy URL: https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html
+- [x] Release notes for v1.0.0 — see below
+
+## Release notes — v1.0.0
+
+- Route planning across LRT, MRT, Monorail, BRT, KTM Komuter and KLIA Ekspres/Transit
+- Hourly crowd forecasts for every station, blended with live rider reports
+- Scheduled arrivals from official GTFS feeds
+- Estimated fares for Rapid KL, KTM and ERL journeys
+- Pinned ETA countdown, nearby stations, favorites and offline mode
+- No account needed — anonymous by default with optional data consent
 
 ## Release build
 
