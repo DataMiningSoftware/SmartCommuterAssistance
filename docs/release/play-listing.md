@@ -69,7 +69,7 @@ Independent, unofficial app — not affiliated with Rapid KL or Prasarana.
 
 - [x] App icon (512×512) — `docs/release/play-icon-512.png`
 - [x] Feature graphic 1024×500 — `docs/release/feature-graphic-1024x500.png`
-- [x] Phone screenshots (1080×1920) — `docs/release/screenshots/` (3 of 8; add geographic map, track and profile shots when convenient)
+- [x] Phone screenshots (1080×1920) — `docs/release/screenshots/` (7: home, transit map, geographic map, stations, crowd board, track, profile)
 - [x] Privacy policy URL: https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html
 - [x] Release notes for v1.0.0 — see below
 

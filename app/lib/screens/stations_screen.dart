@@ -1898,6 +1898,10 @@ class _RouteLegend extends StatelessWidget {
     _LegendEntry(label: 'PH / SP', routeId: 'PH'),
     _LegendEntry(label: 'MR', routeId: 'MR'),
     _LegendEntry(label: 'BRT', routeId: 'BRT'),
+    _LegendEntry(label: 'KTM Seremban', routeId: 'KT1'),
+    _LegendEntry(label: 'KTM Port Klang', routeId: 'KT2'),
+    _LegendEntry(label: 'KLIA Ekspres', routeId: 'ER6'),
+    _LegendEntry(label: 'KLIA Transit', routeId: 'ER7'),
   ];
 
   @override
