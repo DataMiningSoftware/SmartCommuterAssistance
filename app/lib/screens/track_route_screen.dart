@@ -51,8 +51,12 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   late final AnimationController _reportRevealController;
   ActiveTrip? _trip;
   bool _arrived = false;
+  final ValueNotifier<bool> _arrivedNotifier = ValueNotifier<bool>(false);
   int? _estimatedTotalMinutes;
   int _nearestIndex = -1;
+  final ValueNotifier<int> _nearestIndexNotifier = ValueNotifier<int>(-1);
+  final ValueNotifier<DateTime> _clockNotifier =
+      ValueNotifier<DateTime>(DateTime.now());
   List<_StopNode> _routeStops = <_StopNode>[];
   List<_RouteConnection> _routeEdges = <_RouteConnection>[];
   List<_TrackStationOption> _stationOptions = <_TrackStationOption>[];
@@ -107,6 +111,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _nearestIndexNotifier.dispose();
+    _arrivedNotifier.dispose();
+    _clockNotifier.dispose();
     _emptyTripSearchController.dispose();
     _pulseController.dispose();
     _reportRevealController.dispose();
@@ -1433,8 +1440,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       setState(() {
         _emptyTripSearchController.clear();
         _pendingSearchOption = null;
-        _nearestIndex = 0;
-        _arrived = false;
+        _setNearestIndex(0);
+        _setArrived(false);
         _etaPinned = false;
         _walkMinutesToOrigin = 0;
         _delaysReported = 0;
@@ -1498,11 +1505,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
     if (!mounted) return;
     setState(() {
-      _nearestIndex = 0;
-      _arrived = false;
+      _setNearestIndex(0);
+      _setArrived(false);
       _reportMenuVisible = false;
     });
-    _sentNotificationKeys.clear();
   }
 
   Future<_TrackStationOption?> _showDestinationPicker(_StopNode currentStop) {
@@ -1630,6 +1636,16 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     );
   }
 
+  void _setNearestIndex(int value) {
+    _nearestIndex = value;
+    _nearestIndexNotifier.value = value;
+  }
+
+  void _setArrived(bool value) {
+    _arrived = value;
+    _arrivedNotifier.value = value;
+  }
+
   void _startTracking() {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
@@ -1639,6 +1655,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Future<void> _trackingTick() async {
+    _clockNotifier.value = DateTime.now();
     final trip = _trip;
     if (trip == null || _routeStops.isEmpty) return;
     try {
@@ -1675,10 +1692,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
             );
 
       final previousIndex = _nearestIndex;
-      setState(() {
-        _nearestIndex = nearestIndex;
-        _arrived = distanceToDestination != null && distanceToDestination <= 80;
-      });
+      final arrivedNow =
+          distanceToDestination != null && distanceToDestination <= 80;
+      _setNearestIndex(nearestIndex);
+      _setArrived(arrivedNow);
 
       if (_arrived) {
         await _handleArrivalWithFeedback();
@@ -1767,8 +1784,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       _routeStops = <_StopNode>[];
       _routeEdges = <_RouteConnection>[];
       _adaptiveForecastByStopId = <String, StopCrowdForecast>{};
-      _nearestIndex = -1;
-      _arrived = false;
+      _setNearestIndex(-1);
+      _setArrived(false);
       _estimatedTotalMinutes = null;
       _adaptiveRemainingMinutes = null;
       _adaptiveArrivalTime = null;
@@ -2009,7 +2026,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
       if (!mounted) return;
       setState(() {
-        _nearestIndex = 0;
+        _setNearestIndex(0);
         _sentNotificationKeys.clear();
       });
 
@@ -2347,8 +2364,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         _routeStops = <_StopNode>[];
         _routeEdges = <_RouteConnection>[];
         _adaptiveForecastByStopId = <String, StopCrowdForecast>{};
-        _nearestIndex = -1;
-        _arrived = false;
+        _setNearestIndex(-1);
+        _setArrived(false);
         _estimatedTotalMinutes = null;
         _adaptiveRemainingMinutes = null;
         _adaptiveArrivalTime = null;
@@ -2433,7 +2450,6 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Widget _buildTrackingBody(ActiveTrip trip) {
-    final timelineItems = _routeStops.isEmpty ? null : _buildTimelineItems();
     return Stack(
       children: [
         Padding(
@@ -2441,9 +2457,16 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ValueListenableBuilder<DateTime?>(
-                valueListenable: ActiveTripService.instance.pinnedArrivalTime,
-                builder: (_, pinned, __) {
+              AnimatedBuilder(
+                animation: Listenable.merge([
+                  _nearestIndexNotifier,
+                  _arrivedNotifier,
+                  _clockNotifier,
+                  ActiveTripService.instance.pinnedArrivalTime,
+                ]),
+                builder: (context, _) {
+                  final pinned =
+                      ActiveTripService.instance.pinnedArrivalTime.value;
                   final liveRemaining = pinned != null && _etaPinned
                       ? pinned.difference(DateTime.now()).inMinutes.clamp(0, 9999)
                       : _remainingMinutes;
@@ -2476,43 +2499,47 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: timelineItems == null
-                    ? const Center(
-                        child: Text(
-                          'Preparing route timeline...',
-                          style: TextStyle(
-                            color: Color(0xFF667085),
-                            fontWeight: FontWeight.w600,
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: Listenable.merge([
+                      _nearestIndexNotifier,
+                      _arrivedNotifier,
+                    ]),
+                    builder: (context, _) {
+                      final timelineItems = _routeStops.isEmpty
+                          ? null
+                          : _buildTimelineItems();
+                      if (timelineItems == null) {
+                        return const Center(
+                          child: Text(
+                            'Preparing route timeline...',
+                            style: TextStyle(
+                              color: Color(0xFF667085),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      )
-                    : RepaintBoundary(
-                        child: AnimatedBuilder(
-                          animation: _pulseController,
-                          builder: (context, _) {
-                            final flashValue = Curves.easeInOut
-                                .transform(_pulseController.value);
-                            return ListView.separated(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              itemCount: timelineItems.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 0),
-                              itemBuilder: (context, index) {
-                                final item = timelineItems[index];
-                                return RepaintBoundary(
-                                  child: _TrackStopTile(
-                                    item: item,
-                                    status: _statusForTimelineItem(item),
-                                    flashValue: flashValue,
-                                    crowdLevel:
-                                        _crowdLevelForTimelineItem(item),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
+                        );
+                      }
+                      return ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        itemCount: timelineItems.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 0),
+                        itemBuilder: (context, index) {
+                          final item = timelineItems[index];
+                          return RepaintBoundary(
+                            child: _TrackStopTile(
+                              item: item,
+                              status: _statusForTimelineItem(item),
+                              pulse: _pulseController,
+                              crowdLevel: _crowdLevelForTimelineItem(item),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -3214,18 +3241,30 @@ class _RouteStationPill extends StatelessWidget {
 class _TrackStopTile extends StatelessWidget {
   final _TrackTimelineItem item;
   final _TrackStopStatus status;
-  final double flashValue;
+  final Animation<double>? pulse;
   final int? crowdLevel;
 
   const _TrackStopTile({
     required this.item,
     required this.status,
-    required this.flashValue,
+    this.pulse,
     required this.crowdLevel,
   });
 
   @override
   Widget build(BuildContext context) {
+    final pulse = this.pulse;
+    if (pulse == null || status != _TrackStopStatus.current) {
+      return _buildTile(context, 0.0);
+    }
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (context, _) =>
+          _buildTile(context, Curves.easeInOut.transform(pulse.value)),
+    );
+  }
+
+  Widget _buildTile(BuildContext context, double flashValue) {
     final stop = item.primaryStop;
     final secondaryStop = item.secondaryStop;
     final isInterchange = secondaryStop != null;
