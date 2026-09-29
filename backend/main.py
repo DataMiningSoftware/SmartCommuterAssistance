@@ -164,6 +164,15 @@ class CrowdReportResponse(BaseModel):
     occupancy_level: int = 0
 
 
+class DelayReportRequest(BaseModel):
+    stop_id: str
+    line_id: str
+    direction: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    session_id: Optional[str] = None
+
+
 class CrowdBlendRequest(BaseModel):
     stop_id: str
     hour: Optional[int] = None
@@ -292,6 +301,31 @@ def submit_crowd_report(
     result = crowd_service.submit_report(
         stop_id=body.stop_id,
         occupancy_level=body.occupancy_level,
+        user_id=resolved_user_id,
+        latitude=body.latitude,
+        longitude=body.longitude,
+        session_id=body.session_id,
+    )
+    if not result.accepted:
+        raise HTTPException(status_code=400, detail=result.message)
+    return CrowdReportResponse(
+        accepted=True,
+        message=result.message,
+        stop_id=result.stop_id,
+        occupancy_level=result.occupancy_level,
+    )
+
+
+@app.post("/crowd/delay", response_model=CrowdReportResponse)
+def submit_delay_report(
+    body: DelayReportRequest,
+    authorization: str | None = Header(None),
+) -> CrowdReportResponse:
+    resolved_user_id = _optional_user_id(authorization)
+    result = crowd_service.submit_delay_report(
+        stop_id=body.stop_id,
+        line_id=body.line_id,
+        direction=body.direction,
         user_id=resolved_user_id,
         latitude=body.latitude,
         longitude=body.longitude,

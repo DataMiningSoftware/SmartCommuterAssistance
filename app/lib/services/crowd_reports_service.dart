@@ -166,6 +166,18 @@ class NearbyStationCrowdForecast {
   }
 }
 
+class CommunityDelaySignal {
+  final int reportCount;
+  final int distinctReporters;
+  final int offsetMinutes;
+
+  const CommunityDelaySignal({
+    required this.reportCount,
+    required this.distinctReporters,
+    required this.offsetMinutes,
+  });
+}
+
 class CrowdReportsService {
   SupabaseClient get _client => Supabase.instance.client;
   final TransitNetworkService _transitNetworkService = TransitNetworkService();
@@ -407,19 +419,98 @@ class CrowdReportsService {
     _invalidateDynamicCaches();
   }
 
-  Future<void> insertUserDelayReport({
+  Future<bool> insertUserDelayReport({
     required String stopId,
+    String? lineId,
+    String? direction,
+    double? latitude,
+    double? longitude,
   }) async {
+    try {
+      final baseUrl = BackendConfigService().baseUrl.value.replaceAll(
+        RegExp(r'/+$'),
+        '',
+      );
+      if (!OfflineModeService.instance.enabled.value &&
+          baseUrl.isNotEmpty &&
+          !baseUrl.contains('127.0.0.1') &&
+          !baseUrl.contains('10.0.2.2') &&
+          lineId != null &&
+          lineId.isNotEmpty &&
+          latitude != null &&
+          longitude != null) {
+        final token = _client.auth.currentSession?.accessToken;
+        final response = await http.Client()
+            .post(
+              Uri.parse('$baseUrl/crowd/delay'),
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null) 'Authorization': 'Bearer $token',
+              },
+              body: convert.jsonEncode({
+                'stop_id': stopId.trim().toUpperCase(),
+                'line_id': lineId.trim().toUpperCase(),
+                if (direction != null) 'direction': direction,
+                'latitude': latitude,
+                'longitude': longitude,
+              }),
+            )
+            .timeout(const Duration(seconds: 5));
+        if (response.statusCode == 200) {
+          _invalidateDynamicCaches();
+          return true;
+        }
+      }
+    } catch (_) {}
     try {
       await _client.from('crowd_reports').insert({
         'stop_id': stopId.trim().toUpperCase(),
         'source_type': 'delay',
         'occupancy_level': 0,
+        if (lineId != null && lineId.isNotEmpty)
+          'line_id': lineId.trim().toUpperCase(),
+        if (direction != null) 'direction': direction,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        'user_id': _client.auth.currentUser?.id,
       }).timeout(const Duration(seconds: 5));
     } catch (_) {
-      return;
+      return false;
     }
     _invalidateDynamicCaches();
+    return true;
+  }
+
+  Future<CommunityDelaySignal> fetchCommunityDelay({
+    required String lineId,
+    String? direction,
+  }) async {
+    int asInt(Object? value) {
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    try {
+      final response = await _client.rpc('get_community_delay', params: {
+        'p_line': lineId.trim().toUpperCase(),
+        'p_direction': direction,
+      }).timeout(const Duration(seconds: 5));
+      if (response is List && response.isNotEmpty) {
+        final row = response.first;
+        if (row is Map) {
+          return CommunityDelaySignal(
+            reportCount: asInt(row['report_count']),
+            distinctReporters: asInt(row['distinct_reporters']),
+            offsetMinutes: asInt(row['offset_minutes']),
+          );
+        }
+      }
+    } catch (_) {}
+    return const CommunityDelaySignal(
+      reportCount: 0,
+      distinctReporters: 0,
+      offsetMinutes: 0,
+    );
   }
 
   Future<List<StationCrowdBoardItem>> fetchStationCrowdBoard({
@@ -994,36 +1085,23 @@ class CrowdReportsService {
     final isWeekend = time.weekday == DateTime.saturday ||
         time.weekday == DateTime.sunday;
 
-    Future<double> averageFor({required bool useHour}) async {
+    Future<double> correctionFor({required bool useHour}) async {
       try {
-        var query = _client
-            .from('trip_feedback')
-            .select('deviation_min')
-            .eq('route_id', normalizedRoute)
-            .eq('is_weekend', isWeekend);
-        if (useHour) {
-          query = query.eq('time_of_day', time.hour);
-        }
-        final rows =
-            await query.limit(100).timeout(const Duration(seconds: 5));
-        final values = <double>[];
-        for (final row in rows.whereType<Map>()) {
-          final raw = row['deviation_min'];
-          final value = raw is num
-              ? raw.toDouble()
-              : double.tryParse(raw?.toString() ?? '');
-          if (value != null) values.add(value);
-        }
-        if (values.isEmpty) return 0.0;
-        return values.reduce((a, b) => a + b) / values.length;
+        final result = await _client.rpc('get_eta_correction', params: {
+          'p_route_id': normalizedRoute,
+          'p_is_weekend': isWeekend,
+          'p_hour': useHour ? time.hour : null,
+        }).timeout(const Duration(seconds: 5));
+        if (result is num) return result.toDouble();
+        return double.tryParse(result?.toString() ?? '') ?? 0.0;
       } catch (_) {
         return 0.0;
       }
     }
 
-    var correction = await averageFor(useHour: true);
+    var correction = await correctionFor(useHour: true);
     if (correction == 0) {
-      correction = await averageFor(useHour: false);
+      correction = await correctionFor(useHour: false);
     }
     return correction.clamp(-15.0, 15.0).toDouble();
   }

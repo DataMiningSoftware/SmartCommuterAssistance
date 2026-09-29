@@ -55,6 +55,7 @@ SUPABASE_SERVICE_KEY = os.getenv(
 GEOFENCE_MAX_METERS = 500.0
 RATE_LIMIT_HOURS = 2
 CONSENSUS_WINDOW_MINUTES = 30
+DELAY_RATE_LIMIT = timedelta(minutes=30)
 
 
 class CrowdReportResult:
@@ -282,6 +283,120 @@ class CrowdService:
             )
         except Exception:
             logger.exception("Failed to submit crowd report for %s", stop_id)
+            return CrowdReportResult(
+                accepted=False,
+                message="Failed to submit report. Please try again.",
+            )
+
+    def check_delay_rate_limit(
+        self, user_id: str, line_id: str
+    ) -> Tuple[bool, Optional[int]]:
+        """Returns (is_allowed, minutes_until_next) for a delay report."""
+        try:
+            supabase = self._get_supabase()
+            result = (
+                supabase.table("crowd_reports")
+                .select("created_at")
+                .eq("user_id", user_id)
+                .eq("source_type", "delay")
+                .eq("line_id", line_id.upper())
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            if result.data and len(result.data) > 0:
+                last_time_str = result.data[0]["created_at"]
+                last_time = datetime.fromisoformat(
+                    last_time_str.replace("Z", "+00:00")
+                )
+                elapsed = datetime.now(timezone.utc) - last_time
+                if elapsed < DELAY_RATE_LIMIT:
+                    remaining_minutes = int(
+                        (DELAY_RATE_LIMIT - elapsed).total_seconds() / 60
+                    )
+                    return False, remaining_minutes
+            return True, None
+        except Exception:
+            logger.warning("Delay rate limit check failed open", exc_info=True)
+            return True, None
+
+    def submit_delay_report(
+        self,
+        stop_id: str,
+        line_id: str,
+        direction: Optional[str] = None,
+        user_id: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        session_id: Optional[str] = None,
+    ) -> CrowdReportResult:
+        stop_id = stop_id.strip().upper()
+        line_id = line_id.strip().upper()
+        if not line_id:
+            return CrowdReportResult(
+                accepted=False,
+                message="A line is required for a delay report.",
+            )
+
+        if latitude is None or longitude is None:
+            return CrowdReportResult(
+                accepted=False,
+                message="Location is required to verify you are within 500m of the station.",
+            )
+        coords = self.get_stop_coordinates(stop_id)
+        if coords is None:
+            return CrowdReportResult(
+                accepted=False,
+                message=f"Unknown station: {stop_id}",
+            )
+        within_fence, distance = self.check_geofence(
+            latitude, longitude, coords[0], coords[1]
+        )
+        if not within_fence:
+            return CrowdReportResult(
+                accepted=False,
+                message=f"You are {distance}m from {stop_id}. Please move within 500m of the station to report.",
+            )
+
+        if user_id:
+            allowed, minutes_remaining = self.check_delay_rate_limit(
+                user_id, line_id
+            )
+            if not allowed:
+                return CrowdReportResult(
+                    accepted=False,
+                    message=f"Rate limited. Try again in {minutes_remaining} minutes.",
+                )
+
+        try:
+            supabase = self._get_supabase()
+            data: Dict = {
+                "stop_id": stop_id,
+                "occupancy_level": 0,
+                "source_type": "delay",
+                "line_id": line_id,
+            }
+            if direction:
+                data["direction"] = direction.strip()
+            if user_id:
+                data["user_id"] = user_id
+            if latitude is not None:
+                data["latitude"] = round(latitude, 2)
+            if longitude is not None:
+                data["longitude"] = round(longitude, 2)
+            if session_id is not None:
+                data["session_id"] = session_id
+
+            supabase.table("crowd_reports").insert(data).execute()
+
+            return CrowdReportResult(
+                accepted=True,
+                message="Delay reported. Thanks for helping other riders.",
+                stop_id=stop_id,
+                occupancy_level=0,
+            )
+        except Exception:
+            logger.exception("Failed to submit delay report for %s", stop_id)
             return CrowdReportResult(
                 accepted=False,
                 message="Failed to submit report. Please try again.",

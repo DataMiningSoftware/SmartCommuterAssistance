@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../constants/crowd_levels.dart';
@@ -57,6 +58,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   final ValueNotifier<int> _nearestIndexNotifier = ValueNotifier<int>(-1);
   final ValueNotifier<DateTime> _clockNotifier =
       ValueNotifier<DateTime>(DateTime.now());
+  final ValueNotifier<String?> _communityDelayNotifier =
+      ValueNotifier<String?>(null);
+  final Map<String, int> _appliedDelaySignals = <String, int>{};
+  DateTime? _lastCommunityDelayCheck;
   List<_StopNode> _routeStops = <_StopNode>[];
   List<_RouteConnection> _routeEdges = <_RouteConnection>[];
   List<_TrackStationOption> _stationOptions = <_TrackStationOption>[];
@@ -114,6 +119,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _nearestIndexNotifier.dispose();
     _arrivedNotifier.dispose();
     _clockNotifier.dispose();
+    _communityDelayNotifier.dispose();
     _emptyTripSearchController.dispose();
     _pulseController.dispose();
     _reportRevealController.dispose();
@@ -442,6 +448,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _routeResolvedAt =
         originOverride == null ? baseTrip.createdAt : DateTime.now();
     _routeCountsWalk = originOverride == null;
+    _appliedDelaySignals.clear();
+    _communityDelayNotifier.value = null;
+    _lastCommunityDelayCheck = null;
     _trip = ActiveTrip(
       originStopId: originStop?.stopId ?? baseTrip.originStopId,
       destinationStopId: result.destinationStopId,
@@ -1646,6 +1655,50 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _arrivedNotifier.value = value;
   }
 
+  String? _directionForSegment(int index) {
+    if (index < 0 || index >= _routeStops.length) return null;
+    final lineId = _routeStops[index].routeId;
+    for (var i = _routeStops.length - 1; i >= index; i--) {
+      if (_routeStops[i].routeId == lineId) {
+        return _routeStops[i].stopName;
+      }
+    }
+    return _routeStops[index].stopName;
+  }
+
+  Future<void> _checkCommunityDelay() async {
+    final now = DateTime.now();
+    if (_lastCommunityDelayCheck != null &&
+        now.difference(_lastCommunityDelayCheck!) <
+            const Duration(seconds: 60)) {
+      return;
+    }
+    _lastCommunityDelayCheck = now;
+
+    final index = _resolvedCurrentIndex;
+    if (index < 0 || index >= _routeStops.length) return;
+    final lineId = _routeStops[index].routeId;
+    final direction = _directionForSegment(index);
+    final signal = await _crowdReportsService.fetchCommunityDelay(
+      lineId: lineId,
+      direction: direction,
+    );
+
+    if (!mounted) return;
+    _communityDelayNotifier.value = signal.offsetMinutes > 0
+        ? '${signal.distinctReporters} riders report delays on '
+            '${getRouteDisplayName(lineId)} · +${signal.offsetMinutes} min'
+        : null;
+
+    if (signal.offsetMinutes <= 0) return;
+    final key = '$lineId|${direction ?? ''}';
+    if (_appliedDelaySignals.containsKey(key)) return;
+    _appliedDelaySignals[key] = signal.offsetMinutes;
+    if (_etaPinned) {
+      ActiveTripService.instance.extendPinnedEta(signal.offsetMinutes);
+    }
+  }
+
   void _startTracking() {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
@@ -1708,6 +1761,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
       final shouldReroute = await _checkOffRoute(position, bestDistance);
       if (shouldReroute) return;
+
+      unawaited(_checkCommunityDelay());
 
       if (_etaPinned && !_inactivityDialogOpen) {
         await _checkInactivity(position);
@@ -2286,12 +2341,36 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           latitude: _lastMovement?.latitude,
           longitude: _lastMovement?.longitude,
         );
+        unawaited(HapticFeedback.mediumImpact());
         _crowdsReported++;
         if (_etaPinned) {
           ActiveTripService.instance.extendPinnedEta(3);
         }
       } else {
-        await _crowdReportsService.insertUserDelayReport(stopId: stopId);
+        final index = _resolvedCurrentIndex;
+        final lineId = index >= 0 && index < _routeStops.length
+            ? _routeStops[index].routeId
+            : null;
+        final direction = index >= 0 ? _directionForSegment(index) : null;
+        final ok = await _crowdReportsService.insertUserDelayReport(
+          stopId: stopId,
+          lineId: lineId,
+          direction: direction,
+          latitude: _lastMovement?.latitude,
+          longitude: _lastMovement?.longitude,
+        );
+        if (!ok) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Could not submit the delay report. Please try again.',
+              ),
+            ),
+          );
+          return;
+        }
+        unawaited(HapticFeedback.mediumImpact());
         _delaysReported++;
         if (_etaPinned) {
           ActiveTripService.instance.extendPinnedEta(5);
@@ -2462,6 +2541,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   _nearestIndexNotifier,
                   _arrivedNotifier,
                   _clockNotifier,
+                  _communityDelayNotifier,
                   ActiveTripService.instance.pinnedArrivalTime,
                 ]),
                 builder: (context, _) {
@@ -2494,6 +2574,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                             ),
                           )
                         : _routeStops.last.routeId,
+                    delayLabel: _communityDelayNotifier.value,
                   );
                 },
               ),
@@ -2910,6 +2991,7 @@ class _TrackHeader extends StatelessWidget {
   final VoidCallback onChangeDestination;
   final String originRouteId;
   final String destinationRouteId;
+  final String? delayLabel;
 
   const _TrackHeader({
     required this.trip,
@@ -2923,6 +3005,7 @@ class _TrackHeader extends StatelessWidget {
     required this.onChangeDestination,
     required this.originRouteId,
     required this.destinationRouteId,
+    this.delayLabel,
   });
 
   @override
@@ -2991,6 +3074,40 @@ class _TrackHeader extends StatelessWidget {
               ),
             ],
           ),
+          if (delayLabel != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFFB45309).withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFFB45309).withValues(alpha: 0.35),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.campaign_rounded,
+                    size: 15,
+                    color: Color(0xFFB45309),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      delayLabel!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
