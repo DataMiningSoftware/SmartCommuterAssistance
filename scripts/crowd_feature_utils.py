@@ -355,6 +355,7 @@ def build_feature_row(
     extra_holidays: set[date] | None = None,
     rain_mm: float = 0.0,
     ridership_ratio: float = 1.0,
+    flight_count: int = 0,
 ) -> dict[str, object]:
     day_of_week = when.weekday()  # 0=Monday, 6=Sunday
     is_weekend = 1 if day_of_week >= 5 else 0
@@ -372,6 +373,7 @@ def build_feature_row(
         "is_raining": int(is_raining),
         "rain_mm": round(float(rain_mm or 0.0), 2),
         "ridership_ratio": round(float(ridership_ratio or 1.0), 4),
+        "flight_count": int(flight_count or 0),
         "is_holiday": is_holiday_date(when.date(), extra_holidays),
         "peak_period": peak_period,
         "station_pressure": profile.pressure_score,
@@ -407,6 +409,7 @@ def estimate_occupancy_percent(
     is_raining = int(features.get("is_raining", 0))
     rain_mm = float(features.get("rain_mm", 0.0) or 0.0)
     ridership_ratio = float(features.get("ridership_ratio", 1.0) or 1.0)
+    flight_count = int(features.get("flight_count", 0) or 0)
     is_holiday = int(features.get("is_holiday", 0))
     event_intensity = int(features.get("event_intensity", 0))
     headway_minutes = int(features.get("headway_minutes", 6))
@@ -439,6 +442,7 @@ def estimate_occupancy_percent(
     event_weight = 12.0 if profile.event_score >= 3 else 9.0
     noise = rng.uniform(-5.0, 5.0) if rng is not None else 0.0
     rain_boost = min(max(rain_mm, 0.0), 20.0) * 0.5
+    flight_boost = min(max(flight_count, 0), 400) * 0.01
     demand_scale = min(max(ridership_ratio, 0.5), 1.5)
 
     occupancy_percent = (
@@ -450,6 +454,7 @@ def estimate_occupancy_percent(
         + (6.0 if is_holiday else 0.0)
         + (6.0 if is_raining else 0.0)
         + rain_boost
+        + flight_boost
         + (event_intensity * event_weight)
         + (max(headway_minutes - 4, 0) * 1.8)
         + (station_pressure * 6.0)

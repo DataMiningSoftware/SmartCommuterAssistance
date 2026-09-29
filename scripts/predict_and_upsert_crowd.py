@@ -62,6 +62,34 @@ def load_latest_ridership_ratios(client: Client) -> dict[str, float]:
     return ratios
 
 
+def load_latest_flight_counts(client: Client) -> dict[str, int]:
+    try:
+        rows = (
+            client.table("external_daily_features")
+            .select("line_id,flight_count,date")
+            .order("date", desc=True)
+            .limit(500)
+            .execute()
+            .data
+            or []
+        )
+    except Exception:
+        return {}
+    counts: dict[str, int] = {}
+    for row in rows:
+        line = str(row.get("line_id") or "").strip().upper()
+        if not line or line in counts:
+            continue
+        value = row.get("flight_count")
+        if value is None:
+            continue
+        try:
+            counts[line] = int(value)
+        except (TypeError, ValueError):
+            continue
+    return counts
+
+
 def predict_levels(model, feature_frame: pd.DataFrame) -> list[int]:
     try:
         predictions = model.predict(feature_frame)
@@ -83,6 +111,7 @@ def upsert_predictions(
     rain_mm = get_current_rain_mm()
     is_raining = 1 if rain_mm > 0 else 0
     ridership_ratios = load_latest_ridership_ratios(client)
+    flight_counts = load_latest_flight_counts(client)
     stop_metadata = load_stop_metadata(stops_csv)
     extra_holidays = parse_extra_holiday_dates()
 
@@ -101,6 +130,7 @@ def upsert_predictions(
             extra_holidays=extra_holidays,
             rain_mm=rain_mm,
             ridership_ratio=ridership_ratios.get(stop.route_id, 1.0),
+            flight_count=flight_counts.get(stop.route_id, 0),
         )
         feature_rows.append(features)
         selected_stop_ids.append(stop.stop_id)

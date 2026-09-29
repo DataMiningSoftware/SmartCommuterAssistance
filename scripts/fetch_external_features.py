@@ -3,9 +3,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
+import urllib.parse
 import urllib.request
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -22,6 +24,15 @@ RAIN_URL = (
     "&hourly=precipitation&past_days=92&forecast_days=1"
     "&timezone=Asia%2FKuala_Lumpur"
 )
+FLIGHTS_URL = (
+    "https://opensky-network.org/api/flights/arrival"
+    "?airport=WMKK&begin={begin}&end={end}"
+)
+FLIGHT_FEATURE_LINES = ("ER6", "ER7")
+OPENSKY_TOKEN_URL = (
+    "https://auth.opensky-network.org/auth/realms/opensky-network"
+    "/protocol/openid-connect/token"
+)
 
 LINE_RIDERSHIP_FIELD = {
     "KJ": "rail_lrt_kj",
@@ -37,13 +48,41 @@ EXTRA_LINES = ["ER6", "ER7", "BRT"]
 ALL_LINES = list(LINE_RIDERSHIP_FIELD) + EXTRA_LINES
 
 
-def fetch_json(url: str) -> object:
+def fetch_json(url: str, headers: dict | None = None) -> object:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "SmartCommuterAssistant/1.0"},
+        headers={"User-Agent": "SmartCommuterAssistant/1.0", **(headers or {})},
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def opensky_headers() -> dict:
+    client_id = os.getenv("OPENSKY_CLIENT_ID", "").strip()
+    client_secret = os.getenv("OPENSKY_CLIENT_SECRET", "").strip()
+    if not client_id or not client_secret:
+        return {}
+    try:
+        body = urllib.parse.urlencode(
+            {
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+            }
+        ).encode()
+        request = urllib.request.Request(
+            OPENSKY_TOKEN_URL,
+            data=body,
+            headers={"User-Agent": "SmartCommuterAssistant/1.0"},
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        token = payload.get("access_token")
+        if token:
+            return {"Authorization": f"Bearer {token}"}
+    except Exception:
+        return {}
+    return {}
 
 
 def daily_rain_mm() -> dict[str, float]:
@@ -57,6 +96,37 @@ def daily_rain_mm() -> dict[str, float]:
             continue
         totals[str(timestamp)[:10]] += float(value)
     return {day: round(total, 2) for day, total in totals.items()}
+
+
+def daily_flight_counts(days: int = 7) -> dict[str, int]:
+    headers = opensky_headers()
+    if not headers:
+        print(
+            "  OPENSKY_CLIENT_ID / OPENSKY_CLIENT_SECRET not set; "
+            "flight_count stays 0"
+        )
+        return {}
+    counts: dict[str, int] = {}
+    today = date.today()
+    for offset in range(1, min(days, 7) + 1):
+        day = today - timedelta(days=offset)
+        begin = int(
+            datetime.combine(
+                day,
+                datetime.min.time(),
+                tzinfo=timezone.utc,
+            ).timestamp()
+        )
+        try:
+            payload = fetch_json(
+                FLIGHTS_URL.format(begin=begin, end=begin + 86400),
+                headers=headers,
+            )
+            if isinstance(payload, list):
+                counts[day.isoformat()] = len(payload)
+        except Exception:
+            continue
+    return counts
 
 
 def load_holidays() -> set[str]:
@@ -124,9 +194,15 @@ def build_rows(days: int) -> list[dict]:
         history.sort()
 
     rain = daily_rain_mm()
+    flights = daily_flight_counts()
     holidays = load_holidays()
     events = load_event_dates()
     recent_days = sorted(day for day in rain if day >= cutoff)
+
+    def flight_count_for(line: str, day: str) -> int:
+        if line not in FLIGHT_FEATURE_LINES:
+            return 0
+        return flights.get(day, 0)
 
     rows: list[dict] = []
     for line in ALL_LINES:
@@ -141,6 +217,7 @@ def build_rows(days: int) -> list[dict]:
                     "rain_mm": rain.get(day, 0.0),
                     "is_holiday": day in holidays,
                     "event_flag": day in events,
+                    "flight_count": flight_count_for(line, day),
                 }
             )
         if history:
@@ -155,6 +232,7 @@ def build_rows(days: int) -> list[dict]:
                     "rain_mm": rain.get(day, 0.0),
                     "is_holiday": day in holidays,
                     "event_flag": day in events,
+                    "flight_count": flight_count_for(line, day),
                 }
             )
 
@@ -174,6 +252,7 @@ def write_cache(rows: list[dict]) -> None:
                 "rain_mm",
                 "is_holiday",
                 "event_flag",
+                "flight_count",
             ],
         )
         writer.writeheader()

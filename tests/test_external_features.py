@@ -61,6 +61,22 @@ def test_feature_row_includes_external_features():
     assert row["is_raining"] == 1
 
 
+def test_feature_row_includes_flight_count():
+    stop = StopMetadata(
+        stop_id="KLIA",
+        stop_name="KLIA T1",
+        route_id="ER6",
+        is_interchange=True,
+    )
+    row = build_feature_row(
+        stop,
+        datetime(2026, 9, 30, 8, 0),
+        is_raining=0,
+        flight_count=310,
+    )
+    assert row["flight_count"] == 310
+
+
 def test_demand_ratio_scales_occupancy():
     stop = StopMetadata(
         stop_id="KJ1",

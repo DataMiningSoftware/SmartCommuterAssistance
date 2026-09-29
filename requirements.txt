@@ -8,3 +8,4 @@ python-dotenv==1.2.3
 lightgbm==4.7.0
 xgboost==3.4.1
 optuna==5.0.0
+gtfs-realtime-bindings==3.0.0

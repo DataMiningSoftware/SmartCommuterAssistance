@@ -31,6 +31,7 @@ def load_external_features(
             table[(day, line)] = {
                 "rain_mm": float(row.get("rain_mm") or 0.0),
                 "ridership_ratio": float(row.get("ridership_ratio") or 1.0),
+                "flight_count": int(float(row.get("flight_count") or 0)),
             }
     return table
 
@@ -74,6 +75,7 @@ def generate(
         is_raining = 1 if rng.random() < rain_probability else 0
         rain_mm = 0.0
         ridership_ratio = 1.0
+        flight_count = 0
         external = (external_features or {}).get(
             (when.date().isoformat(), stop.route_id),
         )
@@ -81,6 +83,7 @@ def generate(
             rain_mm = float(external.get("rain_mm", 0.0))
             is_raining = 1 if rain_mm > 0 else 0
             ridership_ratio = float(external.get("ridership_ratio", 1.0))
+            flight_count = int(external.get("flight_count", 0))
         features = build_feature_row(
             stop,
             when,
@@ -90,6 +93,7 @@ def generate(
             extra_holidays=extra_holidays,
             rain_mm=rain_mm,
             ridership_ratio=ridership_ratio,
+            flight_count=flight_count,
         )
 
         hour = int(features["hour"])
@@ -120,6 +124,7 @@ def generate(
                 "is_raining": is_raining,
                 "rain_mm": round(rain_mm, 2),
                 "ridership_ratio": round(ridership_ratio, 4),
+                "flight_count": flight_count,
                 "is_holiday": is_holiday,
                 "peak_period": int(features["peak_period"]),
                 "station_pressure": int(features["station_pressure"]),
