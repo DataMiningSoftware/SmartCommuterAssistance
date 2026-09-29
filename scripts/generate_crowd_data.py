@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 from datetime import datetime, timedelta
 import random
 from pathlib import Path
@@ -13,6 +14,25 @@ from crowd_feature_utils import (
     load_stop_metadata,
     parse_extra_holiday_dates,
 )
+
+
+def load_external_features(
+    path: Path,
+) -> dict[tuple[str, str], dict[str, float]]:
+    if not path.exists():
+        return {}
+    table: dict[tuple[str, str], dict[str, float]] = {}
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            day = (row.get("date") or "").strip()[:10]
+            line = (row.get("line_id") or "").strip().upper()
+            if not day or not line:
+                continue
+            table[(day, line)] = {
+                "rain_mm": float(row.get("rain_mm") or 0.0),
+                "ridership_ratio": float(row.get("ridership_ratio") or 1.0),
+            }
+    return table
 
 
 def occupancy_level_from_percent(occupancy_percent: float) -> int:
@@ -33,6 +53,7 @@ def generate(
     seed: int,
     rain_probability: float,
     global_event_level: float,
+    external_features: dict[tuple[str, str], dict[str, float]] | None = None,
 ) -> pd.DataFrame:
     rng = random.Random(seed)
     stop_metadata = list(load_stop_metadata(stops_csv).values())
@@ -51,6 +72,15 @@ def generate(
             minutes=rng.randint(0, 59),
         )
         is_raining = 1 if rng.random() < rain_probability else 0
+        rain_mm = 0.0
+        ridership_ratio = 1.0
+        external = (external_features or {}).get(
+            (when.date().isoformat(), stop.route_id),
+        )
+        if external is not None:
+            rain_mm = float(external.get("rain_mm", 0.0))
+            is_raining = 1 if rain_mm > 0 else 0
+            ridership_ratio = float(external.get("ridership_ratio", 1.0))
         features = build_feature_row(
             stop,
             when,
@@ -58,6 +88,8 @@ def generate(
             rng=rng,
             global_event_level=global_event_level,
             extra_holidays=extra_holidays,
+            rain_mm=rain_mm,
+            ridership_ratio=ridership_ratio,
         )
 
         hour = int(features["hour"])
@@ -86,6 +118,8 @@ def generate(
                 "dow_sin": features["dow_sin"],
                 "dow_cos": features["dow_cos"],
                 "is_raining": is_raining,
+                "rain_mm": round(rain_mm, 2),
+                "ridership_ratio": round(ridership_ratio, 4),
                 "is_holiday": is_holiday,
                 "peak_period": int(features["peak_period"]),
                 "station_pressure": int(features["station_pressure"]),
@@ -138,6 +172,9 @@ if __name__ == "__main__":
         seed=args.seed,
         rain_probability=args.rain_prob,
         global_event_level=args.event_level,
+        external_features=load_external_features(
+            script_dir / "external_features_cache.csv",
+        ),
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.output, index=False)

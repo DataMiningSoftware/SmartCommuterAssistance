@@ -23,16 +23,43 @@ OPEN_METEO_URL = (
 )
 
 
-def get_is_raining() -> int:
+def get_current_rain_mm() -> float:
     try:
         response = requests.get(OPEN_METEO_URL, timeout=8)
         response.raise_for_status()
         payload = response.json()
-        rain = float(payload.get("current", {}).get("rain", 0.0))
-        return 1 if rain > 0 else 0
+        return float(payload.get("current", {}).get("rain", 0.0))
     except Exception:
         # Safe fallback when weather API fails.
-        return 0
+        return 0.0
+
+
+def load_latest_ridership_ratios(client: Client) -> dict[str, float]:
+    try:
+        rows = (
+            client.table("external_daily_features")
+            .select("line_id,ridership_ratio,date")
+            .order("date", desc=True)
+            .limit(500)
+            .execute()
+            .data
+            or []
+        )
+    except Exception:
+        return {}
+    ratios: dict[str, float] = {}
+    for row in rows:
+        line = str(row.get("line_id") or "").strip().upper()
+        if not line or line in ratios:
+            continue
+        value = row.get("ridership_ratio")
+        if value is None:
+            continue
+        try:
+            ratios[line] = float(value)
+        except (TypeError, ValueError):
+            continue
+    return ratios
 
 
 def predict_levels(model, feature_frame: pd.DataFrame) -> list[int]:
@@ -53,7 +80,9 @@ def upsert_predictions(
     global_event_level: float,
 ) -> None:
     now = datetime.now(tz=KL_TIMEZONE)
-    is_raining = get_is_raining()
+    rain_mm = get_current_rain_mm()
+    is_raining = 1 if rain_mm > 0 else 0
+    ridership_ratios = load_latest_ridership_ratios(client)
     stop_metadata = load_stop_metadata(stops_csv)
     extra_holidays = parse_extra_holiday_dates()
 
@@ -70,6 +99,8 @@ def upsert_predictions(
             is_raining=is_raining,
             global_event_level=global_event_level,
             extra_holidays=extra_holidays,
+            rain_mm=rain_mm,
+            ridership_ratio=ridership_ratios.get(stop.route_id, 1.0),
         )
         feature_rows.append(features)
         selected_stop_ids.append(stop.stop_id)
@@ -84,7 +115,7 @@ def upsert_predictions(
         "Prediction context -> "
         f"hour={now.hour}, dow={now.weekday()}, "
         f"weekend={1 if now.weekday() >= 5 else 0}, "
-        f"raining={is_raining}, rows={len(feature_rows)}"
+        f"raining={is_raining} ({rain_mm} mm), rows={len(feature_rows)}"
     )
     print(feature_frame.head(8).to_string(index=False))
 

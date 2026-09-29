@@ -353,6 +353,8 @@ def build_feature_row(
     rng: random.Random | None = None,
     global_event_level: float = 0.0,
     extra_holidays: set[date] | None = None,
+    rain_mm: float = 0.0,
+    ridership_ratio: float = 1.0,
 ) -> dict[str, object]:
     day_of_week = when.weekday()  # 0=Monday, 6=Sunday
     is_weekend = 1 if day_of_week >= 5 else 0
@@ -368,6 +370,8 @@ def build_feature_row(
         "dow_sin": round(dow_sin, 6),
         "dow_cos": round(dow_cos, 6),
         "is_raining": int(is_raining),
+        "rain_mm": round(float(rain_mm or 0.0), 2),
+        "ridership_ratio": round(float(ridership_ratio or 1.0), 4),
         "is_holiday": is_holiday_date(when.date(), extra_holidays),
         "peak_period": peak_period,
         "station_pressure": profile.pressure_score,
@@ -401,6 +405,8 @@ def estimate_occupancy_percent(
     day_of_week = int(features.get("day_of_week", 0))
     is_weekend = int(features.get("is_weekend", 0))
     is_raining = int(features.get("is_raining", 0))
+    rain_mm = float(features.get("rain_mm", 0.0) or 0.0)
+    ridership_ratio = float(features.get("ridership_ratio", 1.0) or 1.0)
     is_holiday = int(features.get("is_holiday", 0))
     event_intensity = int(features.get("event_intensity", 0))
     headway_minutes = int(features.get("headway_minutes", 6))
@@ -432,6 +438,8 @@ def estimate_occupancy_percent(
 
     event_weight = 12.0 if profile.event_score >= 3 else 9.0
     noise = rng.uniform(-5.0, 5.0) if rng is not None else 0.0
+    rain_boost = min(max(rain_mm, 0.0), 20.0) * 0.5
+    demand_scale = min(max(ridership_ratio, 0.5), 1.5)
 
     occupancy_percent = (
         10.0
@@ -441,6 +449,7 @@ def estimate_occupancy_percent(
         + (-8.0 if is_weekend else 4.0)
         + (6.0 if is_holiday else 0.0)
         + (6.0 if is_raining else 0.0)
+        + rain_boost
         + (event_intensity * event_weight)
         + (max(headway_minutes - 4, 0) * 1.8)
         + (station_pressure * 6.0)
@@ -449,4 +458,5 @@ def estimate_occupancy_percent(
         + (stop_bias(stop.stop_id) * 1.2)
         + noise
     )
+    occupancy_percent = occupancy_percent * demand_scale
     return max(0.0, min(100.0, occupancy_percent))

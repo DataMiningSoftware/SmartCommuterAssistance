@@ -1,0 +1,22 @@
+{
+  "note": "Manually maintained event calendar. Add entries for major events at the venues below; intensity 1-3 scales the event feature. Dates must be ISO (YYYY-MM-DD).",
+  "venues": {
+    "bukit_jalil": {
+      "name": "National Stadium Bukit Jalil / Axiata Arena",
+      "stop_ids": ["SP17"]
+    },
+    "klcc": {
+      "name": "KLCC / Kuala Lumpur Convention Centre",
+      "stop_ids": ["KJ10", "PY21"]
+    },
+    "merdeka_118": {
+      "name": "Merdeka 118 / Stadium Merdeka",
+      "stop_ids": ["KG17", "AG9", "SP9", "MR4"]
+    },
+    "mid_valley": {
+      "name": "Mid Valley Megamall / The Gardens",
+      "stop_ids": ["MID_VALLEY", "KJ17"]
+    }
+  },
+  "events": []
+}
