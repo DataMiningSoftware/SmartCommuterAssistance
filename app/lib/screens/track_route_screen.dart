@@ -80,6 +80,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   int _crowdsReported = 0;
   String? _weatherAtStart;
   bool _proximityChecked = false;
+  DateTime? _routeResolvedAt;
+  bool _routeCountsWalk = true;
 
   _PositionRecord? _lastMovement;
   bool _inactivityDialogOpen = false;
@@ -384,10 +386,11 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   Future<void> _applyResolvedTrip({
     required ActiveTrip baseTrip,
     required _DijkstraResult result,
+    _StopNode? originOverride,
   }) async {
     final routeStops = <_StopNode>[];
     final activeTripStops = <ActiveTripStop>[];
-    final originStop = _stopsById[baseTrip.originStopId];
+    final originStop = originOverride ?? _stopsById[baseTrip.originStopId];
     if (originStop != null) {
       routeStops.add(originStop);
       activeTripStops.add(
@@ -429,10 +432,13 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _walkMinutesToOrigin = 0;
     _lastMovement = null;
     _inactivityDialogOpen = false;
+    _routeResolvedAt =
+        originOverride == null ? baseTrip.createdAt : DateTime.now();
+    _routeCountsWalk = originOverride == null;
     _trip = ActiveTrip(
-      originStopId: baseTrip.originStopId,
+      originStopId: originStop?.stopId ?? baseTrip.originStopId,
       destinationStopId: result.destinationStopId,
-      originName: baseTrip.originName,
+      originName: originStop?.stopName ?? baseTrip.originName,
       destinationName: baseTrip.destinationName,
       routePreference: baseTrip.routePreference,
       highestCrowdLevel: _highestRouteCrowdLevel(activeTripStops),
@@ -1486,6 +1492,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         stops: trip.stops,
       ),
       result: result,
+      originOverride: currentStop,
     );
     await _refreshAdaptiveForecasts(force: true);
 
@@ -1682,11 +1689,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         await _checkProximityAndPinEta(position);
       }
 
-      final shouldReroute = await _checkOffRoute(
-        position.latitude,
-        position.longitude,
-        bestDistance,
-      );
+      final shouldReroute = await _checkOffRoute(position, bestDistance);
       if (shouldReroute) return;
 
       if (_etaPinned && !_inactivityDialogOpen) {
@@ -1735,8 +1738,12 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
     final predictedMinutes = trip.estimatedTotalMinutes;
     if (predictedMinutes != null) {
-      final actualMinutes = DateTime.now().difference(trip.createdAt).inMinutes;
-      final predictedWithWalk = predictedMinutes + _walkMinutesToOrigin;
+      final baseline = _routeResolvedAt ?? trip.createdAt;
+      final actualMinutes = DateTime.now().difference(baseline).inMinutes;
+      final predictedWithWalk =
+          predictedMinutes + (_routeCountsWalk ? _walkMinutesToOrigin : 0);
+      final walkDistanceM =
+          _routeCountsWalk ? _walkMinutesToOrigin * 80.0 : 0.0;
       await _crowdReportsService.submitTripFeedback(
         routeId: _routeStops.isEmpty ? '' : _routeStops.last.routeId,
         originStop: trip.originStopId,
@@ -1746,7 +1753,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         crowdAtStart: trip.highestCrowdLevel,
         delaysReported: _delaysReported,
         crowdsReported: _crowdsReported,
-        walkDistanceM: _walkMinutesToOrigin * 80.0,
+        walkDistanceM: walkDistanceM,
         weather: _weatherAtStart,
       );
     }
@@ -1936,11 +1943,13 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Future<bool> _checkOffRoute(
-    double latitude,
-    double longitude,
+    Position position,
     double bestRouteDistance,
   ) async {
     if (_isRerouting) return false;
+    if (position.speed > 3.5) return false;
+    final latitude = position.latitude;
+    final longitude = position.longitude;
     final now = DateTime.now();
     if (_lastRerouteTime != null &&
         now.difference(_lastRerouteTime!) < const Duration(seconds: 30)) {
@@ -1979,6 +1988,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     final trip = _trip;
     if (trip == null || _isRerouting) return;
     setState(() => _isRerouting = true);
+    _lastRerouteTime = DateTime.now();
 
     try {
       final result = _bestPathToStops(
@@ -1988,11 +1998,14 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       );
       if (result == null) return;
 
-      await _applyResolvedTrip(baseTrip: trip, result: result);
+      await _applyResolvedTrip(
+        baseTrip: trip,
+        result: result,
+        originOverride: currentStop,
+      );
       await _refreshAdaptiveForecasts(force: true);
 
       _rerouteCount++;
-      _lastRerouteTime = DateTime.now();
 
       if (!mounted) return;
       setState(() {
