@@ -98,18 +98,30 @@ class _StationCard extends StatelessWidget {
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
+              runSpacing: 6,
               children: station.lines
-                  .map((lineId) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: getRouteColor(lineId),
-                          borderRadius: BorderRadius.circular(12),
+                  .map((lineId) => resolveSchematicLineId(lineId))
+                  .where((lineId) => lineId.isNotEmpty)
+                  .map(
+                    (lineId) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: getRouteColor(lineId),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        getRouteDisplayName(lineId),
+                        style: TextStyle(
+                          color: getRouteOnColor(lineId),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
                         ),
-                        child: Text(
-                          lineId,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
-                        ),
-                      ))
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 8),

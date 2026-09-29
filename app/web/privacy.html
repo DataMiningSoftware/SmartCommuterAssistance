@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy — Smart Commuter Assistant+</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.6;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+    color: #1f2937;
+    background: #f8fafc;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e5e7eb; background: #0b1220; }
+    a { color: #7dd3fc; }
+    th { background: #111827; }
+    td, th { border-color: #374151; }
+    .card { background: #111827; border-color: #374151; }
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  h2 { font-size: 20px; margin-top: 32px; }
+  .updated { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f3f4f6; }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 16px 0;
+  }
+  ul { padding-left: 20px; }
+  a { color: #0a3a8b; }
+</style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Smart Commuter Assistant+ — last updated 29 September 2026</p>
+
+  <p>
+    Smart Commuter Assistant+ ("the app") is a Klang Valley rail transit
+    companion that provides route planning, crowd forecasts, fares, and journey
+    tracking. This policy explains what data the app collects, why, and how you
+    can control or delete it.
+  </p>
+
+  <h2>1. Data we collect</h2>
+  <table>
+    <tr><th>Data</th><th>Purpose</th><th>Required?</th></tr>
+    <tr>
+      <td>Anonymous device identifier</td>
+      <td>Pseudonymous identity for rate limits, community consensus checks and — with your consent — model training. No name or email is collected.</td>
+      <td>Automatic</td>
+    </tr>
+    <tr>
+      <td>Email address &amp; password</td>
+      <td>Optional account sync, if you choose to create an account later</td>
+      <td>Only if you create an account (not required)</td>
+    </tr>
+    <tr>
+      <td>Precise location (GPS)</td>
+      <td>Nearest-station detection, arrival lookup, walking-distance ranking, and the 500 m station geofence</td>
+      <td>Only while the app is in use and you grant permission</td>
+    </tr>
+    <tr>
+      <td>Crowd &amp; delay reports</td>
+      <td>Community crowd levels; stored with your anonymous id (location rounded to ~1 km)</td>
+      <td>Optional</td>
+    </tr>
+    <tr>
+      <td>Trip history &amp; feedback</td>
+      <td>ETA learning and route-planning improvements</td>
+      <td>Optional (trip feedback is only stored with model-training consent)</td>
+    </tr>
+    <tr>
+      <td>Device/usage analytics</td>
+      <td>Crash reporting (Sentry), when enabled</td>
+      <td>Optional</td>
+    </tr>
+  </table>
+  <p>Location is <strong>foreground-only</strong>. The app does not track you in the background.</p>
+
+  <h2>2. How data is used</h2>
+  <ul>
+    <li>To compute routes, arrivals, crowd forecasts, and fares.</li>
+    <li>To show you nearby stations and live crowd levels.</li>
+    <li>
+      <strong>Model training (optional, off by default):</strong> with your
+      explicit consent, we use your crowd and delay reports and your
+      predicted-vs-actual trip times to train our crowd-prediction and ETA
+      models. This improves crowd forecasts, wait-time estimates, and schedule
+      planning for all riders. Only anonymised, aggregated data is used; we
+      never sell your data. You can grant or withdraw this consent at any time
+      in <strong>Profile → Improve predictions with my trip data</strong>.
+    </li>
+  </ul>
+  <p>We do <strong>not</strong> sell your data.</p>
+
+  <h2>3. Third-party services</h2>
+  <ul>
+    <li><strong>Supabase</strong> — Postgres database + authentication</li>
+    <li><strong>Render</strong> — backend hosting (routing/arrivals API)</li>
+    <li><strong>Sentry</strong> — crash and error reporting (when enabled)</li>
+    <li><strong>data.gov.my / Prasarana / KTMB</strong> — official transit schedule data</li>
+    <li><strong>OpenStreetMap / CARTO / Valhalla</strong> — map tiles and walking-distance routing</li>
+    <li><strong>Open-Meteo</strong> — weather data</li>
+  </ul>
+
+  <h2>4. Data retention</h2>
+  <ul>
+    <li>Anonymous device data is retained until you delete it in the app.</li>
+    <li>Crowd reports are retained to power crowd forecasting (location rounded to ~1 km).</li>
+    <li>Trip feedback is retained only while you have granted model-training consent; withdrawing consent excludes your data from all future training runs.</li>
+  </ul>
+
+  <h2>5. Your rights &amp; data deletion</h2>
+  <p>
+    You can delete your data at any time from <strong>Profile → Delete my
+    data</strong> in the app. This permanently removes your anonymous device
+    profile, contributed reports, and trip feedback. There is no account to
+    delete unless you voluntarily created one.
+  </p>
+  <p>
+    If you are unable to open the app, you may request deletion at
+    <a href="https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues">our issue tracker</a>.
+  </p>
+
+  <h2>6. Children's privacy</h2>
+  <p>
+    This app is not directed at children under 13. We do not knowingly collect
+    data from children under 13.
+  </p>
+
+  <h2>7. Contact</h2>
+  <p>
+    Questions about this policy:
+    <a href="https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues">github.com/DataMiningSoftware/SmartCommuterAssistance</a>
+  </p>
+
+  <div class="card">
+    <strong>Disclaimer:</strong> Smart Commuter Assistant+ is an independent,
+    unofficial app and is not affiliated with, endorsed by, or sponsored by
+    Rapid KL, Prasarana Malaysia, or KTMB. Transit data is provided for
+    reference under open data terms with attribution.
+  </div>
+</body>
+</html>

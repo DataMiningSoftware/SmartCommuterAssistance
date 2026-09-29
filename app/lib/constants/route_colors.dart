@@ -4,6 +4,61 @@ import 'package:flutter/material.dart';
 /// is active on the map. Matches the app's disabled/muted token.
 const Color kMapDisabledGrey = Color(0xFF98A2B3);
 
+const Map<String, String> _schematicLineToRoute = {
+  '1': 'KT1',
+  '2': 'KT2',
+  '3': 'AG',
+  '4': 'SP',
+  '5': 'KJ',
+  '6': 'ER6',
+  '7': 'ER7',
+  '8': 'MR',
+  '9': 'KG',
+  '10': 'KS',
+  '11': 'JS',
+  '12': 'PY',
+  'B1': 'BRT',
+};
+
+String resolveSchematicLineId(String lineId) {
+  final normalized = lineId.trim().toUpperCase();
+  return _schematicLineToRoute[normalized] ?? normalized;
+}
+
+String getRouteDisplayName(String routeId) {
+  final id = normalizeRouteId(resolveSchematicLineId(routeId));
+  switch (id) {
+    case 'KJ':
+      return 'Kelana Jaya';
+    case 'MRT':
+      return 'MRT Kajang';
+    case 'PYL':
+      return 'MRT Putrajaya';
+    case 'AG':
+      return 'LRT Ampang';
+    case 'PH':
+      return 'LRT Sri Petaling';
+    case 'MR':
+      return 'KL Monorail';
+    case 'BRT':
+      return 'BRT Sunway';
+    case 'KT1':
+      return 'KTM Seremban';
+    case 'KT2':
+      return 'KTM Port Klang';
+    case 'KS':
+      return 'Skypark Link';
+    case 'ER6':
+      return 'KLIA Ekspres';
+    case 'ER7':
+      return 'KLIA Transit';
+    case 'JS':
+      return 'Johan Setia';
+    default:
+      return id;
+  }
+}
+
 String _stripLineSuffix(String id) {
   return id
       .replaceAll(' LINE', '')
@@ -14,7 +69,7 @@ String _stripLineSuffix(String id) {
 }
 
 Color getRouteColor(String routeId) {
-  final raw = routeId.trim().toUpperCase();
+  final raw = resolveSchematicLineId(routeId);
   final id = _stripLineSuffix(raw);
 
   if (id.startsWith('KJ') || id == 'KELANA JAYA') return const Color(0xFFE34262);
@@ -34,14 +89,14 @@ Color getRouteColor(String routeId) {
 }
 
 Color getRouteOnColor(String routeId) {
-  final raw = routeId.trim().toUpperCase();
+  final raw = resolveSchematicLineId(routeId);
   final id = _stripLineSuffix(raw);
   if (id.startsWith('PYL') || id.startsWith('PY') || id == 'PUTRAJAYA') return const Color(0xFF1F2329);
   return Colors.white;
 }
 
 String normalizeRouteId(String routeId) {
-  final raw = routeId.trim().toUpperCase();
+  final raw = resolveSchematicLineId(routeId);
   final id = _stripLineSuffix(raw);
   if (id.startsWith('KJ') || id == 'KELANA JAYA') return 'KJ';
   if (id == 'MRT' || id.startsWith('KG') || id == 'KAJANG') return 'MRT';

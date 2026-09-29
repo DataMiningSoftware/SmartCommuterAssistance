@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_features.dart';
 import '../services/accessibility_service.dart';
 import '../services/auth_service.dart';
@@ -325,6 +326,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.info_outline,
                 title: 'About',
                 onTap: () => _showAboutDialog(context),
+              ),
+              const Divider(height: 1),
+              _ActionRow(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy Policy',
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    'https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
               ),
             ],
           ),
