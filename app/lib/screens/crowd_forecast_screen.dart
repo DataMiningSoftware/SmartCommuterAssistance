@@ -39,6 +39,21 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     return forecasts[stopId.trim().toUpperCase()];
   }
 
+  Future<void> _refreshAll() async {
+    final stopId = _selectedStationId;
+    setState(() {
+      _stationsFuture = _service.fetchStationOptions();
+      if (stopId != null) {
+        _forecastFuture = _fetchForecast(stopId);
+      }
+    });
+    await _stationsFuture;
+    final forecast = _forecastFuture;
+    if (forecast != null) {
+      await forecast;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,9 +91,11 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     _selectedStationId ??= stations.first.stopId;
     _forecastFuture ??= _fetchForecast(_selectedStationId!);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: _refreshAll,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
@@ -130,27 +147,33 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
                   forecast.occupancyLevel,
                   isClosedHours: isClosed,
                 );
-                return _CrowdLevelCard(
-                  title: ui.title,
-                  subtitle: ui.subtitle,
-                  color: ui.color,
-                  level: forecast.occupancyLevel,
-                  sourceType: forecast.sourceType,
-                  createdAt: forecast.updatedAt,
-                  confidence: _forecastConfidence(
-                    sourceType: forecast.sourceType,
-                    level: forecast.occupancyLevel,
-                  ),
-                  explanation: _forecastExplanation(
-                    sourceType: forecast.sourceType,
-                    level: forecast.occupancyLevel,
-                  ),
-                  isClosedHours: isClosed,
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    _CrowdLevelCard(
+                      title: ui.title,
+                      subtitle: ui.subtitle,
+                      color: ui.color,
+                      level: forecast.occupancyLevel,
+                      sourceType: forecast.sourceType,
+                      createdAt: forecast.updatedAt,
+                      confidence: _forecastConfidence(
+                        sourceType: forecast.sourceType,
+                        level: forecast.occupancyLevel,
+                      ),
+                      explanation: _forecastExplanation(
+                        sourceType: forecast.sourceType,
+                        level: forecast.occupancyLevel,
+                      ),
+                      isClosedHours: isClosed,
+                    ),
+                  ],
                 );
               },
             ),
           ),
         ],
+      ),
       ),
     );
   }

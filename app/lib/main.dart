@@ -516,6 +516,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int currentIndex = 0;
   final List<int> screenGenerations = <int>[0, 0, 0, 0, 0];
   bool isConnected = true;
+  bool _offlineOverlayDismissed = false;
   _NetworkBannerType bannerType = _NetworkBannerType.hidden;
 
   @override
@@ -575,7 +576,10 @@ class _MainNavigationState extends State<MainNavigation> {
     if (!connected) {
       bannerTimer?.cancel();
       if (!mounted) return;
-      setState(() => bannerType = _NetworkBannerType.disconnected);
+      setState(() {
+        bannerType = _NetworkBannerType.disconnected;
+        _offlineOverlayDismissed = false;
+      });
       return;
     }
 
@@ -693,6 +697,17 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
 
           _NetworkStatusBanner(type: bannerType),
+          if (!isConnected && !_offlineOverlayDismissed)
+            Positioned.fill(
+              child: _OfflineOverlay(
+                onRetry: () async {
+                  setState(() => _offlineOverlayDismissed = true);
+                  await initializeConnectivity();
+                },
+                onContinue: () =>
+                    setState(() => _offlineOverlayDismissed = true),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: Stack(
@@ -878,6 +893,71 @@ class _DataModeIndicator extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _OfflineOverlay extends StatelessWidget {
+  const _OfflineOverlay({required this.onRetry, required this.onContinue});
+
+  final Future<void> Function() onRetry;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.97),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.wifi_off_rounded, size: 48, color: scheme.primary),
+                const SizedBox(height: 16),
+                Text(
+                  "You're offline",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Some features need a connection. Cached stations, saved '
+                  'routes and local crowd estimates still work.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => onRetry(),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Try again'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: onContinue,
+                    child: const Text('Continue offline'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

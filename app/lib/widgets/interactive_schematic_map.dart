@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../constants/route_colors.dart';
 import '../models/map_station.dart';
@@ -365,6 +366,29 @@ class _SchematicPainter extends CustomPainter {
   final Color backgroundColor;
   final Color gridColor;
   final Set<String> hiddenLineIds;
+
+  @override
+  SemanticsBuilderCallback get semanticsBuilder => (Size size) {
+        final nodes = <CustomPainterSemantics>[];
+        for (final station in layout.stations.values) {
+          if (station.lines.every(hiddenLineIds.contains)) continue;
+          final center = toPixel(station.x, station.y);
+          nodes.add(
+            CustomPainterSemantics(
+              rect: Rect.fromCenter(center: center, width: 40, height: 40),
+              properties: SemanticsProperties(
+                label: station.name,
+                hint: 'Station',
+                button: true,
+              ),
+            ),
+          );
+        }
+        return nodes;
+      };
+
+  @override
+  bool shouldRebuildSemantics(covariant _SchematicPainter oldDelegate) => false;
 
   @override
   void paint(Canvas canvas, Size size) {

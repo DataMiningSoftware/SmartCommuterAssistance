@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -1196,7 +1198,7 @@ class _StationsScreenState extends State<StationsScreen> {
 
   Widget _buildStationsContent(AsyncSnapshot<void> snapshot) {
     if (snapshot.connectionState == ConnectionState.waiting) {
-      return const SizedBox.shrink();
+      return const _StationsSkeleton();
     }
 
     return Column(
@@ -1281,26 +1283,31 @@ class _StationsScreenState extends State<StationsScreen> {
     }
 
     return ClipRect(
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-        itemCount: _filteredStations.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final station = _filteredStations[index];
-          final crowdUi = _stationCrowdLevelUi(station);
-          return _StationCard(
-            name: _stationName(station),
-            codes: _stationCodeList(station),
-            routeIds: _stationRouteIdList(station),
-            crowdLevelUi: crowdUi,
-            distanceMeters: _userPosition == null
-                ? null
-                : _distanceMeters(station, _userPosition!),
-            onTap: _isPlanningRoute ? () {} : () => _planRouteToStation(station),
-            onArrivalsTap: () => _showScheduledArrivals(station),
-            onReportTap: () => _reportCrowdLevel(station),
-          );
-        },
+      child: RefreshIndicator(
+        onRefresh: () => _loadStations(forceRefresh: true),
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          itemCount: _filteredStations.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final station = _filteredStations[index];
+            final crowdUi = _stationCrowdLevelUi(station);
+            return _StationCard(
+              name: _stationName(station),
+              codes: _stationCodeList(station),
+              routeIds: _stationRouteIdList(station),
+              crowdLevelUi: crowdUi,
+              distanceMeters: _userPosition == null
+                  ? null
+                  : _distanceMeters(station, _userPosition!),
+              onTap:
+                  _isPlanningRoute ? () {} : () => _planRouteToStation(station),
+              onArrivalsTap: () => _showScheduledArrivals(station),
+              onReportTap: () => _reportCrowdLevel(station),
+            );
+          },
+        ),
       ),
     );
   }
@@ -1633,6 +1640,7 @@ class _StationsScreenState extends State<StationsScreen> {
         latitude: _userPosition?.latitude,
         longitude: _userPosition?.longitude,
       );
+      unawaited(HapticFeedback.mediumImpact());
       await _loadLatestCrowdReports();
       _showMessage('Thanks. Crowd report submitted for $selectedCode.');
     } catch (e) {
@@ -1646,6 +1654,54 @@ class _StationsScreenState extends State<StationsScreen> {
       return const _CrowdLevelUi(label: 'Unknown', color: Color(0xFF64748B));
     }
     return _CrowdLevelUi(label: crowd.label, color: crowd.color);
+  }
+}
+
+class _StationsSkeleton extends StatelessWidget {
+  const _StationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 6,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        return Container(
+          height: 84,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEF2F7),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 180,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCE4F0),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: 110,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCE4F0),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

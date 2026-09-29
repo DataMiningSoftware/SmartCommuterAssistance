@@ -520,40 +520,45 @@ class _MapScreenState extends State<MapScreen>
         width: showLabels ? 150 : 44,
         height: 44,
         alignment: Alignment.center,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => _controller?.selectStation(station),
-          child: showLabels
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Center(child: dot),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        StationNameMatcher.instance.displayName(station.name),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isCurrent || isDestination
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: hasRoute && !onRoute
-                              ? kMapDisabledGrey
-                              : Colors.black87,
-                          shadows: const [
-                            Shadow(color: Colors.white, blurRadius: 2),
-                          ],
-                        ),
-                        overflow: TextOverflow.ellipsis,
+        child: Semantics(
+          label: StationNameMatcher.instance.displayName(station.name),
+          hint: 'Station',
+          button: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _controller?.selectStation(station),
+            child: showLabels
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(child: dot),
                       ),
-                    ),
-                  ],
-                )
-              : Center(child: dot),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          StationNameMatcher.instance.displayName(station.name),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: isCurrent || isDestination
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: hasRoute && !onRoute
+                                ? kMapDisabledGrey
+                                : Colors.black87,
+                            shadows: const [
+                              Shadow(color: Colors.white, blurRadius: 2),
+                            ],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(child: dot),
+          ),
         ),
       ));
     }
