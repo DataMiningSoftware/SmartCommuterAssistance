@@ -12,4 +12,6 @@ services:
       - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: "*"
+        value: "https://dataminingsoftware.github.io"
+      - key: WEB_CONCURRENCY
+        value: "1"

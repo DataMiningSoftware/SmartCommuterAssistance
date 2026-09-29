@@ -1,0 +1,20 @@
+# Keeps the free Render backend instance from spinning down after 15 minutes
+# of inactivity. Render sleeps idle services and the next user request pays a
+# 30-60 second cold start; pinging /health every 10 minutes avoids that.
+name: Backend Keepalive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping backend health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: |
+          curl --fail-with-body -sS --max-time 90 \
+            https://smart-commuter-backend.onrender.com/health
+        shell: bash

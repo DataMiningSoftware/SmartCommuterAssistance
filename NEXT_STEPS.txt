@@ -1,0 +1,126 @@
+Smart Commuter Assistant+ — Next Steps (To-Do)
+================================================
+
+Status: Demo ready, NOT deployment ready.
+
+The demo is solid (maps, routing, crowds, arrivals, ETA, auth, docs,
+CI, signing keys, privacy policy). Below is what remains before this can
+ship to the Play Store.
+
+--------------------------------------------------------------------------
+1. DATA QUALITY (high)
+--------------------------------------------------------------------------
+[ ] Populate real lat/lng for ALL 233 stations in app/assets/data/transit_network.json
+    (currently only 82 of 233 have real coordinates; the rest are 0,0)
+[ ] Strip corporate naming-rights suffixes from station names
+    (e.g. " - REDONE", "BANK RAKYAT ", "CGC ", " - UOB", " - MAYBANK")
+    (~20 stations affected)
+[ ] Fix hyphen spacing ("SOUTH QUAY-USJ 1" -> "SOUTH QUAY - USJ 1")
+[ ] Fix spelling ("KENTOMEN" -> "KENTONMEN")
+[ ] Verify Supabase train_stops_kl table has complete coordinate coverage
+[ ] Verify geographic map markers render for all stations
+
+--------------------------------------------------------------------------
+2. ML / CROWD FORECASTS (high)
+--------------------------------------------------------------------------
+[ ] Schedule the daily retrain cron (run_daily_pipeline.py) via GitHub Actions
+    or a backend scheduler (currently run manually only)
+[ ] Add weather (Open-Meteo) as a training feature
+[ ] Add public-holiday calendar as a training feature
+[ ] Replace on-device CommuterMlService placeholder (5 stubs) with real model
+    (ONNX export of the trained sklearn model)
+[ ] After 3 months of real history: evaluate Prophet for 24-72h forecasts
+
+--------------------------------------------------------------------------
+3. BACKEND DEPLOYMENT (high)
+--------------------------------------------------------------------------
+[ ] Deploy FastAPI backend to Render (or Cloud Run)
+[ ] ROTATE the Supabase service_role key on the Render/Cloud Run env
+    (local backend/.env was fixed, but the deployed env likely still has
+    the old rotated key -> crowd/trip endpoints would fail)
+[ ] Verify /arrivals/station/{id} returns correct next-N arrivals
+[ ] Restrict CORS_ORIGINS for production (not "*")
+
+--------------------------------------------------------------------------
+4. AUTH / SIGN-UP (high)
+--------------------------------------------------------------------------
+[ ] Disable "Confirm email" (Supabase -> Auth -> Providers -> Email) OR
+    configure real SMTP, so device sign-ups don't require email verification
+[ ] Finish Google sign-in dashboard setup:
+    - Supabase -> Auth -> Providers -> Google (client ID + secret)
+    - Supabase -> Auth -> URL Configuration: add
+      com.nawfal.smartcommuter://login-callback
+    - Google Cloud Console OAuth client + Play SHA-1 fingerprint
+
+--------------------------------------------------------------------------
+5. WIP FEATURES (decide: finish or cut)
+--------------------------------------------------------------------------
+[ ] Map views (transit + geographic) - still being refined
+[ ] Race Arena
+[ ] Education / "Learn the Rails"
+[ ] Friends / social
+
+--------------------------------------------------------------------------
+6. UI / UX POLISH
+--------------------------------------------------------------------------
+[ ] Loading skeleton/shimmer states on data screens
+[ ] Pull-to-refresh on Stations, CrowdBoard, Forecast, Map
+[ ] Full-screen "no internet" offline state (not just a banner)
+[ ] Client-side rate-limit indicator on the crowd report button
+[ ] Haptic feedback on crowd report submission
+[ ] Accessibility / TalkBack labels on schematic map stations
+[ ] Test on a low-end device / emulator with 2x CPU throttling
+
+--------------------------------------------------------------------------
+7. SECURITY & OPS
+--------------------------------------------------------------------------
+[ ] Verify RLS policies on all Supabase tables (anon key = minimum perms)
+[ ] Enable ProGuard/R8 minification for release builds
+[ ] Rate-limit the crowd/trip endpoints on the backend
+[ ] Review Sentry after first week of deployment
+[ ] Add basic page-view analytics (Sentry performance)
+
+--------------------------------------------------------------------------
+8. TESTING
+--------------------------------------------------------------------------
+[ ] dart analyze lib/  -> zero errors/warnings
+[ ] flutter test       -> all pass
+[ ] pytest tests/      -> all pass
+[ ] Manual smoke test:
+    auth -> browse stations -> crowd board -> submit report -> plan route
+    -> map -> toggle theme -> logout
+[ ] Offline test: disable network, verify SQLite cache serves stops + routes
+
+--------------------------------------------------------------------------
+9. PERFORMANCE (60fps tracking)
+--------------------------------------------------------------------------
+[ ] Wrap tracking pulse animation in RepaintBoundary
+[ ] Replace full-screen setState in _trackingTick with ValueListenableBuilder
+[ ] Add const constructors to track widgets (_TrackStopTile, _TrackHeader)
+
+--------------------------------------------------------------------------
+10. RELEASE
+--------------------------------------------------------------------------
+[ ] flutter build apk --release
+[ ] flutter build appbundle --release
+[ ] Verify app size (<40 MB APK / <30 MB AAB)
+[ ] git tag v1.0.0
+[ ] Create GitHub release with APK + changelog
+[ ] Play Store listing: feature graphic, screenshots, Data Safety form,
+    content rating, privacy policy URL (PRIVACY_POLICY.md)
+
+--------------------------------------------------------------------------
+11. BUGS
+--------------------------------------------------------------------------
+[ ] Fix route recalculation bug (route not recalculating correctly on
+    re-pin / off-route detection)
+
+--------------------------------------------------------------------------
+Priority order to ship
+--------------------------------------------------------------------------
+1. Rotate Render service key + deploy backend (unblocks live data)
+2. Finish real coordinates + station-name cleanup
+3. Fix route recalculation bug
+4. Complete or clearly cut the WIP features
+5. Full test pass + one low-end device run
+6. flutter build appbundle --release + tag + Play Store listing

@@ -20,23 +20,30 @@ class AuthService {
   StreamSubscription<AuthState>? _authSubscription;
   bool _isInitialized = false;
   bool _isGuestMode = false;
+  bool _isAnonymous = false;
 
   @visibleForTesting
   bool get hasAuthSubscription => _authSubscription != null;
 
   bool get isGuestMode => _isGuestMode;
 
+  bool get isAnonymous => _isAnonymous;
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     await _databaseService.initialize();
 
     try {
-      await _syncCurrentUserFromSession(
-        Supabase.instance.client.auth.currentSession,
-      );
-      _authSubscription =
-          Supabase.instance.client.auth.onAuthStateChange.listen(
+      final client = Supabase.instance.client;
+      final session = client.auth.currentSession;
+      if (session != null) {
+        await _syncCurrentUserFromSession(session);
+      } else {
+        await _ensureAnonymousSession();
+      }
+      _authSubscription = client.auth.onAuthStateChange.listen(
         (data) {
+          if (data.event == AuthChangeEvent.initialSession) return;
           unawaited(_syncCurrentUserFromSession(data.session));
         },
       );
@@ -46,6 +53,18 @@ class AuthService {
     }
 
     _isInitialized = true;
+  }
+
+  Future<void> _ensureAnonymousSession() async {
+    try {
+      final response = await Supabase.instance.client.auth
+          .signInAnonymously()
+          .timeout(const Duration(seconds: 5));
+      await _syncCurrentUserFromSession(response.session);
+    } catch (error) {
+      debugPrint('Anonymous sign-in unavailable, using guest mode: $error');
+      await _activateGuestMode();
+    }
   }
 
   Future<bool> signUp({
@@ -134,14 +153,15 @@ class AuthService {
       debugPrint('Logout fallback: $error');
     }
     _isGuestMode = false;
+    _isAnonymous = false;
     currentUser.value = null;
+    await _ensureAnonymousSession();
   }
 
   Future<bool> deleteAccount() async {
     final baseUrl =
         BackendConfigService().baseUrl.value.replaceAll(RegExp(r'/+$'), '');
     final token = Supabase.instance.client.auth.currentSession?.accessToken;
-    final uid = Supabase.instance.client.auth.currentUser?.id;
     try {
       final response = await http
           .post(
@@ -149,7 +169,6 @@ class AuthService {
             headers: {
               'Content-Type': 'application/json',
               if (token != null) 'Authorization': 'Bearer $token',
-              if (uid != null) 'x-user-id': uid,
             },
           )
           .timeout(const Duration(seconds: 10));
@@ -170,23 +189,24 @@ class AuthService {
   Future<void> _syncCurrentUserFromSession(Session? session) async {
     final authUser = session?.user;
     if (authUser == null) {
+      if (_isGuestMode) return;
       _isGuestMode = false;
+      _isAnonymous = false;
       currentUser.value = null;
       return;
     }
 
-    final email = authUser.email?.trim().toLowerCase();
-    if (email == null || email.isEmpty) {
-      currentUser.value = null;
-      return;
-    }
+    final email = authUser.email?.trim().toLowerCase() ?? '';
+    final anonymous = email.isEmpty;
+    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
+    final name =
+        anonymous ? 'Commuter' : _extractDisplayName(metadata, email);
 
     _isGuestMode = false;
-    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
-    final name = _extractDisplayName(metadata, email);
+    _isAnonymous = anonymous;
     final localUser = await _databaseService.upsertUserProfile(
       name: name,
-      email: email,
+      email: anonymous ? anonymousProfileEmail(authUser.id) : email,
     );
     currentUser.value = localUser;
   }
@@ -215,6 +235,12 @@ class AuthService {
     }
     return email.split('@').first;
   }
+}
+
+String anonymousProfileEmail(String userId) {
+  final compact = userId.replaceAll('-', '');
+  final suffix = compact.length >= 8 ? compact.substring(0, 8) : compact;
+  return 'anon_${suffix.isEmpty ? 'device' : suffix}@local';
 }
 
 String formatDatabaseException(Object error) {

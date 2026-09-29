@@ -5,8 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_config_service.dart';
+import 'ml_consent_service.dart';
+import 'offline_mode_service.dart';
 import 'operating_hours_service.dart';
 import 'transit_network_service.dart';
+import 'walking_route_service.dart';
 
 class StationOption {
   final String stopId;
@@ -364,15 +367,17 @@ class CrowdReportsService {
         RegExp(r'/+$'),
         '',
       );
-      if (baseUrl.isNotEmpty && !baseUrl.contains('127.0.0.1') && !baseUrl.contains('10.0.2.2')) {
-        final user = _client.auth.currentUser;
-        final userId = user?.id ?? '';
+      if (!OfflineModeService.instance.enabled.value &&
+          baseUrl.isNotEmpty &&
+          !baseUrl.contains('127.0.0.1') &&
+          !baseUrl.contains('10.0.2.2')) {
+        final token = _client.auth.currentSession?.accessToken;
         final response = await http.Client()
             .post(
               Uri.parse('$baseUrl/crowd/report'),
               headers: {
                 'Content-Type': 'application/json',
-                if (userId.isNotEmpty) 'x-user-id': userId,
+                if (token != null) 'Authorization': 'Bearer $token',
               },
               body: convert.jsonEncode({
                 'stop_id': stopId.trim().toUpperCase(),
@@ -394,6 +399,7 @@ class CrowdReportsService {
         'stop_id': stopId.trim().toUpperCase(),
         'source_type': 'user',
         'occupancy_level': occupancyLevel.clamp(1, 5),
+        'user_id': _client.auth.currentUser?.id,
       }).timeout(const Duration(seconds: 5));
     } catch (_) {
       return;
@@ -854,13 +860,20 @@ class CrowdReportsService {
           stationName: stopName,
           routeId: routeId,
           distanceMeters: distance,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
         );
       }
     }
 
     final nearest = nearestByName.values.toList()
       ..sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
-    final limited = nearest.take(limit).toList();
+    final ranked = await _rankByWalkingDistance(
+      nearest,
+      latitude: latitude,
+      longitude: longitude,
+    );
+    final limited = ranked.take(limit).toList();
     if (limited.isEmpty) return const <NearbyStationCrowdForecast>[];
 
     Map<String, StopCrowdForecast> forecasts =
@@ -887,6 +900,52 @@ class CrowdReportsService {
         .toList();
   }
 
+  static const int _walkingShortlistSize = 10;
+
+  Future<List<_StationDistanceCandidate>> _rankByWalkingDistance(
+    List<_StationDistanceCandidate> candidates, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    if (candidates.length <= 1) return candidates;
+    final shortlist = candidates.take(_walkingShortlistSize).toList();
+    final matrix = await WalkingRouteService.instance.matrix(
+      fromLat: latitude,
+      fromLon: longitude,
+      targets: [
+        for (final candidate in shortlist)
+          (lat: candidate.latitude, lon: candidate.longitude),
+      ],
+    );
+    if (matrix.isEmpty) return candidates;
+
+    final walkSeconds = <String, int>{};
+    final walkMeters = <String, double>{};
+    for (var index = 0; index < shortlist.length; index++) {
+      final walk = matrix[index];
+      if (walk == null) continue;
+      walkSeconds[shortlist[index].stopId] = walk.seconds;
+      walkMeters[shortlist[index].stopId] = walk.meters;
+    }
+
+    final ranked = shortlist
+        .map(
+          (candidate) => walkMeters.containsKey(candidate.stopId)
+              ? candidate.withDistance(walkMeters[candidate.stopId]!)
+              : candidate,
+        )
+        .toList()
+      ..sort((a, b) {
+        final keyA =
+            walkSeconds[a.stopId] ?? (a.distanceMeters / 1.35).round();
+        final keyB =
+            walkSeconds[b.stopId] ?? (b.distanceMeters / 1.35).round();
+        return keyA.compareTo(keyB);
+      });
+
+    return [...ranked, ...candidates.skip(_walkingShortlistSize)];
+  }
+
   Future<bool> submitTripFeedback({
     required String routeId,
     required String originStop,
@@ -899,8 +958,10 @@ class CrowdReportsService {
     double? walkDistanceM,
     String? weather,
   }) async {
+    if (!MlConsentService.instance.granted) return false;
     try {
       await _client.from('trip_feedback').insert({
+        'user_id': _client.auth.currentUser?.id,
         'route_id': routeId.trim().toUpperCase(),
         'origin_stop': originStop.trim().toUpperCase(),
         'dest_stop': destStop.trim().toUpperCase(),
@@ -1278,13 +1339,28 @@ class _StationDistanceCandidate {
   final String stationName;
   final String routeId;
   final double distanceMeters;
+  final double latitude;
+  final double longitude;
 
   const _StationDistanceCandidate({
     required this.stopId,
     required this.stationName,
     required this.routeId,
     required this.distanceMeters,
+    required this.latitude,
+    required this.longitude,
   });
+
+  _StationDistanceCandidate withDistance(double meters) {
+    return _StationDistanceCandidate(
+      stopId: stopId,
+      stationName: stationName,
+      routeId: routeId,
+      distanceMeters: meters,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
 }
 
 class _StationBoardGroup {

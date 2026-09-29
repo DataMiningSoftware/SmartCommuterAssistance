@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/route_colors.dart';
@@ -94,6 +96,8 @@ class TransitNetworkService {
 
   TransitNetworkData? _cachedNetwork;
   Future<TransitNetworkData>? _inFlightLoad;
+  bool _lastLoadWasFallback = false;
+  DateTime? _lastFallbackAt;
 
   Future<TransitNetworkData> loadNetwork({bool forceRefresh = false}) {
     if (forceRefresh) {
@@ -101,7 +105,16 @@ class TransitNetworkService {
       _inFlightLoad = null;
     }
     final cached = _cachedNetwork;
-    if (cached != null) return Future<TransitNetworkData>.value(cached);
+    if (cached != null) {
+      final fallbackExpired = _lastLoadWasFallback &&
+          (_lastFallbackAt == null ||
+              DateTime.now().difference(_lastFallbackAt!) >
+                  const Duration(seconds: 60));
+      if (!fallbackExpired) {
+        return Future<TransitNetworkData>.value(cached);
+      }
+      _cachedNetwork = null;
+    }
     final inflight = _inFlightLoad;
     if (inflight != null) return inflight;
 
@@ -109,6 +122,7 @@ class TransitNetworkService {
     _inFlightLoad = future;
     return future.then((data) {
       _cachedNetwork = data;
+      _lastFallbackAt = _lastLoadWasFallback ? DateTime.now() : null;
       _inFlightLoad = null;
       return data;
     }).catchError((Object error) {
@@ -118,23 +132,35 @@ class TransitNetworkService {
   }
 
   Future<TransitNetworkData> _fetchNetwork() async {
+    _lastLoadWasFallback = false;
     final rows = <Map<String, dynamic>>[];
     final client = _client;
     try {
       final remoteRows = await client!
           .from('train_stops_kl')
           .select('stop_id,stop_name,stop_lat,stop_lon,route_id,sequence_order')
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10));
       final maps = remoteRows
           .whereType<Map>()
           .map((row) => Map<String, dynamic>.from(row))
           .toList();
       rows.addAll(maps);
-      if (maps.isNotEmpty) {
+      debugPrint('TransitNetworkService: fetched ${maps.length} stops from Supabase');
+      if (maps.isEmpty) {
+        final restRows = await _fetchRowsViaRest(
+          'train_stops_kl',
+          'stop_id,stop_name,stop_lat,stop_lon,route_id,sequence_order',
+        );
+        debugPrint('TransitNetworkService: REST fallback returned ${restRows.length} stops');
+        rows.addAll(restRows);
+        if (restRows.isNotEmpty) {
+          await _databaseService.cacheTrainStops(restRows);
+        }
+      } else {
         await _databaseService.cacheTrainStops(maps);
       }
-    } catch (_) {
-      // Fall back to cache.
+    } catch (error) {
+      debugPrint('TransitNetworkService: Supabase stop fetch failed: $error');
     }
 
     if (rows.isEmpty) {
@@ -145,6 +171,8 @@ class TransitNetworkService {
     }
 
     if (rows.isEmpty) {
+      debugPrint('TransitNetworkService: using bundled offline station catalog');
+      _lastLoadWasFallback = true;
       return loadOfflineFallbackFromAsset();
     }
 
@@ -185,17 +213,28 @@ class TransitNetworkService {
     try {
       final remoteEdges = await client!.from('route_connections').select(
             'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
-          ).timeout(const Duration(seconds: 5));
+          ).timeout(const Duration(seconds: 10));
       final maps = remoteEdges
           .whereType<Map>()
           .map((row) => Map<String, dynamic>.from(row))
           .toList();
       edgeRows.addAll(maps);
-      if (maps.isNotEmpty) {
+      debugPrint('TransitNetworkService: fetched ${maps.length} connections from Supabase');
+      if (maps.isEmpty) {
+        final restEdges = await _fetchRowsViaRest(
+          'route_connections',
+          'from_stop_id,to_stop_id,route_id,travel_time_minutes,connection_type',
+        );
+        debugPrint('TransitNetworkService: REST fallback returned ${restEdges.length} connections');
+        edgeRows.addAll(restEdges);
+        if (restEdges.isNotEmpty) {
+          await _databaseService.cacheRouteConnections(restEdges);
+        }
+      } else {
         await _databaseService.cacheRouteConnections(maps);
       }
-    } catch (_) {
-      // Fall back to cache.
+    } catch (error) {
+      debugPrint('TransitNetworkService: Supabase connection fetch failed: $error');
     }
 
     if (edgeRows.isEmpty) {
@@ -220,7 +259,103 @@ class TransitNetworkService {
     );
   }
 
+  Future<List<Map<String, dynamic>>> _fetchRowsViaRest(
+    String path,
+    String select,
+  ) async {
+    const url = String.fromEnvironment('SUPABASE_URL');
+    const key = String.fromEnvironment('SUPABASE_ANON_KEY');
+    if (url.isEmpty || key.isEmpty) return const [];
+    try {
+      final uri = Uri.parse('$url/rest/v1/$path')
+          .replace(queryParameters: {'select': select});
+      final response = await http.get(
+        uri,
+        headers: {'apikey': key, 'Authorization': 'Bearer $key'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        debugPrint('TransitNetworkService: REST $path status ${response.statusCode}');
+        return const [];
+      }
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map>()
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+    } catch (error) {
+      debugPrint('TransitNetworkService: REST $path failed: $error');
+      return const [];
+    }
+  }
+
+  Future<TransitNetworkData?> _loadBundledNetworkAsset() async {
+    try {
+      final raw = await rootBundle.loadString('assets/data/transit_network.json');
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      final stopsById = <String, TransitStop>{};
+      for (final entry in json['stations'] as List<dynamic>) {
+        final station = entry as Map<String, dynamic>;
+        final id = (station['id'] as String? ?? '').trim().toUpperCase();
+        final name = (station['name'] as String? ?? '').trim();
+        final latitude = (station['lat'] as num?)?.toDouble();
+        final longitude = (station['lng'] as num?)?.toDouble();
+        if (id.isEmpty ||
+            name.isEmpty ||
+            latitude == null ||
+            longitude == null ||
+            (latitude == 0 && longitude == 0)) {
+          continue;
+        }
+        final lines = (station['lines'] as List<dynamic>? ?? const [])
+            .map((line) => line.toString().toUpperCase())
+            .toList();
+        stopsById[id] = TransitStop(
+          stopId: id,
+          stopName: name,
+          routeId: lines.isEmpty ? '' : normalizeRouteId(lines.first),
+          latitude: latitude,
+          longitude: longitude,
+        );
+      }
+      if (stopsById.isEmpty) return null;
+
+      final connections = <TransitConnection>[];
+      for (final entry in json['connections'] as List<dynamic>) {
+        final connection = entry as Map<String, dynamic>;
+        final from = (connection['from'] as String? ?? '').trim().toUpperCase();
+        final to = (connection['to'] as String? ?? '').trim().toUpperCase();
+        if (!stopsById.containsKey(from) || !stopsById.containsKey(to)) {
+          continue;
+        }
+        connections.add(
+          TransitConnection(
+            fromStopId: from,
+            toStopId: to,
+            routeId: normalizeRouteId(
+              (connection['route'] as String? ?? '').trim().toUpperCase(),
+            ),
+            connectionType:
+                (connection['type'] as String? ?? 'standard_stop').trim(),
+            travelMinutes: (connection['minutes'] as num?)?.toInt() ?? 2,
+          ),
+        );
+      }
+
+      return TransitNetworkData(
+        stopsById: stopsById,
+        connections: connections,
+        stationOptions: _buildStationOptions(stopsById.values),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<TransitNetworkData> loadOfflineFallbackFromAsset() async {
+    final bundled = await _loadBundledNetworkAsset();
+    if (bundled != null) return bundled;
+
     final raw = await rootBundle.loadString('assets/train_stops_kl.csv');
     final rows = const LineSplitter().convert(raw).skip(1).where((line) => line.trim().isNotEmpty).toList();
 

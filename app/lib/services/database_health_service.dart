@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_config_service.dart';
+import 'offline_mode_service.dart';
 
 class DatabaseHealthService {
   DatabaseHealthService._();
@@ -19,12 +20,18 @@ class DatabaseHealthService {
   void markConfigured() => isSupabaseConfigured.value = true;
 
   Future<void> initialize() async {
+    OfflineModeService.instance.enabled.addListener(_onOfflineModeChanged);
     await _check();
     _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _check());
   }
 
+  void _onOfflineModeChanged() {
+    _check();
+  }
+
   Future<void> _check() async {
-    if (!isSupabaseConfigured.value) {
+    if (OfflineModeService.instance.enabled.value ||
+        !isSupabaseConfigured.value) {
       isConnected.value = false;
       return;
     }
@@ -38,7 +45,8 @@ class DatabaseHealthService {
       await Supabase.instance.client
           .from('crowd_reports')
           .select('id')
-          .limit(1);
+          .limit(1)
+          .timeout(const Duration(seconds: 5));
       return true;
     } catch (_) {
       return false;
@@ -63,6 +71,7 @@ class DatabaseHealthService {
   }
 
   void dispose() {
+    OfflineModeService.instance.enabled.removeListener(_onOfflineModeChanged);
     _pollTimer?.cancel();
   }
 }

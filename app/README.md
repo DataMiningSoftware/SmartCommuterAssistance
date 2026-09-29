@@ -163,12 +163,12 @@ When running queries in the Supabase SQL Editor, RLS does **not** apply — you 
 4. Environment variables:
    - `SUPABASE_URL` = your Supabase project URL
    - `SUPABASE_SERVICE_KEY` = your Supabase service_role key
-   - `CORS_ORIGINS` = allowed origins, comma-separated (`*` for development)
+   - `CORS_ORIGINS` = allowed origins, comma-separated (required in production — no wildcard)
 5. Build Flutter with the deployed backend URL:
 
 ```powershell
 cd app
-flutter build appbundle --release --dart-define-from-file=env/dev.json
+flutter build appbundle --release --obfuscate --split-debug-info=build/debug-info --dart-define-from-file=env/dev.json
 ```
 
 For production, make sure `BACKEND_URL` in the Dart defines points to the deployed backend.
@@ -197,7 +197,7 @@ For production, make sure `BACKEND_URL` in the Dart defines points to the deploy
 ├── app/                        # Flutter app (Smart Commuter Assistant+)
 │   ├── assets/
 │   │   ├── data/               # transit_network.json, gtfs_schedule.json
-│   │   └── images/             # klang_valley_map.jpeg, logo.png
+│   │   └── images/             # logo.png
 │   ├── lib/
 │   │   ├── constants/          # Colors, shadows, crowd levels
 │   │   ├── main.dart           # Flutter entry point

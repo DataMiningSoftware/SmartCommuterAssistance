@@ -23,7 +23,7 @@ class ClosingTimeService {
 
   void initialize() {
     _tick();
-    _tickTimer = Timer.periodic(const Duration(seconds: 30), (_) => _tick());
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   void _tick() {
@@ -86,6 +86,19 @@ class ClosingTimeService {
     final h = min ~/ 60;
     final m = min % 60;
     return m > 0 ? '${h}h ${m}m' : '${h}h';
+  }
+
+  String get countdownFormatted {
+    final duration = timeUntilClose.value;
+    if (duration.inSeconds <= 0) return '';
+    final minutes = duration.inMinutes;
+    if (minutes >= 60) {
+      final h = minutes ~/ 60;
+      final m = minutes % 60;
+      return '${h}h ${m.toString().padLeft(2, '0')}m';
+    }
+    final seconds = duration.inSeconds % 60;
+    return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
   }
 
   void dispose() {

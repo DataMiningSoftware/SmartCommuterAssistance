@@ -41,10 +41,6 @@
       "label": "MRT Kajang Line",
       "color": "#007A4D"
     },
-    "10": {
-      "label": "KTM KL Sentral - Skypark Terminal Line",
-      "color": "#7A7A3D"
-    },
     "11": {
       "label": "LRT Johan Setia Line (Coming Soon)",
       "color": "#29ABE2"
@@ -225,29 +221,14 @@
       "x": 47.5,
       "y": 70.0,
       "lines": [
-        "5"
-      ]
-    },
-    "BANDAR_BARU_KLANG": {
-      "name": "Bandar Baru Klang",
-      "x": 8.0,
-      "y": 101.0,
-      "lines": [
-        "10"
-      ]
-    },
-    "BANDAR_BUKIT_TINGGI": {
-      "name": "Bandar Bukit Tinggi",
-      "x": 15.0,
-      "y": 111.0,
-      "lines": [
+        "5",
         "2"
       ]
     },
     "BANGI": {
       "name": "Bangi",
-      "x": 78.0,
-      "y": 90.0,
+      "x": 86.0,
+      "y": 84.5,
       "lines": [
         "1"
       ]
@@ -257,21 +238,22 @@
       "x": 47.5,
       "y": 46.0,
       "lines": [
-        "1"
+        "1",
+        "2"
       ]
     },
     "BATANG_BENAR": {
       "name": "Batang Benar",
-      "x": 78.0,
-      "y": 93.0,
+      "x": 86.0,
+      "y": 88.0,
       "lines": [
         "1"
       ]
     },
     "BATANG_KALI": {
       "name": "Batang Kali",
-      "x": 8.0,
-      "y": 15.2,
+      "x": 20.0,
+      "y": 16.0,
       "lines": [
         "2"
       ]
@@ -284,17 +266,9 @@
         "1"
       ]
     },
-    "BATU_KENTONMEN_LRT": {
-      "name": "Batu Kentonmen",
-      "x": 49.0,
-      "y": 30.5,
-      "lines": [
-        "4"
-      ]
-    },
     "BATU_TIGA": {
       "name": "Batu Tiga",
-      "x": 15.0,
+      "x": 16.5,
       "y": 79.0,
       "lines": [
         "2"
@@ -359,42 +333,18 @@
     },
     "BUKIT_BADAK": {
       "name": "Bukit Badak",
-      "x": 15.0,
-      "y": 91.0,
+      "x": 10.0,
+      "y": 87.5,
       "lines": [
         "2"
-      ]
-    },
-    "DATO_MENTERI": {
-      "name": "Dato Menteri",
-      "x": 8.0,
-      "y": 81.0,
-      "lines": [
-        "10"
-      ]
-    },
-    "GLENMARIE2": {
-      "name": "Glenmarie 2",
-      "x": 15.0,
-      "y": 75.0,
-      "lines": [
-        "10"
       ]
     },
     "JALAN_KASTAM": {
       "name": "Jalan Kastam",
       "x": 10.0,
-      "y": 107.5,
+      "y": 108.5,
       "lines": [
         "2"
-      ]
-    },
-    "JALAN_MERU": {
-      "name": "Jalan Meru",
-      "x": 8.0,
-      "y": 97.0,
-      "lines": [
-        "10"
       ]
     },
     "JALAN_TEMPLER": {
@@ -402,13 +352,14 @@
       "x": 40.0,
       "y": 79.0,
       "lines": [
-        "5"
+        "5",
+        "2"
       ]
     },
     "KAJANG2": {
       "name": "Kajang 2",
-      "x": 78.0,
-      "y": 84.0,
+      "x": 80.5,
+      "y": 81.0,
       "lines": [
         "1"
       ]
@@ -418,29 +369,30 @@
       "x": 36.0,
       "y": 79.0,
       "lines": [
-        "5"
+        "5",
+        "2"
       ]
     },
     "KAMPUNG_RAJA_UDA": {
       "name": "Kampung Raja Uda",
       "x": 10.0,
-      "y": 104.5,
+      "y": 104.0,
       "lines": [
         "2"
       ]
     },
     "KEPONG": {
       "name": "Kepong",
-      "x": 35.5,
-      "y": 27.5,
+      "x": 29.0,
+      "y": 41.5,
       "lines": [
         "2"
       ]
     },
     "KEPONG_SENTRAL": {
       "name": "Kepong Sentral",
-      "x": 31.0,
-      "y": 21.0,
+      "x": 20.0,
+      "y": 34.5,
       "lines": [
         "2"
       ]
@@ -679,7 +631,8 @@
       "x": 78.0,
       "y": 81.0,
       "lines": [
-        "9"
+        "9",
+        "1"
       ]
     },
     "KJ1": {
@@ -738,12 +691,12 @@
       "x": 56.0,
       "y": 59.0,
       "lines": [
-        "6",
-        "7",
         "5",
+        "8",
         "1",
         "2",
-        "8"
+        "6",
+        "7"
       ]
     },
     "KJ16": {
@@ -759,7 +712,8 @@
       "x": 47.5,
       "y": 67.0,
       "lines": [
-        "5"
+        "5",
+        "2"
       ]
     },
     "KJ18": {
@@ -781,7 +735,7 @@
     "KJ2": {
       "name": "TAMAN MELATI",
       "x": 71.0,
-      "y": 12.8,
+      "y": 13.0,
       "lines": [
         "5"
       ]
@@ -855,7 +809,8 @@
       "x": 20.0,
       "y": 79.0,
       "lines": [
-        "5"
+        "5",
+        "2"
       ]
     },
     "KJ29": {
@@ -869,7 +824,7 @@
     "KJ3": {
       "name": "WANGSA MAJU",
       "x": 71.0,
-      "y": 15.6,
+      "y": 15.5,
       "lines": [
         "5"
       ]
@@ -943,7 +898,7 @@
     "KJ4": {
       "name": "SRI RAMPAI",
       "x": 71.0,
-      "y": 18.4,
+      "y": 18.5,
       "lines": [
         "5"
       ]
@@ -951,7 +906,7 @@
     "KJ5": {
       "name": "SETIAWANGSA",
       "x": 71.0,
-      "y": 21.2,
+      "y": 21.0,
       "lines": [
         "5"
       ]
@@ -967,7 +922,7 @@
     "KJ7": {
       "name": "DATO' KERAMAT",
       "x": 71.0,
-      "y": 26.8,
+      "y": 27.0,
       "lines": [
         "5"
       ]
@@ -975,7 +930,7 @@
     "KJ8": {
       "name": "DAMAI",
       "x": 71.0,
-      "y": 29.6,
+      "y": 29.5,
       "lines": [
         "5"
       ]
@@ -991,16 +946,8 @@
     },
     "KLANG": {
       "name": "Klang",
-      "x": 15.0,
-      "y": 95.0,
-      "lines": [
-        "2"
-      ]
-    },
-    "KLANG_JAYA": {
-      "name": "Klang Jaya",
-      "x": 15.0,
-      "y": 107.0,
+      "x": 10.0,
+      "y": 91.5,
       "lines": [
         "2"
       ]
@@ -1025,8 +972,8 @@
     },
     "KUALA_KUBU_BHARU": {
       "name": "Kuala Kubu Bharu",
-      "x": 8.0,
-      "y": 11.8,
+      "x": 18.0,
+      "y": 10.0,
       "lines": [
         "2"
       ]
@@ -1036,21 +983,22 @@
       "x": 47.5,
       "y": 51.5,
       "lines": [
+        "1",
         "2"
       ]
     },
     "KUANG": {
       "name": "Kuang",
-      "x": 15.0,
-      "y": 26.5,
+      "x": 20.0,
+      "y": 24.5,
       "lines": [
         "2"
       ]
     },
     "LABU": {
       "name": "Labu",
-      "x": 78.0,
-      "y": 99.0,
+      "x": 86.0,
+      "y": 95.5,
       "lines": [
         "1"
       ]
@@ -1058,7 +1006,7 @@
     "MID_VALLEY": {
       "name": "Mid Valley",
       "x": 56.0,
-      "y": 63.5,
+      "y": 65.5,
       "lines": [
         "1"
       ]
@@ -1068,11 +1016,7 @@
       "x": 56.0,
       "y": 59.0,
       "lines": [
-        "6",
-        "7",
         "5",
-        "1",
-        "2",
         "8"
       ]
     },
@@ -1164,16 +1108,16 @@
     },
     "NILAI": {
       "name": "Nilai",
-      "x": 78.0,
-      "y": 96.0,
+      "x": 86.0,
+      "y": 92.0,
       "lines": [
         "1"
       ]
     },
     "PADANG_JAWA": {
       "name": "Padang Jawa",
-      "x": 15.0,
-      "y": 87.0,
+      "x": 10.0,
+      "y": 83.0,
       "lines": [
         "2"
       ]
@@ -1183,15 +1127,8 @@
       "x": 47.5,
       "y": 73.0,
       "lines": [
-        "5"
-      ]
-    },
-    "PASAR_BESAR_KLANG": {
-      "name": "Pasar Besar Klang",
-      "x": 8.0,
-      "y": 93.0,
-      "lines": [
-        "10"
+        "5",
+        "2"
       ]
     },
     "PELABUHAN_KLANG": {
@@ -1210,14 +1147,6 @@
         "2"
       ]
     },
-    "PUCHONG_JAYA": {
-      "name": "Puchong Jaya",
-      "x": 47.5,
-      "y": 87.0,
-      "lines": [
-        "4"
-      ]
-    },
     "PULAU_SEBANG": {
       "name": "Pulau Sebang",
       "x": 86.0,
@@ -1231,7 +1160,8 @@
       "x": 47.5,
       "y": 41.5,
       "lines": [
-        "1"
+        "1",
+        "2"
       ]
     },
     "PY01": {
@@ -1256,7 +1186,8 @@
       "x": 20.0,
       "y": 27.5,
       "lines": [
-        "12"
+        "12",
+        "2"
       ]
     },
     "PY05": {
@@ -1528,29 +1459,30 @@
       "x": 74.5,
       "y": 105.0,
       "lines": [
-        "12"
+        "12",
+        "7"
       ]
     },
     "RASA": {
       "name": "Rasa",
-      "x": 8.0,
-      "y": 13.5,
+      "x": 20.0,
+      "y": 13.0,
       "lines": [
         "2"
       ]
     },
     "RAWANG": {
       "name": "Rawang",
-      "x": 8.0,
-      "y": 18.5,
+      "x": 20.0,
+      "y": 21.5,
       "lines": [
         "2"
       ]
     },
     "REMBAU": {
       "name": "Rembau",
-      "x": 78.0,
-      "y": 114.0,
+      "x": 86.0,
+      "y": 113.5,
       "lines": [
         "1"
       ]
@@ -1560,38 +1492,29 @@
       "x": 74.5,
       "y": 108.5,
       "lines": [
-        "6",
         "7"
       ]
     },
     "SEGAMBUT": {
       "name": "Segambut",
-      "x": 40.5,
-      "y": 33.5,
+      "x": 38.5,
+      "y": 41.5,
       "lines": [
         "2"
       ]
     },
-    "SEKSYEN7_SHAH_ALAM": {
-      "name": "Seksyen 7 Shah Alam",
-      "x": 8.0,
-      "y": 89.0,
-      "lines": [
-        "10"
-      ]
-    },
     "SENAWANG": {
       "name": "Senawang",
-      "x": 78.0,
-      "y": 108.0,
+      "x": 86.0,
+      "y": 106.0,
       "lines": [
         "1"
       ]
     },
     "SEPUTEH": {
       "name": "Seputeh",
-      "x": 56.0,
-      "y": 67.0,
+      "x": 63.5,
+      "y": 72.0,
       "lines": [
         "1"
       ]
@@ -1599,23 +1522,23 @@
     "SERDANG": {
       "name": "Serdang",
       "x": 78.0,
-      "y": 78.0,
+      "y": 76.5,
       "lines": [
         "1"
       ]
     },
     "SEREMBAN": {
       "name": "Seremban",
-      "x": 78.0,
-      "y": 105.0,
+      "x": 86.0,
+      "y": 102.5,
       "lines": [
         "1"
       ]
     },
     "SERENDAH": {
       "name": "Serendah",
-      "x": 8.0,
-      "y": 16.8,
+      "x": 20.0,
+      "y": 19.0,
       "lines": [
         "2"
       ]
@@ -1625,32 +1548,24 @@
       "x": 33.0,
       "y": 79.0,
       "lines": [
-        "5"
+        "5",
+        "2"
       ]
     },
     "SETIA_JAYA": {
       "name": "Setia Jaya",
-      "x": 30.0,
+      "x": 26.5,
       "y": 79.0,
-      "lines": [
-        "B1",
-        "1"
-      ]
-    },
-    "SHAH_ALAM": {
-      "name": "Shah Alam",
-      "x": 15.0,
-      "y": 83.0,
       "lines": [
         "2"
       ]
     },
-    "SKYPARK_TERMINAL": {
-      "name": "Skypark Terminal",
-      "x": 8.0,
-      "y": 70.0,
+    "SHAH_ALAM": {
+      "name": "Shah Alam",
+      "x": 13.5,
+      "y": 79.0,
       "lines": [
-        "10"
+        "2"
       ]
     },
     "SP1": {
@@ -1710,7 +1625,9 @@
       "x": 78.0,
       "y": 72.0,
       "lines": [
-        "4"
+        "4",
+        "1",
+        "7"
       ]
     },
     "SP16": {
@@ -1903,42 +1820,18 @@
         "4"
       ]
     },
-    "SRI_ANDALAS": {
-      "name": "Sri Andalas",
-      "x": 15.0,
-      "y": 103.0,
-      "lines": [
-        "2"
-      ]
-    },
-    "STADIUM_SHAH_ALAM": {
-      "name": "Stadium Shah Alam",
-      "x": 8.0,
-      "y": 77.0,
-      "lines": [
-        "10"
-      ]
-    },
     "SUNGAI_GADUT": {
       "name": "Sungai Gadut",
-      "x": 78.0,
-      "y": 111.0,
+      "x": 86.0,
+      "y": 110.0,
       "lines": [
         "1"
       ]
     },
-    "TAMAN_SELATAN": {
-      "name": "Taman Selatan",
-      "x": 15.0,
-      "y": 99.0,
-      "lines": [
-        "2"
-      ]
-    },
     "TAMAN_WAHYU": {
       "name": "Taman Wahyu",
-      "x": 49.0,
-      "y": 14.5,
+      "x": 47.5,
+      "y": 16.5,
       "lines": [
         "1"
       ]
@@ -1954,7 +1847,7 @@
     "TELUK_GADONG": {
       "name": "Teluk Gadong",
       "x": 10.0,
-      "y": 101.5,
+      "y": 100.0,
       "lines": [
         "2"
       ]
@@ -1962,31 +1855,55 @@
     "TELUK_PULAI": {
       "name": "Teluk Pulai",
       "x": 10.0,
-      "y": 98.5,
+      "y": 96.0,
       "lines": [
         "2"
       ]
     },
     "TIROI": {
       "name": "Tiroi",
-      "x": 78.0,
-      "y": 102.0,
+      "x": 86.0,
+      "y": 99.0,
       "lines": [
         "1"
       ]
     },
-    "UITM_SHAH_ALAM": {
-      "name": "UiTM Shah Alam",
-      "x": 8.0,
-      "y": 85.0,
-      "lines": [
-        "10"
-      ]
-    },
     "UKM": {
       "name": "UKM",
-      "x": 78.0,
-      "y": 87.0,
+      "x": 83.5,
+      "y": 81.0,
+      "lines": [
+        "1"
+      ]
+    },
+    "SENTUL": {
+      "name": "Sentul",
+      "x": 47.5,
+      "y": 35.0,
+      "lines": [
+        "1"
+      ]
+    },
+    "BATU_KENTONMEN": {
+      "name": "Batu Kentonmen",
+      "x": 47.5,
+      "y": 29.0,
+      "lines": [
+        "1"
+      ]
+    },
+    "KAMPUNG_BATU": {
+      "name": "Kampung Batu",
+      "x": 47.5,
+      "y": 22.5,
+      "lines": [
+        "1"
+      ]
+    },
+    "SALAK_SELATAN": {
+      "name": "Salak Selatan",
+      "x": 70.5,
+      "y": 72.0,
       "lines": [
         "1"
       ]

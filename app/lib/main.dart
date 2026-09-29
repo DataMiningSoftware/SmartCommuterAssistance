@@ -1,17 +1,19 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'constants/app_features.dart';
 import 'constants/app_shadows.dart';
-import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/race_screen.dart';
 import 'screens/track_route_screen.dart';
+import 'services/accessibility_service.dart';
 import 'services/active_trip_service.dart';
 import 'services/auth_service.dart';
 import 'services/commuter_ml_service.dart';
@@ -19,10 +21,12 @@ import 'services/database_service.dart';
 import 'services/closing_time_service.dart';
 import 'services/database_health_service.dart';
 import 'services/location_sharing_service.dart';
+import 'services/ml_consent_service.dart';
 import 'services/navigation_state.dart';
 import 'services/notification_service.dart';
+import 'services/offline_mode_service.dart';
 import 'services/theme_controller.dart';
-import 'widgets/party_sheet.dart';
+import 'widgets/ml_consent_sheet.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,13 +48,20 @@ Future<void> main() async {
     debugPrint('Supabase config missing, starting in local guest mode.');
   }
 
+  const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  if (sentryDsn.isEmpty) {
+    if (kReleaseMode) {
+      debugPrint('SENTRY_DSN is not configured; crash reporting is disabled.');
+    }
+    runApp(const SmartCommuterApp());
+    return;
+  }
+
   await SentryFlutter.init(
     (options) {
-      options.dsn = const String.fromEnvironment(
-        'SENTRY_DSN',
-        defaultValue: '',
-      );
+      options.dsn = sentryDsn;
       options.tracesSampleRate = 0.2;
+      options.environment = kReleaseMode ? 'production' : 'development';
     },
     appRunner: () => runApp(const SmartCommuterApp()),
   );
@@ -237,13 +248,32 @@ class SmartCommuterApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.instance.mode,
       builder: (context, mode, _) {
-        return MaterialApp(
-          title: 'Smart Commuter Assistant+',
-          debugShowCheckedModeBanner: false,
-          themeMode: mode,
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          home: const _BootstrapGate(),
+        return ValueListenableBuilder<bool>(
+          valueListenable: AccessibilityService.instance.enabled,
+          builder: (context, accessible, _) {
+            return MaterialApp(
+              title: 'Smart Commuter Assistant+',
+              debugShowCheckedModeBanner: false,
+              themeMode: mode,
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              builder: (context, child) {
+                if (!accessible || child == null) {
+                  return child ?? const SizedBox.shrink();
+                }
+                final media = MediaQuery.of(context);
+                return MediaQuery(
+                  data: media.copyWith(
+                    textScaler:
+                        media.textScaler.clamp(minScaleFactor: 1.15),
+                    boldText: true,
+                  ),
+                  child: child,
+                );
+              },
+              home: const _BootstrapGate(),
+            );
+          },
         );
       },
     );
@@ -271,16 +301,53 @@ class _BootstrapGateState extends State<_BootstrapGate> {
     setState(() {});
   }
 
+  static const Duration _stepTimeout = Duration(seconds: 5);
+  static const Duration _bootstrapBudget = Duration(seconds: 8);
+
+  Future<void> _runStep(
+    Future<void> Function() step, {
+    required String label,
+  }) async {
+    try {
+      await step().timeout(_stepTimeout);
+    } catch (error) {
+      debugPrint('Bootstrap step "$label" skipped: $error');
+    }
+  }
+
   Future<void> _bootstrap() async {
-    await DatabaseService().initialize();
-    await ThemeController.initialize();
-    await AuthService().initialize();
-    await ActiveTripService.instance.initialize();
-    await NotificationService().initialize();
-    await DatabaseHealthService.instance.initialize();
-    await CommuterMlService().initialize();
+    await _runStep(DatabaseService().initialize, label: 'database');
+
+    await Future.wait<void>([
+      _runStep(ThemeController.initialize, label: 'theme'),
+      _runStep(AuthService().initialize, label: 'auth'),
+      _runStep(ActiveTripService.instance.initialize, label: 'active trip'),
+      _runStep(NotificationService().initialize, label: 'notifications'),
+      _runStep(OfflineModeService.instance.load, label: 'offline mode'),
+      _runStep(AccessibilityService.instance.load, label: 'accessibility'),
+      _runStep(MlConsentService.instance.load, label: 'ml consent'),
+    ]).timeout(
+      _bootstrapBudget,
+      onTimeout: () {
+        debugPrint('Bootstrap watchdog fired; opening the app without waiting.');
+        return const <void>[];
+      },
+    );
+
     ClosingTimeService.instance.initialize();
-    LocationSharingService.instance.start();
+    unawaited(_deferredInitialize());
+  }
+
+  Future<void> _deferredInitialize() async {
+    await _runStep(
+      DatabaseHealthService.instance.initialize,
+      label: 'database health',
+    );
+    await _runStep(CommuterMlService().initialize, label: 'on-device ml');
+    await _runStep(
+      () async => LocationSharingService.instance.start(),
+      label: 'location sharing',
+    );
   }
 
   @override
@@ -313,7 +380,7 @@ class AuthGate extends StatelessWidget {
       valueListenable: auth.currentUser,
       builder: (context, user, _) {
         if (user == null) {
-          return const LoginScreen();
+          return const _StartupLoadingScreen();
         }
         return const MainNavigation();
       },
@@ -459,6 +526,15 @@ class _MainNavigationState extends State<MainNavigation> {
     initializeConnectivity();
     NavigationState.instance.selectedIndex
         .addListener(_handleExternalNavigation);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAskMlConsent());
+  }
+
+  Future<void> _maybeAskMlConsent() async {
+    if (AuthService().isGuestMode) return;
+    final consent = MlConsentService.instance;
+    if (await consent.hasBeenAsked()) return;
+    if (!mounted) return;
+    await showMlConsentSheet(context, source: 'onboarding');
   }
 
   @override
@@ -551,8 +627,40 @@ class _MainNavigationState extends State<MainNavigation> {
       HomeScreen(key: ValueKey('home_${screenGenerations[0]}')),
       MapScreen(key: ValueKey('map_${screenGenerations[1]}')),
       TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}')),
-      RaceScreen(key: ValueKey('race_${screenGenerations[3]}')),
+      if (AppFeatures.racingEnabled)
+        RaceScreen(key: ValueKey('race_${screenGenerations[3]}')),
       ProfileScreen(key: ValueKey('profile_${screenGenerations[4]}')),
+    ];
+  }
+
+  List<NavigationDestination> buildDestinations() {
+    return const [
+      NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home_rounded),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.map_outlined),
+        selectedIcon: Icon(Icons.map_rounded),
+        label: 'Map',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.route_outlined),
+        selectedIcon: Icon(Icons.route_rounded),
+        label: 'Track',
+      ),
+      if (AppFeatures.racingEnabled)
+        NavigationDestination(
+          icon: Icon(Icons.emoji_events_outlined),
+          selectedIcon: Icon(Icons.emoji_events_rounded),
+          label: 'Race',
+        ),
+      NavigationDestination(
+        icon: Icon(Icons.person_outline_rounded),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
     ];
   }
 
@@ -585,52 +693,7 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
 
           _NetworkStatusBanner(type: bannerType),
-          ValueListenableBuilder<bool>(
-            valueListenable: ClosingTimeService.instance.isClosingSoon,
-            builder: (context, closingSoon, _) {
-              if (!closingSoon) return const SizedBox.shrink();
-              final remaining = ClosingTimeService.instance.minutesUntilCloseFormatted;
-              return IgnorePointer(
-                ignoring: true,
-                child: SafeArea(
-                  minimum: const EdgeInsets.only(top: 44, left: 12, right: 12),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: appCardShadows(context),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.access_time_rounded, size: 16, color: Colors.white),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Trains closing in $remaining',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showPartySheet(context),
-        tooltip: 'Party',
-        child: const Icon(Icons.groups_rounded),
       ),
       bottomNavigationBar: Stack(
         clipBehavior: Clip.none,
@@ -706,35 +769,60 @@ class _MainNavigationState extends State<MainNavigation> {
                 child: NavigationBar(
                   selectedIndex: currentIndex,
                   onDestinationSelected: handleTabSwitch,
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home_rounded),
-                      label: 'Home',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.map_outlined),
-                      selectedIcon: Icon(Icons.map_rounded),
-                      label: 'Map',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.route_outlined),
-                      selectedIcon: Icon(Icons.route_rounded),
-                      label: 'Track',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.emoji_events_outlined),
-                      selectedIcon: Icon(Icons.emoji_events_rounded),
-                      label: 'Race',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.person_outline_rounded),
-                      selectedIcon: Icon(Icons.person_rounded),
-                      label: 'Profile',
-                    ),
-                  ],
+                  destinations: buildDestinations(),
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: _bottomToolbarHeight + _bottomToolbarBottomMargin + 10,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: ClosingTimeService.instance.isClosingSoon,
+              builder: (context, closingSoon, _) {
+                if (!closingSoon) return const SizedBox.shrink();
+                return IgnorePointer(
+                  child: Center(
+                    child: ValueListenableBuilder<Duration>(
+                      valueListenable: ClosingTimeService.instance.timeUntilClose,
+                      builder: (context, remaining, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDC2626)
+                                .withValues(alpha: 0.94),
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: appCardShadows(context),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.access_time_rounded,
+                                size: 13,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Trains closing in ${ClosingTimeService.instance.countdownFormatted}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const Positioned(

@@ -60,4 +60,4 @@ jobs:
           service: smart-commuter-backend
           region: asia-southeast1
           source: .
-          env_vars: SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+          env_vars: SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }},CORS_ORIGINS=${{ vars.CORS_ORIGINS }}

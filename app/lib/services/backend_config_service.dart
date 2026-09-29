@@ -17,21 +17,23 @@ class BackendConfigService {
   BackendConfigService._internal();
 
   static const String configuredBaseUrl = String.fromEnvironment('BACKEND_URL');
+  static const String productionBaseUrl =
+      'https://smart-commuter-backend.onrender.com';
 
-  static const List<BackendTarget> defaults = [
+  static const List<BackendTarget> devTargets = [
     BackendTarget(label: 'Android Emulator', baseUrl: 'http://10.0.2.2:8000'),
     BackendTarget(label: 'Localhost', baseUrl: 'http://127.0.0.1:8000'),
-    BackendTarget(label: 'LAN (edit)', baseUrl: 'http://192.168.1.5:8000'),
-    BackendTarget(label: 'Production', baseUrl: 'https://smart-commuter-backend.onrender.com'),
+    BackendTarget(label: 'Production', baseUrl: productionBaseUrl),
   ];
 
   static String get initialBaseUrl {
     final configured = configuredBaseUrl.trim();
     if (configured.isNotEmpty) return configured;
+    if (kReleaseMode) return productionBaseUrl;
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return defaults.first.baseUrl;
+      return devTargets.first.baseUrl;
     }
-    return defaults[1].baseUrl;
+    return devTargets[1].baseUrl;
   }
 
   final ValueNotifier<String> baseUrl = ValueNotifier<String>(initialBaseUrl);

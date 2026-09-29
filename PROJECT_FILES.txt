@@ -1,0 +1,190 @@
+================================================================================
+SMART COMMUTER ASSISTANT+ — PROJECT FILE INDEX
+================================================================================
+Purpose: quick-reference map of every file/directory so an AI agent (or human)
+can orient instantly without re-scanning the whole repo. Keep this file up to
+date whenever files are added/removed/renamed.
+
+Repo: https://github.com/DataMiningSoftware/SmartCommuterAssistance
+Stack: Flutter (app/) + FastAPI (backend/) + Supabase/Postgres + Python ML (scripts/)
+
+--------------------------------------------------------------------------------
+ROOT FILES
+--------------------------------------------------------------------------------
+AGENTS.md            Agent rules / conventions (config, structure, DB, build, ETA,
+                     map architecture, retrain pipeline). READ FIRST.
+README.md            Top-level project readme.
+CHECKLIST.md         Manual checklist of tasks/progress.
+Makefile             Dev convenience targets.
+Dockerfile           Root Docker build (backend image entrypoint).
+docker-compose.yml   Local orchestration.
+.dockerignore        Docker build exclusions.
+.gitignore           Git exclusions.
+.gitattributes       Git attributes.
+.env.example         Example env vars (backend).
+requirements.txt     Root Python deps (used by CI "Daily Retrain").
+requirements-dev.txt Dev/test Python deps (pytest etc).
+opencode.json        opencode tool configuration.
+PROJECT_FILES.txt    This file.
+
+--------------------------------------------------------------------------------
+.github/workflows/  (GitHub Actions)
+--------------------------------------------------------------------------------
+ci.yml                     General CI (build/test app+backend).
+crowd-forecast.yml         Cron (every 6h): build_and_upsert_hourly_forecast.py.
+retrain-pipeline.yml       Cron (daily 18:30 UTC): run_daily_pipeline.py.
+snapshot-daily-blend.yml   Cron (daily 00:00 UTC): backend/snapshot_daily_blend.py RPC.
+supabase-keepalive.yml     Cron (every 3d): pings DB to stop free-tier auto-pause.
+deploy.yml                 Push->main: pytest -> Docker push GHCR -> deploy Cloud Run.
+
+--------------------------------------------------------------------------------
+backend/  (FastAPI)
+--------------------------------------------------------------------------------
+main.py                 FastAPI app: /health, /stations, /crowd/report, /crowd/blend,
+                        /trip/feedback, /arrivals/station/{id}, /arrivals/nearest,
+                        /plan-trip (Dijkstra). Loads network from scripts/train_stops_kl.csv.
+crowd_service.py        Crowd report logic (geofence 500m, rate-limit 2h, consensus).
+                        Also Supabase client factory (_get_supabase).
+gtfs_service.py         GTFS schedule parsing + nearest-stop/arrival lookups.
+snapshot_daily_blend.py One-shot script: calls snapshot_daily_blend() RPC.
+requirements.txt        Backend deps (fastapi, uvicorn, supabase, httpx, python-dotenv).
+Dockerfile              Backend container.
+README.md               Backend readme.
+run_backend.ps1         PowerShell helper to run uvicorn locally.
+.env                    Local secrets (SUPABASE_URL/KEY) — gitignored.
+data/gtfs/rapid-rail-kl.zip   GTFS feed bundle.
+
+--------------------------------------------------------------------------------
+app/  (Flutter)  — lib/ has the actual app code
+--------------------------------------------------------------------------------
+pubspec.yaml            Flutter manifest + deps + asset declarations.
+pubspec.lock            Locked dependency versions.
+analysis_options.yaml   Lint rules.
+main.dart? -> lib/main.dart  (see lib/).
+
+app/assets/
+  images/klang_valley_map.jpeg   Official Klang Valley transit map (1692x2400) — background.
+  images/logo.png                App logo.
+  data/gtfs_schedule.json        Static GTFS schedule (fallback).
+  data/map_stations.json         Station catalog for map.
+  data/transit_network.json      Stations (233) + connections (656); line ids: AG,SP,KJ,KG,MR,PY,BRT,KT1,KT2,KS,ER6,ER7,JS.
+  schematic_layout.json          100x140 grid schematic layout (lines '1'..'12','B1' + stations).
+  train_stops_kl.csv             Station/route CSV (backend pathfinding source).
+env/dev.json                     Config (Supabase URL/keys) for --dart-define-from-file.
+env/dev.template.json            Template for dev.json.
+
+app/lib/constants/
+  route_colors.dart      Line colors + normalizeRouteId (KJ,MRT,PYL,AG,PH,MR,BRT,...).
+  crowd_levels.dart      Crowd level labels/colors (1..5).
+  app_shadows.dart       Shared shadow styles.
+
+app/lib/models/
+  transit_graph.dart     TransitStation/Edge/Graph + Dijkstra (8-min transfer penalty).
+  schematic_layout.dart  SchematicLayout load + line->graph route mapping (_lineToGraphRoute).
+  map_station.dart       MapStation model (id,name,x,y,lines,lat,lng).
+  route_info.dart        RouteInfo (planning steps).
+  app_user.dart          App user model.
+
+app/lib/services/
+  active_trip_service.dart   Active trip persistence + PINNED ETA (pinEta/extendPinnedEta).
+  train_arrival_service.dart Fetch arrivals from backend /arrivals/station/{id}.
+  gtfs_local_service.dart    Local GTFS schedule fallback.
+  crowd_reports_service.dart Crowd report + forecast fetch + submitTripFeedback.
+  commuter_ml_service.dart   Simulated ML engine (XGBoost-style trees, synthetic data).
+  transit_network_service.dart Load transit_network.json -> stops/connections/options.
+  transit_data_service.dart  Load TransitGraph.
+  transit_planner_service.dart Route planner (api + local gateway + ML ranking).
+  map_selection_controller.dart Station selection + route planning state for map.
+  station_service.dart       Station lookup.
+  station_name_matcher.dart  Fuzzy station name matching/normalize.
+  auth_service.dart          Supabase auth (guest/login/signup).
+  database_service.dart      SQLite local cache (sqflite).
+  database_health_service.dart DB health checks.
+  backend_config_service.dart Backend base URL config.
+  navigation_state.dart      App navigation state.
+  notification_service.dart  Local notifications (phase 2).
+  operating_hours_service.dart Line operating hours (has KT1/KT2/ER6/ER7/KS).
+  closing_time_service.dart  Closing-time helper.
+  location_privacy_service.dart Location privacy toggles.
+  theme_controller.dart      App theme (light/dark).
+
+app/lib/screens/
+  home_screen.dart           Main dashboard (arrivals, plan, crowd).
+  map_screen.dart            Transit map + geographic map (hides lines via _hiddenLineIds).
+  track_route_screen.dart    Live trip tracking, ETA pinning, arrival feedback.
+  stations_screen.dart       Station list/search + route planning.
+  station_crowd_board_screen.dart Crowd board per station.
+  crowd_forecast_screen.dart Forecast display.
+  login_screen.dart / signup_screen.dart / profile_screen.dart  Auth + profile.
+
+app/lib/widgets/
+  interactive_schematic_map.dart  Interactive transit map (Canvas painter; background image TODO).
+  map_cards.dart             Station/route cards.
+  scheduled_arrivals_panel.dart   Arrivals panel.
+  app_logo.dart / app_page_title.dart / data_source_badge.dart  Small UI widgets.
+
+app/test/                    Flutter widget/unit tests.
+app/scripts/build_gtfs_schedule.py   Builds gtfs_schedule.json.
+app/Project_Summary.md       Older project summary doc.
+app/README.md                App readme.
+
+--------------------------------------------------------------------------------
+scripts/  (Python: ML training, data gen, SQL, migrations)
+--------------------------------------------------------------------------------
+train_crowd_model.py            Train crowd ML model -> crowd_predictor*.pkl.
+aggregate_training_data.py      Pull real crowd_reports + trip_feedback from Supabase.
+predict_and_upsert_crowd.py     Predict + upsert crowd_forecast_hourly.
+run_daily_pipeline.py           Orchestrator: aggregate -> train -> predict+upsert.
+build_and_upsert_hourly_forecast.py  Build hourly forecast (crowd-forecast cron).
+crowd_feature_utils.py          Shared feature engineering.
+generate_*.py                   Data generators (crowd data, routes, simulated forecasts).
+apply_migrations.py             Run supabase/*.sql migrations.
+backfill_coords.py / populate_coords.py / add_more_coords.py  Coordinate backfill helpers.
+regenerate_schematic_layout.py  Regenerate schematic_layout.json.
+list_calibrated.py / check_unmatched.py  Calibration/validation helpers.
+*.sql                           SQL setup scripts (stop catalog, routes, connections).
+*.csv / *.pkl / *.json          Training data + serialized models.
+requirements-crowd.txt          ML deps (pandas, supabase, etc).
+
+--------------------------------------------------------------------------------
+supabase/  (Postgres migrations)
+--------------------------------------------------------------------------------
+migration_crowd_system.sql       Core crowd tables + RPCs (submit_crowd_report,
+                                get_blended_crowd_level, snapshot_daily_blend).
+migration_trip_feedback.sql      trip_feedback table (predicted vs actual).
+migration_day_of_week.sql        day_of_week columns.
+migration_get_unique_stations.sql  get_unique_stations RPC.
+migration_cleanup.sql            Cleanup migration.
+rls_policies.sql                 Row-level security policies.
+
+--------------------------------------------------------------------------------
+tests/  (Python)
+--------------------------------------------------------------------------------
+conftest.py                     Pytest fixtures.
+test_fastapi_backend.py         Backend endpoint tests.
+test_train_crowd_model.py       ML training tests.
+test_crowd_feature_utils.py     Feature util tests.
+test_train_backends.py          Train-backend tests.
+
+docker/
+  python-worker/Dockerfile      Worker container for ML cron jobs.
+
+================================================================================
+KEY CONCEPTS / GOTCHAS
+================================================================================
+- 3 line-id systems: schematic keys '1'..'12','B1' <-> graph route ids KT1/KT2/KS/
+  ER6/ER7/AG/SP/KJ/KG/MR/PY/BRT <-> normalized ids KJ/MRT/PYL/AG/PH/MR/BRT/KT1/KT2/
+  KS/ER6/ER7 (route_colors).
+- KTM lines (KT1,KT2,KS) + KLIA (ER6,ER7) are NOW VISIBLE on the map (only line '11'
+  Johan Setia remains hidden in map_screen.dart _hiddenLineIds). Colors in route_colors.
+- Transit map background = assets/images/klang_valley_map.jpeg (interactive_schematic_map
+  loads it; falls back to grey grid canvas if missing).
+- ETA is pinned once (<100m from origin) -> definitive arrival clock time; counts
+  down from pinnedArrivalTime. On arrival submits trip_feedback (predicted/actual).
+  fetchEtaCorrection() (crowd_reports_service) reads historical trip_feedback
+  deviation_min for the route and nudges the pinned ETA -> continual learning.
+- Backend supabase pin is 2.31.0 (2.9.0 had a "Invalid API key" JWT-regex bug that
+  broke snapshot_daily_blend cron).
+- Supabase free tier auto-pauses after 7 days inactivity (keepalive workflow).
+- Config lives in app/env/dev.json (JSON), NOT .env. Env vars override.
+================================================================================

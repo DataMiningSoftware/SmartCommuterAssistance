@@ -1216,6 +1216,7 @@ class _StationsScreenState extends State<StationsScreen> {
                         FocusScope.of(context).unfocus();
                       },
                       icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Clear search',
                     ),
             ),
           ),

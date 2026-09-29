@@ -12,12 +12,17 @@ from math import atan2, cos, radians, sin, sqrt
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query, Header
+from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from crowd_service import CrowdService
+from fare_service import compute_fare
 from gtfs_service import GtfsScheduleService, MALAYSIA_TZ, parse_query_datetime
+from rate_limit import RateLimitMiddleware, rate_limit_from_env
+
+logger = logging.getLogger("smart_commuter")
 
 
 class RouteStepModel(BaseModel):
@@ -209,28 +214,47 @@ class RaceFinalizeResponse(BaseModel):
     results: list[dict]
 
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
 app = FastAPI(title="Smart Commuter Backend", version="0.3.0")
 gtfs_service = GtfsScheduleService()
 crowd_service = CrowdService()
 cors_origins = [
     origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
     if origin.strip()
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins or ["*"],
-    allow_credentials="*" not in cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(RateLimitMiddleware, limiter=rate_limit_from_env())
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials="*" not in cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception(
+        "Unhandled error on %s %s", request.method, request.url.path
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
 
 
 @app.get("/health")
 def health() -> dict:
     network = load_network()
-    gtfs = gtfs_service.feed_metadata()
+    gtfs = gtfs_service.cache_metadata()
     return {
         "status": "ok",
         "stops": len(network["stops_by_id"]),
@@ -262,13 +286,9 @@ def list_stations() -> StationListResponse:
 @app.post("/crowd/report", response_model=CrowdReportResponse)
 def submit_crowd_report(
     body: CrowdReportRequest,
-    x_user_id: str | None = Header(None),
     authorization: str | None = Header(None),
 ) -> CrowdReportResponse:
-    try:
-        resolved_user_id = _resolve_user_id(authorization, x_user_id)
-    except HTTPException:
-        resolved_user_id = x_user_id
+    resolved_user_id = _optional_user_id(authorization)
     result = crowd_service.submit_report(
         stop_id=body.stop_id,
         occupancy_level=body.occupancy_level,
@@ -359,8 +379,12 @@ def submit_trip_feedback(body: TripFeedbackRequest) -> TripFeedbackResponse:
                 "created_at": now.isoformat(),
             }
         ).execute()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Failed to record trip feedback")
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to record feedback right now.",
+        )
     return TripFeedbackResponse(accepted=True, message="Feedback recorded.")
 
 
@@ -483,30 +507,34 @@ def plan_trip(
     )
 
 
-def _resolve_user_id(authorization: str | None, x_user_id: str | None) -> str:
-    token = None
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization[7:].strip()
-    if token:
-        try:
-            response = crowd_service._get_supabase().auth.get_user(jwt=token)
-            if response is not None and response.user is not None and response.user.id:
-                return response.user.id
-        except Exception:
-            pass
+def _require_user_id(authorization: str | None) -> str:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization[7:].strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        response = crowd_service._get_supabase().auth.get_user(jwt=token)
+    except Exception:
+        logger.warning("Token verification failed", exc_info=True)
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    if x_user_id:
-        return x_user_id
-    raise HTTPException(status_code=401, detail="User id required")
+    if response is None or response.user is None or not response.user.id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return response.user.id
+
+
+def _optional_user_id(authorization: str | None) -> Optional[str]:
+    if authorization is None:
+        return None
+    return _require_user_id(authorization)
 
 
 @app.post("/race/start", response_model=RaceStartResponse)
 def start_race(
     body: RaceStartRequest,
-    x_user_id: str | None = Header(None),
     authorization: str | None = Header(None),
 ) -> RaceStartResponse:
-    x_user_id = _resolve_user_id(authorization, x_user_id)
+    user_id = _require_user_id(authorization)
 
     supabase = crowd_service._get_supabase()
     party = (
@@ -519,7 +547,7 @@ def start_race(
     if not party.data:
         raise HTTPException(status_code=404, detail="Party not found")
     owner_id = party.data[0]["owner_id"]
-    if owner_id != x_user_id:
+    if owner_id != user_id:
         raise HTTPException(status_code=403, detail="Only the party owner can start a race")
     if party.data[0]["state"] not in ("open", "active"):
         raise HTTPException(status_code=409, detail="Party is not active")
@@ -696,10 +724,9 @@ def _finalize_race(race_id: str) -> list[dict]:
 @app.post("/race/checkpoint", response_model=RaceCheckpointResponse)
 def submit_race_checkpoint(
     body: RaceCheckpointRequest,
-    x_user_id: str | None = Header(None),
     authorization: str | None = Header(None),
 ) -> RaceCheckpointResponse:
-    x_user_id = _resolve_user_id(authorization, x_user_id)
+    user_id = _require_user_id(authorization)
 
     supabase = crowd_service._get_supabase()
     race = (
@@ -719,7 +746,7 @@ def submit_race_checkpoint(
         supabase.table("race_participants")
         .select("*")
         .eq("race_id", body.race_id)
-        .eq("user_id", x_user_id)
+        .eq("user_id", user_id)
         .limit(1)
         .execute()
     )
@@ -733,7 +760,7 @@ def submit_race_checkpoint(
         supabase.table("race_checkpoints")
         .select("station_id,reached_at")
         .eq("race_id", body.race_id)
-        .eq("user_id", x_user_id)
+        .eq("user_id", user_id)
         .eq("seq", body.seq - 1)
         .limit(1)
         .execute()
@@ -752,7 +779,7 @@ def submit_race_checkpoint(
     supabase.table("race_checkpoints").upsert(
         {
             "race_id": body.race_id,
-            "user_id": x_user_id,
+            "user_id": user_id,
             "station_id": station_id,
             "seq": body.seq,
             "crowd_level": body.crowd_level,
@@ -766,7 +793,7 @@ def submit_race_checkpoint(
     if destination and station_id == destination.upper():
         supabase.table("race_participants").update(
             {"status": "finished", "finished_at": datetime.now(timezone.utc).isoformat()}
-        ).eq("race_id", body.race_id).eq("user_id", x_user_id).execute()
+        ).eq("race_id", body.race_id).eq("user_id", user_id).execute()
         _finalize_race(body.race_id)
         message = "Finish recorded; race finalized."
 
@@ -782,26 +809,50 @@ def submit_race_checkpoint(
 @app.post("/race/finalize", response_model=RaceFinalizeResponse)
 def finalize_race(
     body: RaceFinalizeRequest,
-    x_user_id: str | None = Header(None),
     authorization: str | None = Header(None),
 ) -> RaceFinalizeResponse:
-    x_user_id = _resolve_user_id(authorization, x_user_id)
+    user_id = _require_user_id(authorization)
+    supabase = crowd_service._get_supabase()
+    participant = (
+        supabase.table("race_participants")
+        .select("user_id")
+        .eq("race_id", body.race_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if not participant.data:
+        raise HTTPException(status_code=403, detail="Not a participant in this race")
     results = _finalize_race(body.race_id)
     return RaceFinalizeResponse(accepted=True, results=results)
 
 
 @app.post("/account/delete")
 def delete_account(
-    x_user_id: str | None = Header(None),
     authorization: str | None = Header(None),
 ) -> dict:
-    user_id = _resolve_user_id(authorization, x_user_id)
+    user_id = _require_user_id(authorization)
     supabase = crowd_service._get_supabase()
     supabase.table("crowd_reports").update({"user_id": None}).eq(
         "user_id", user_id
     ).execute()
     supabase.auth.admin.delete_user(user_id)
     return {"deleted": True}
+
+
+@lru_cache(maxsize=1)
+def load_segment_times() -> Dict[str, int]:
+    repo_root = Path(__file__).resolve().parents[1]
+    path = repo_root / "app" / "assets" / "data" / "segment_times.json"
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as fh:
+        raw = json.load(fh)
+    flat: Dict[str, int] = {}
+    for route_id, pairs in raw.items():
+        for key, minutes in pairs.items():
+            flat[f"{route_id}|{key}"] = int(minutes)
+    return flat
 
 
 @lru_cache(maxsize=1)
@@ -843,13 +894,16 @@ def load_network() -> dict:
     by_route: Dict[str, List[StopRecord]] = {}
     for stop in stops:
         by_route.setdefault(stop.route_id, []).append(stop)
+    segment_times = load_segment_times()
     for route_id, route_stops in by_route.items():
         ordered = sorted(
             route_stops,
             key=lambda stop: (stop.sequence_order, stop.stop_id),
         )
         for left, right in zip(ordered, ordered[1:]):
-            minutes = travel_minutes_between(left, right, fallback=2)
+            minutes = segment_times.get(
+                f"{route_id}|{left.stop_id}|{right.stop_id}"
+            ) or travel_minutes_between(left, right, fallback=2)
             add_edge(
                 adjacency,
                 GraphEdge(
@@ -1127,9 +1181,7 @@ def to_route_model(
         if candidate.transfer_count >= 2 or candidate.total_minutes >= 40
         else "Medium" if candidate.total_minutes >= 25 else "Low"
     )
-    fare = min(
-        max(1.4 + (total_distance * 0.13) + (candidate.transfer_count * 0.35), 1.4), 8.0
-    )
+    fare = compute_fare(candidate.edges, stops_by_id)
 
     return RouteModel(
         routeId=route_id,

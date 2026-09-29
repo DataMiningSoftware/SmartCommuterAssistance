@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/route_info.dart';
 import '../models/transit_graph.dart';
 import 'commuter_ml_service.dart';
+import 'fare_service.dart';
 
 class TransitPlanRequest {
   final String originId;
@@ -122,9 +123,7 @@ class LocalTransitPlanningGateway implements TransitPlanningGateway {
             ? 'Moderate'
             : 'Light';
 
-    final fare =
-        (1.4 + (path.totalDistanceKm * 0.13) + (path.transferCount * 0.35))
-            .clamp(1.4, 8.0);
+    final fare = FareService.fareForPath(path, graph);
 
     return RouteInfo(
       routeId: 'route_$sequence',

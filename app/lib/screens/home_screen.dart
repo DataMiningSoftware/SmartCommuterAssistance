@@ -47,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    LocationPrivacyService.consent.addListener(_onLocationConsentChanged);
     _loadLocation();
     _loadMapStops();
     _stationSearchFuture = _loadStationSearchOptions();
@@ -54,6 +55,19 @@ class _HomeScreenState extends State<HomeScreen> {
       (options) => _loadStationClosedByStop(options, _departureTime),
     );
     _startNearestCrowdAutoRefresh();
+  }
+
+  void _onLocationConsentChanged() {
+    if (!mounted) return;
+    if (LocationPrivacyService.consent.value) {
+      _loadLocation();
+    } else {
+      setState(() {
+        _position = null;
+        _nearestCrowdFuture =
+            Future.value(const <NearbyStationCrowdForecast>[]);
+      });
+    }
   }
 
   void _handleStationSelected(_HomeStationSearchOption option) {
@@ -324,6 +338,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (result == true) {
       await LocationPrivacyService.setConsent(true);
+    } else {
+      await LocationPrivacyService.markAsked();
     }
     return result ?? false;
   }
@@ -405,6 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    LocationPrivacyService.consent.removeListener(_onLocationConsentChanged);
     _nearestAutoRefreshTimer?.cancel();
     _routeSearchController.dispose();
     super.dispose();
@@ -412,6 +429,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadLocation() async {
     try {
+      final consented = await LocationPrivacyService.hasConsent();
+      if (!consented) {
+        if (await LocationPrivacyService.hasBeenAsked()) return;
+        final result = await _showLocationConsentDialog();
+        if (result != true || !mounted) return;
+      }
+
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         return;
@@ -428,31 +452,33 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      final consented = await LocationPrivacyService.hasConsent();
-      if (!consented) {
-        final result = await _showLocationConsentDialog();
-        if (result != true || !mounted) return;
-      }
-
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-      );
+        timeLimit: const Duration(seconds: 12),
+      ).catchError((Object error) async {
+        debugPrint('Home location: current position failed: $error');
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown == null) {
+          throw error;
+        }
+        return lastKnown;
+      });
       if (!mounted) return;
-      final redacted = LocationPrivacyService.redact(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
       setState(() {
         _position = position;
         _nearestCrowdFuture =
             _crowdReportsService.fetchNearestStationsWithCrowd(
-          latitude: redacted.latitude,
-          longitude: redacted.longitude,
+          latitude: position.latitude,
+          longitude: position.longitude,
           departureTime: DateTime.now(),
           limit: 5,
         );
       });
+      debugPrint(
+        'Home location: ${position.latitude}, ${position.longitude}',
+      );
     } catch (e) {
+      debugPrint('Home location failed: $e');
       if (!mounted) return;
     }
   }
@@ -460,14 +486,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshNearestCrowd() {
     final position = _position;
     if (position == null) return;
-    final redacted = LocationPrivacyService.redact(
-      latitude: position.latitude,
-      longitude: position.longitude,
-    );
     setState(() {
       _nearestCrowdFuture = _crowdReportsService.fetchNearestStationsWithCrowd(
-        latitude: redacted.latitude,
-        longitude: redacted.longitude,
+        latitude: position.latitude,
+        longitude: position.longitude,
         departureTime: DateTime.now(),
         limit: 5,
       );
@@ -2163,6 +2185,7 @@ class _StationCrowdBoard extends StatelessWidget {
               IconButton(
                 onPressed: onRefresh,
                 icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Refresh nearby stations',
               ),
             ],
           ),

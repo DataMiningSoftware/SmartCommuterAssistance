@@ -1,9 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/deepseek-v4.1-flash",
   "provider": {
     "google": {
       "options": {
-        "apiKey": "AQ.Ab8RN6JgPTZGPQKTsj_9eEpG3neabzfqbSOVHIV3Y3X8_UXR2g"
+        "apiKey": "{env:GOOGLE_API_KEY}"
       }
     }
   },
@@ -16,8 +17,8 @@
     "vision_agent": {
       "description": "Extracts station coordinates from the transit map reference image — the only agent that can see images",
       "mode": "subagent",
-      "model": "google/gemini-2.5-flash",
-      "tools": { "write": true, "edit": true, "bash": false }
+      "model": "opencode/deepseek-v4.1-flash",
+      "permission": { "bash": "deny" }
     },
     "schema_agent": {
       "description": "Database schema specialist for lines, stations, and connections",

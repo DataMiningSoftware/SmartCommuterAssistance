@@ -58,6 +58,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.3
@@ -84,15 +86,17 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: assets/images/logo.png
+  adaptive_icon_background: "#F4F7FC"
+  adaptive_icon_foreground: assets/images/logo.png
   remove_alpha_ios: true
 
 flutter_native_splash:
   color: "#F4F7FC"
   image: assets/images/logo.png
   android: true
-  ios: false
+  ios: true
   web: false
   android_12:
     color: "#F4F7FC"

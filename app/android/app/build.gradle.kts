@@ -9,10 +9,18 @@ plugins {
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
-val hasReleaseKeystore = keystorePropertiesFile.exists()
-if (hasReleaseKeystore) {
+if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+
+val configuredStoreFile = keystoreProperties.getProperty("storeFile")
+val releaseKeystoreFile: File? = configuredStoreFile?.let { path ->
+    listOf(rootProject.file(path), file(path)).firstOrNull { it.exists() }
+}
+
+val hasReleaseKeystore = keystorePropertiesFile.exists() &&
+    configuredStoreFile != null &&
+    releaseKeystoreFile != null
 
 android {
     namespace = "com.nawfal.smartcommuter"
@@ -45,7 +53,7 @@ android {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
+                storeFile = releaseKeystoreFile
                 storePassword = keystoreProperties["storePassword"] as String
             }
         }
@@ -53,11 +61,29 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseKeystore) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
             }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+}
+
+tasks.matching {
+    it.name == "assembleRelease" || it.name == "bundleRelease"
+}.configureEach {
+    doFirst {
+        if (!hasReleaseKeystore) {
+            throw GradleException(
+                "Release signing is not configured. Create app/android/key.properties " +
+                    "with an existing storeFile plus keyAlias, keyPassword and " +
+                    "storePassword, then retry.",
+            )
         }
     }
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../constants/app_features.dart';
 import '../models/transit_graph.dart';
 import '../services/race_service.dart';
 import '../services/route_choice_service.dart';
@@ -138,7 +139,9 @@ class _RouteBuilderScreenState extends State<RouteBuilderScreen> {
       chosenMinutes: _manualMinutes,
     );
     final ok = await _routeChoice.submitFeedback(choice);
-    await _publishRacePlan(chosenPath, agentPath);
+    if (AppFeatures.racingEnabled) {
+      await _publishRacePlan(chosenPath, agentPath);
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(ok ? 'Comparison logged for retraining.' : 'Log in to save comparisons.')),

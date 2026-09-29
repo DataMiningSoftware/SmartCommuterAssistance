@@ -6,8 +6,8 @@
       "name": "SENTUL TIMUR",
       "lat": 3.1818,
       "lng": 101.6957,
-      "gridX": 57.0,
-      "gridY": 34.0,
+      "gridX": 56.0,
+      "gridY": 15.0,
       "lines": [
         "AG",
         "SP"
@@ -18,8 +18,8 @@
       "name": "PUDU",
       "lat": 3.1405,
       "lng": 101.7057,
-      "gridX": 71.0,
-      "gridY": 66.0,
+      "gridX": 74.5,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "SP"
@@ -30,8 +30,8 @@
       "name": "CHAN SOW LIN",
       "lat": 3.1425,
       "lng": 101.7335,
-      "gridX": 76.0,
-      "gridY": 66.0,
+      "gridX": 78.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "PY",
@@ -43,8 +43,8 @@
       "name": "MIHARJA",
       "lat": 3.120973,
       "lng": 101.717922,
-      "gridX": 87.0,
-      "gridY": 65.0,
+      "gridX": 82.0,
+      "gridY": 48.5,
       "lines": [
         "AG"
       ]
@@ -54,8 +54,8 @@
       "name": "MALURI",
       "lat": 3.1399,
       "lng": 101.7279,
-      "gridX": 91.0,
-      "gridY": 61.0,
+      "gridX": 86.0,
+      "gridY": 44.5,
       "lines": [
         "AG",
         "KG"
@@ -66,8 +66,8 @@
       "name": "PANDAN JAYA",
       "lat": 3.130141,
       "lng": 101.739122,
-      "gridX": 91.0,
-      "gridY": 51.0,
+      "gridX": 86.0,
+      "gridY": 37.0,
       "lines": [
         "AG"
       ]
@@ -77,8 +77,8 @@
       "name": "PANDAN INDAH",
       "lat": 3.134581,
       "lng": 101.746509,
-      "gridX": 91.0,
-      "gridY": 45.0,
+      "gridX": 86.0,
+      "gridY": 31.0,
       "lines": [
         "AG"
       ]
@@ -88,8 +88,8 @@
       "name": "CEMPAKA",
       "lat": 3.138324,
       "lng": 101.752979,
-      "gridX": 91.0,
-      "gridY": 38.0,
+      "gridX": 86.0,
+      "gridY": 25.0,
       "lines": [
         "AG"
       ]
@@ -99,8 +99,8 @@
       "name": "CAHAYA",
       "lat": 3.140575,
       "lng": 101.756677,
-      "gridX": 91.0,
-      "gridY": 31.0,
+      "gridX": 86.0,
+      "gridY": 19.0,
       "lines": [
         "AG"
       ]
@@ -110,8 +110,8 @@
       "name": "AMPANG",
       "lat": 3.150318,
       "lng": 101.760049,
-      "gridX": 91.0,
-      "gridY": 26.0,
+      "gridX": 86.0,
+      "gridY": 10.0,
       "lines": [
         "AG"
       ]
@@ -121,8 +121,8 @@
       "name": "SENTUL",
       "lat": 3.1936,
       "lng": 101.6881,
-      "gridX": 49.0,
-      "gridY": 43.0,
+      "gridX": 56.0,
+      "gridY": 20.0,
       "lines": [
         "AG",
         "SP"
@@ -133,8 +133,8 @@
       "name": "TITIWANGSA",
       "lat": 3.1733,
       "lng": 101.6956,
-      "gridX": 57.0,
-      "gridY": 52.0,
+      "gridX": 56.0,
+      "gridY": 30.5,
       "lines": [
         "AG",
         "MR",
@@ -147,8 +147,8 @@
       "name": "PWTC",
       "lat": 3.166333,
       "lng": 101.693586,
-      "gridX": 57.0,
-      "gridY": 56.0,
+      "gridX": 56.0,
+      "gridY": 36.5,
       "lines": [
         "AG",
         "SP"
@@ -159,8 +159,8 @@
       "name": "SULTAN ISMAIL",
       "lat": 3.161245,
       "lng": 101.694109,
-      "gridX": 57.0,
-      "gridY": 58.0,
+      "gridX": 56.0,
+      "gridY": 41.5,
       "lines": [
         "AG",
         "SP"
@@ -171,8 +171,8 @@
       "name": "BANDARAYA - UOB",
       "lat": 3.155567,
       "lng": 101.694485,
-      "gridX": 57.0,
-      "gridY": 61.0,
+      "gridX": 56.0,
+      "gridY": 46.0,
       "lines": [
         "AG",
         "SP"
@@ -183,8 +183,8 @@
       "name": "MASJID JAMEK",
       "lat": 3.1495,
       "lng": 101.6964,
-      "gridX": 54.0,
-      "gridY": 64.0,
+      "gridX": 56.0,
+      "gridY": 51.5,
       "lines": [
         "AG",
         "KJ",
@@ -196,8 +196,8 @@
       "name": "PLAZA RAKYAT",
       "lat": 3.144049,
       "lng": 101.702105,
-      "gridX": 57.0,
-      "gridY": 67.0,
+      "gridX": 62.0,
+      "gridY": 54.5,
       "lines": [
         "AG",
         "SP"
@@ -209,7 +209,7 @@
       "lat": 3.1429,
       "lng": 101.7002,
       "gridX": 71.0,
-      "gridY": 71.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "MR",
@@ -219,43 +219,22 @@
     {
       "id": "ANGKASAPURI",
       "name": "Angkasapuri",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 47.0,
-      "gridY": 93.0,
+      "lat": 3.113212,
+      "lng": 101.673367,
+      "gridX": 47.5,
+      "gridY": 70.0,
       "lines": [
-        "KJ"
-      ]
-    },
-    {
-      "id": "BANDAR_BARU_KLANG",
-      "name": "Bandar Baru Klang",
-      "lat": 3.0625,
-      "lng": 101.465556,
-      "gridX": 9.0,
-      "gridY": 111.0,
-      "lines": [
-        "KS"
-      ]
-    },
-    {
-      "id": "BANDAR_BUKIT_TINGGI",
-      "name": "Bandar Bukit Tinggi",
-      "lat": 2.993056,
-      "lng": 101.445833,
-      "gridX": 17.0,
-      "gridY": 121.0,
-      "lines": [
+        "KJ",
         "KT2"
       ]
     },
     {
       "id": "BANGI",
       "name": "Bangi",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 104.0,
+      "lat": 2.904467,
+      "lng": 101.785943,
+      "gridX": 86.0,
+      "gridY": 84.5,
       "lines": [
         "KT1"
       ]
@@ -263,21 +242,22 @@
     {
       "id": "BANK_NEGARA",
       "name": "Bank Negara",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 49.0,
-      "gridY": 58.0,
+      "lat": 3.155105,
+      "lng": 101.693118,
+      "gridX": 47.5,
+      "gridY": 46.0,
       "lines": [
-        "KT1"
+        "KT1",
+        "KT2"
       ]
     },
     {
       "id": "BATANG_BENAR",
       "name": "Batang Benar",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 107.0,
+      "lat": 2.829904,
+      "lng": 101.826655,
+      "gridX": 86.0,
+      "gridY": 88.0,
       "lines": [
         "KT1"
       ]
@@ -285,10 +265,10 @@
     {
       "id": "BATANG_KALI",
       "name": "Batang Kali",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 5.0,
-      "gridY": 56.0,
+      "lat": 3.46838,
+      "lng": 101.637759,
+      "gridX": 20.0,
+      "gridY": 16.0,
       "lines": [
         "KT2"
       ]
@@ -296,32 +276,21 @@
     {
       "id": "BATU_CAVES",
       "name": "Batu Caves",
-      "lat": 0.0,
-      "lng": 0.0,
+      "lat": 3.237796,
+      "lng": 101.681215,
       "gridX": 49.0,
-      "gridY": 26.0,
+      "gridY": 10.0,
       "lines": [
         "KT1"
       ]
     },
     {
-      "id": "BATU_KENTONMEN_LRT",
-      "name": "Batu Kentonmen",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 57.0,
-      "gridY": 40.0,
-      "lines": [
-        "SP"
-      ]
-    },
-    {
       "id": "BATU_TIGA",
       "name": "Batu Tiga",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 14.0,
-      "gridY": 98.0,
+      "lat": 3.076091,
+      "lng": 101.559811,
+      "gridX": 16.5,
+      "gridY": 79.0,
       "lines": [
         "KT2"
       ]
@@ -331,8 +300,8 @@
       "name": "SUNWAY-SETIA JAYA",
       "lat": 3.0885,
       "lng": 101.6083,
-      "gridX": 27.0,
-      "gridY": 101.0,
+      "gridX": 30.0,
+      "gridY": 79.0,
       "lines": [
         "BRT"
       ]
@@ -342,8 +311,8 @@
       "name": "MENTARI",
       "lat": 3.087,
       "lng": 101.6115,
-      "gridX": 25.0,
-      "gridY": 104.0,
+      "gridX": 30.0,
+      "gridY": 83.0,
       "lines": [
         "BRT"
       ]
@@ -353,8 +322,8 @@
       "name": "SUNWAY LAGOON",
       "lat": 3.0706,
       "lng": 101.6107,
-      "gridX": 30.0,
-      "gridY": 104.0,
+      "gridX": 35.0,
+      "gridY": 83.0,
       "lines": [
         "BRT"
       ]
@@ -364,8 +333,8 @@
       "name": "SUNMED",
       "lat": 3.0656,
       "lng": 101.6087,
-      "gridX": 36.0,
-      "gridY": 104.0,
+      "gridX": 39.0,
+      "gridY": 83.0,
       "lines": [
         "BRT"
       ]
@@ -375,8 +344,8 @@
       "name": "SunU-Monash",
       "lat": 3.0791,
       "lng": 101.6145,
-      "gridX": 32.0,
-      "gridY": 108.0,
+      "gridX": 35.0,
+      "gridY": 89.0,
       "lines": [
         "BRT"
       ]
@@ -386,8 +355,8 @@
       "name": "SOUTH QUAY-USJ 1",
       "lat": 3.0765,
       "lng": 101.592,
-      "gridX": 25.0,
-      "gridY": 108.0,
+      "gridX": 28.0,
+      "gridY": 89.0,
       "lines": [
         "BRT"
       ]
@@ -397,8 +366,8 @@
       "name": "USJ7",
       "lat": 3.0553,
       "lng": 101.5919,
-      "gridX": 22.0,
-      "gridY": 108.0,
+      "gridX": 20.0,
+      "gridY": 89.0,
       "lines": [
         "BRT",
         "KJ"
@@ -407,67 +376,35 @@
     {
       "id": "BUKIT_BADAK",
       "name": "Bukit Badak",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 17.0,
-      "gridY": 107.0,
+      "lat": 3.036147,
+      "lng": 101.470176,
+      "gridX": 10.0,
+      "gridY": 87.5,
       "lines": [
         "KT2"
-      ]
-    },
-    {
-      "id": "DATO_MENTERI",
-      "name": "Dato Menteri",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 101.0,
-      "lines": [
-        "KS"
-      ]
-    },
-    {
-      "id": "GLENMARIE2",
-      "name": "Glenmarie 2",
-      "lat": 3.095278,
-      "lng": 101.588611,
-      "gridX": 15.0,
-      "gridY": 91.0,
-      "lines": [
-        "KS"
       ]
     },
     {
       "id": "JALAN_KASTAM",
       "name": "Jalan Kastam",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 124.0,
+      "lat": 3.013128,
+      "lng": 101.402599,
+      "gridX": 10.0,
+      "gridY": 108.5,
       "lines": [
         "KT2"
       ]
     },
     {
-      "id": "JALAN_MERU",
-      "name": "Jalan Meru",
-      "lat": 3.058889,
-      "lng": 101.451944,
-      "gridX": 9.0,
-      "gridY": 116.0,
-      "lines": [
-        "KS"
-      ]
-    },
-    {
       "id": "JALAN_TEMPLER",
       "name": "Jalan Templer",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 34.0,
-      "gridY": 91.0,
+      "lat": 3.084013,
+      "lng": 101.656402,
+      "gridX": 40.0,
+      "gridY": 79.0,
       "lines": [
-        "KJ"
+        "KJ",
+        "KT2"
       ]
     },
     {
@@ -484,10 +421,10 @@
     {
       "id": "KAJANG2",
       "name": "Kajang 2",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 98.0,
+      "lat": 2.96264,
+      "lng": 101.79207,
+      "gridX": 80.5,
+      "gridY": 81.0,
       "lines": [
         "KT1"
       ]
@@ -495,21 +432,22 @@
     {
       "id": "KAMPUNG_DATO_HARUN",
       "name": "Kampung Dato Harun",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 30.0,
-      "gridY": 91.0,
+      "lat": 3.084828,
+      "lng": 101.632339,
+      "gridX": 36.0,
+      "gridY": 79.0,
       "lines": [
-        "KJ"
+        "KJ",
+        "KT2"
       ]
     },
     {
       "id": "KAMPUNG_RAJA_UDA",
       "name": "Kampung Raja Uda",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 121.0,
+      "lat": 3.020253,
+      "lng": 101.41023,
+      "gridX": 10.0,
+      "gridY": 104.0,
       "lines": [
         "KT2"
       ]
@@ -519,8 +457,8 @@
       "name": "Kepong",
       "lat": 3.2126,
       "lng": 101.6332,
-      "gridX": 35.0,
-      "gridY": 57.0,
+      "gridX": 29.0,
+      "gridY": 41.5,
       "lines": [
         "KT2"
       ]
@@ -530,8 +468,8 @@
       "name": "Kepong Sentral",
       "lat": 3.2076,
       "lng": 101.6356,
-      "gridX": 35.0,
-      "gridY": 45.0,
+      "gridX": 20.0,
+      "gridY": 34.5,
       "lines": [
         "KT2"
       ]
@@ -542,7 +480,7 @@
       "lat": 3.176146,
       "lng": 101.572052,
       "gridX": 27.0,
-      "gridY": 76.0,
+      "gridY": 33.0,
       "lines": [
         "KG",
         "PY"
@@ -553,8 +491,8 @@
       "name": "KWASA SENTRAL",
       "lat": 3.170112,
       "lng": 101.564651,
-      "gridX": 28.0,
-      "gridY": 80.0,
+      "gridX": 27.0,
+      "gridY": 35.5,
       "lines": [
         "KG"
       ]
@@ -565,7 +503,7 @@
       "lat": 3.150134,
       "lng": 101.57869,
       "gridX": 27.0,
-      "gridY": 84.0,
+      "gridY": 38.0,
       "lines": [
         "KG"
       ]
@@ -576,7 +514,7 @@
       "lat": 3.14948,
       "lng": 101.593925,
       "gridX": 27.0,
-      "gridY": 88.0,
+      "gridY": 40.5,
       "lines": [
         "KG"
       ]
@@ -587,7 +525,7 @@
       "lat": 3.155301,
       "lng": 101.609077,
       "gridX": 27.0,
-      "gridY": 92.0,
+      "gridY": 43.0,
       "lines": [
         "KG"
       ]
@@ -598,7 +536,7 @@
       "lat": 3.1464,
       "lng": 101.6186,
       "gridX": 27.0,
-      "gridY": 96.0,
+      "gridY": 45.5,
       "lines": [
         "KG"
       ]
@@ -609,7 +547,7 @@
       "lat": 3.13613,
       "lng": 101.630539,
       "gridX": 27.0,
-      "gridY": 100.0,
+      "gridY": 48.0,
       "lines": [
         "KG"
       ]
@@ -620,7 +558,7 @@
       "lat": 3.129864,
       "lng": 101.642471,
       "gridX": 27.0,
-      "gridY": 104.0,
+      "gridY": 50.5,
       "lines": [
         "KG"
       ]
@@ -630,8 +568,8 @@
       "name": "PUSAT BANDAR DAMANSARA",
       "lat": 3.143444,
       "lng": 101.662857,
-      "gridX": 31.0,
-      "gridY": 108.0,
+      "gridX": 33.0,
+      "gridY": 53.0,
       "lines": [
         "KG"
       ]
@@ -641,8 +579,8 @@
       "name": "SEMANTAN",
       "lat": 3.150977,
       "lng": 101.665497,
-      "gridX": 36.0,
-      "gridY": 108.0,
+      "gridX": 39.0,
+      "gridY": 53.0,
       "lines": [
         "KG"
       ]
@@ -652,8 +590,8 @@
       "name": "MUZIUM NEGARA",
       "lat": 3.137317,
       "lng": 101.687336,
-      "gridX": 42.0,
-      "gridY": 76.0,
+      "gridX": 45.0,
+      "gridY": 53.0,
       "lines": [
         "KG"
       ]
@@ -663,8 +601,8 @@
       "name": "PASAR SENI",
       "lat": 3.1427,
       "lng": 101.6955,
-      "gridX": 57.0,
-      "gridY": 73.0,
+      "gridX": 56.0,
+      "gridY": 57.0,
       "lines": [
         "KG",
         "KJ"
@@ -675,8 +613,8 @@
       "name": "MERDEKA",
       "lat": 3.1415,
       "lng": 101.702,
-      "gridX": 57.0,
-      "gridY": 71.0,
+      "gridX": 62.0,
+      "gridY": 56.0,
       "lines": [
         "KG"
       ]
@@ -686,8 +624,8 @@
       "name": "BUKIT BINTANG",
       "lat": 3.1465,
       "lng": 101.7113,
-      "gridX": 66.0,
-      "gridY": 63.0,
+      "gridX": 67.0,
+      "gridY": 42.5,
       "lines": [
         "KG",
         "MR"
@@ -698,8 +636,8 @@
       "name": "TUN RAZAK EXCHANGE",
       "lat": 3.1425,
       "lng": 101.7196,
-      "gridX": 79.0,
-      "gridY": 61.0,
+      "gridX": 78.0,
+      "gridY": 42.5,
       "lines": [
         "KG",
         "PY"
@@ -710,8 +648,8 @@
       "name": "COCHRANE",
       "lat": 3.1419,
       "lng": 101.7227,
-      "gridX": 85.0,
-      "gridY": 63.0,
+      "gridX": 82.0,
+      "gridY": 44.5,
       "lines": [
         "KG"
       ]
@@ -721,8 +659,8 @@
       "name": "MALURI",
       "lat": 3.1399,
       "lng": 101.7279,
-      "gridX": 91.0,
-      "gridY": 61.0,
+      "gridX": 86.0,
+      "gridY": 44.5,
       "lines": [
         "AG",
         "KG"
@@ -733,8 +671,8 @@
       "name": "TAMAN PERTAMA",
       "lat": 3.112547,
       "lng": 101.729371,
-      "gridX": 93.0,
-      "gridY": 64.0,
+      "gridX": 86.0,
+      "gridY": 48.0,
       "lines": [
         "KG"
       ]
@@ -744,8 +682,8 @@
       "name": "TAMAN MIDAH",
       "lat": 3.104505,
       "lng": 101.732186,
-      "gridX": 93.0,
-      "gridY": 67.0,
+      "gridX": 86.0,
+      "gridY": 51.0,
       "lines": [
         "KG"
       ]
@@ -755,8 +693,8 @@
       "name": "TAMAN MUTIARA",
       "lat": 3.090989,
       "lng": 101.740453,
-      "gridX": 93.0,
-      "gridY": 70.0,
+      "gridX": 86.0,
+      "gridY": 54.0,
       "lines": [
         "KG"
       ]
@@ -766,8 +704,8 @@
       "name": "TAMAN CONNAUGHT",
       "lat": 3.079172,
       "lng": 101.74522,
-      "gridX": 93.0,
-      "gridY": 73.0,
+      "gridX": 86.0,
+      "gridY": 57.0,
       "lines": [
         "KG"
       ]
@@ -777,8 +715,8 @@
       "name": "TAMAN SUNTEX",
       "lat": 3.071578,
       "lng": 101.763552,
-      "gridX": 93.0,
-      "gridY": 76.0,
+      "gridX": 86.0,
+      "gridY": 60.0,
       "lines": [
         "KG"
       ]
@@ -788,8 +726,8 @@
       "name": "SRI RAYA",
       "lat": 3.062273,
       "lng": 101.772899,
-      "gridX": 93.0,
-      "gridY": 79.0,
+      "gridX": 86.0,
+      "gridY": 63.0,
       "lines": [
         "KG"
       ]
@@ -799,8 +737,8 @@
       "name": "BANDAR TUN HUSSEIN ONN",
       "lat": 3.048223,
       "lng": 101.775109,
-      "gridX": 93.0,
-      "gridY": 82.0,
+      "gridX": 86.0,
+      "gridY": 66.0,
       "lines": [
         "KG"
       ]
@@ -810,8 +748,8 @@
       "name": "BATU 11 CHERAS",
       "lat": 3.041339,
       "lng": 101.773383,
-      "gridX": 93.0,
-      "gridY": 85.0,
+      "gridX": 86.0,
+      "gridY": 69.0,
       "lines": [
         "KG"
       ]
@@ -821,8 +759,8 @@
       "name": "BUKIT DUKUNG",
       "lat": 3.026413,
       "lng": 101.771072,
-      "gridX": 93.0,
-      "gridY": 88.0,
+      "gridX": 86.0,
+      "gridY": 72.0,
       "lines": [
         "KG"
       ]
@@ -832,8 +770,8 @@
       "name": "SUNGAI JERNIH",
       "lat": 3.000948,
       "lng": 101.783857,
-      "gridX": 93.0,
-      "gridY": 91.0,
+      "gridX": 86.0,
+      "gridY": 75.0,
       "lines": [
         "KG"
       ]
@@ -843,8 +781,8 @@
       "name": "STADIUM KAJANG",
       "lat": 2.9935,
       "lng": 101.7876,
-      "gridX": 93.0,
-      "gridY": 94.0,
+      "gridX": 86.0,
+      "gridY": 78.0,
       "lines": [
         "KG"
       ]
@@ -854,10 +792,11 @@
       "name": "KAJANG",
       "lat": 2.982778,
       "lng": 101.790278,
-      "gridX": 79.0,
-      "gridY": 95.0,
+      "gridX": 78.0,
+      "gridY": 81.0,
       "lines": [
-        "KG"
+        "KG",
+        "KT1"
       ]
     },
     {
@@ -865,8 +804,8 @@
       "name": "GOMBAK",
       "lat": 3.1873,
       "lng": 101.7342,
-      "gridX": 73.0,
-      "gridY": 26.0,
+      "gridX": 71.0,
+      "gridY": 10.0,
       "lines": [
         "KJ"
       ]
@@ -876,8 +815,8 @@
       "name": "KLCC",
       "lat": 3.1592,
       "lng": 101.7135,
-      "gridX": 68.0,
-      "gridY": 55.0,
+      "gridX": 71.0,
+      "gridY": 37.0,
       "lines": [
         "KJ"
       ]
@@ -887,8 +826,8 @@
       "name": "KAMPUNG BARU - CBP COOPBANK PERTAMA",
       "lat": 3.1567,
       "lng": 101.7085,
-      "gridX": 68.0,
-      "gridY": 58.0,
+      "gridX": 71.0,
+      "gridY": 39.5,
       "lines": [
         "KJ"
       ]
@@ -898,8 +837,8 @@
       "name": "DANG WANGI",
       "lat": 3.156942,
       "lng": 101.701975,
-      "gridX": 65.0,
-      "gridY": 57.0,
+      "gridX": 67.0,
+      "gridY": 41.5,
       "lines": [
         "KJ"
       ]
@@ -909,8 +848,8 @@
       "name": "MASJID JAMEK",
       "lat": 3.1495,
       "lng": 101.6964,
-      "gridX": 54.0,
-      "gridY": 64.0,
+      "gridX": 56.0,
+      "gridY": 51.5,
       "lines": [
         "AG",
         "KJ",
@@ -922,8 +861,8 @@
       "name": "PASAR SENI",
       "lat": 3.1427,
       "lng": 101.6955,
-      "gridX": 57.0,
-      "gridY": 73.0,
+      "gridX": 56.0,
+      "gridY": 57.0,
       "lines": [
         "KG",
         "KJ"
@@ -931,18 +870,18 @@
     },
     {
       "id": "KJ15",
-      "name": "KL SENTRAL - REDONE",
+      "name": "KL SENTRAL",
       "lat": 3.1343,
       "lng": 101.6861,
-      "gridX": 47.0,
-      "gridY": 79.0,
+      "gridX": 56.0,
+      "gridY": 59.0,
       "lines": [
-        "ER6",
-        "ER7",
         "KJ",
+        "MR",
         "KT1",
         "KT2",
-        "MR"
+        "ER6",
+        "ER7"
       ]
     },
     {
@@ -950,8 +889,8 @@
       "name": "BANK RAKYAT BANGSAR",
       "lat": 3.1306,
       "lng": 101.6753,
-      "gridX": 44.0,
-      "gridY": 84.0,
+      "gridX": 47.5,
+      "gridY": 63.5,
       "lines": [
         "KJ"
       ]
@@ -961,10 +900,11 @@
       "name": "ABDULLAH HUKUM",
       "lat": 3.1222,
       "lng": 101.6712,
-      "gridX": 47.0,
-      "gridY": 89.0,
+      "gridX": 47.5,
+      "gridY": 67.0,
       "lines": [
-        "KJ"
+        "KJ",
+        "KT2"
       ]
     },
     {
@@ -973,7 +913,7 @@
       "lat": 3.1159,
       "lng": 101.661,
       "gridX": 44.0,
-      "gridY": 89.0,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -983,8 +923,8 @@
       "name": "UNIVERSITI",
       "lat": 3.1143,
       "lng": 101.6553,
-      "gridX": 44.0,
-      "gridY": 84.0,
+      "gridX": 40.5,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -994,8 +934,8 @@
       "name": "TAMAN MELATI",
       "lat": 3.1759,
       "lng": 101.7288,
-      "gridX": 73.0,
-      "gridY": 30.0,
+      "gridX": 71.0,
+      "gridY": 13.0,
       "lines": [
         "KJ"
       ]
@@ -1005,8 +945,8 @@
       "name": "TAMAN JAYA",
       "lat": 3.1083,
       "lng": 101.6418,
-      "gridX": 42.0,
-      "gridY": 84.0,
+      "gridX": 37.0,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -1016,8 +956,8 @@
       "name": "ASIA JAYA",
       "lat": 3.1099,
       "lng": 101.6345,
-      "gridX": 40.0,
-      "gridY": 84.0,
+      "gridX": 33.5,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -1027,8 +967,8 @@
       "name": "TAMAN PARAMOUNT",
       "lat": 3.107,
       "lng": 101.6204,
-      "gridX": 38.0,
-      "gridY": 84.0,
+      "gridX": 30.0,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -1038,8 +978,8 @@
       "name": "TAMAN BAHAGIA",
       "lat": 3.1015,
       "lng": 101.6094,
-      "gridX": 35.0,
-      "gridY": 84.0,
+      "gridX": 26.5,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -1049,8 +989,8 @@
       "name": "KELANA JAYA",
       "lat": 3.0916,
       "lng": 101.6,
-      "gridX": 32.0,
-      "gridY": 84.0,
+      "gridX": 23.0,
+      "gridY": 67.0,
       "lines": [
         "KJ"
       ]
@@ -1060,8 +1000,8 @@
       "name": "LEMBAH SUBANG",
       "lat": 3.0867,
       "lng": 101.5903,
-      "gridX": 22.0,
-      "gridY": 87.0,
+      "gridX": 20.0,
+      "gridY": 70.0,
       "lines": [
         "KJ"
       ]
@@ -1071,8 +1011,8 @@
       "name": "ARA DAMANSARA",
       "lat": 3.0828,
       "lng": 101.5762,
-      "gridX": 22.0,
-      "gridY": 91.0,
+      "gridX": 20.0,
+      "gridY": 73.0,
       "lines": [
         "KJ"
       ]
@@ -1082,8 +1022,8 @@
       "name": "CGC GLENMARIE",
       "lat": 3.0807,
       "lng": 101.5691,
-      "gridX": 22.0,
-      "gridY": 94.0,
+      "gridX": 20.0,
+      "gridY": 76.0,
       "lines": [
         "KJ"
       ]
@@ -1093,10 +1033,11 @@
       "name": "SUBANG JAYA",
       "lat": 3.0823,
       "lng": 101.5885,
-      "gridX": 22.0,
-      "gridY": 98.0,
+      "gridX": 20.0,
+      "gridY": 79.0,
       "lines": [
-        "KJ"
+        "KJ",
+        "KT2"
       ]
     },
     {
@@ -1104,8 +1045,8 @@
       "name": "SS 15",
       "lat": 3.0784,
       "lng": 101.5862,
-      "gridX": 22.0,
-      "gridY": 101.0,
+      "gridX": 20.0,
+      "gridY": 83.0,
       "lines": [
         "KJ"
       ]
@@ -1115,8 +1056,8 @@
       "name": "WANGSA MAJU",
       "lat": 3.2036,
       "lng": 101.7346,
-      "gridX": 73.0,
-      "gridY": 34.0,
+      "gridX": 71.0,
+      "gridY": 15.5,
       "lines": [
         "KJ"
       ]
@@ -1126,8 +1067,8 @@
       "name": "SS 18",
       "lat": 3.067182,
       "lng": 101.585945,
-      "gridX": 22.0,
-      "gridY": 104.0,
+      "gridX": 20.0,
+      "gridY": 86.0,
       "lines": [
         "KJ"
       ]
@@ -1137,8 +1078,8 @@
       "name": "USJ7",
       "lat": 3.054956,
       "lng": 101.592194,
-      "gridX": 22.0,
-      "gridY": 108.0,
+      "gridX": 20.0,
+      "gridY": 89.0,
       "lines": [
         "BRT",
         "KJ"
@@ -1149,8 +1090,8 @@
       "name": "TAIPAN",
       "lat": 3.04815,
       "lng": 101.590233,
-      "gridX": 22.0,
-      "gridY": 114.0,
+      "gridX": 20.0,
+      "gridY": 92.5,
       "lines": [
         "KJ"
       ]
@@ -1160,8 +1101,8 @@
       "name": "WAWASAN",
       "lat": 3.035062,
       "lng": 101.588348,
-      "gridX": 22.0,
-      "gridY": 117.0,
+      "gridX": 20.0,
+      "gridY": 95.5,
       "lines": [
         "KJ"
       ]
@@ -1171,8 +1112,8 @@
       "name": "USJ 21",
       "lat": 3.029881,
       "lng": 101.581711,
-      "gridX": 22.0,
-      "gridY": 121.0,
+      "gridX": 20.0,
+      "gridY": 98.5,
       "lines": [
         "KJ"
       ]
@@ -1182,8 +1123,8 @@
       "name": "ALAM MEGAH",
       "lat": 3.023151,
       "lng": 101.572029,
-      "gridX": 26.0,
-      "gridY": 124.0,
+      "gridX": 24.0,
+      "gridY": 102.5,
       "lines": [
         "KJ"
       ]
@@ -1193,8 +1134,8 @@
       "name": "SUBANG ALAM",
       "lat": 3.009421,
       "lng": 101.572281,
-      "gridX": 30.0,
-      "gridY": 124.0,
+      "gridX": 28.0,
+      "gridY": 102.5,
       "lines": [
         "KJ"
       ]
@@ -1204,8 +1145,8 @@
       "name": "PUTRA HEIGHTS",
       "lat": 2.996227,
       "lng": 101.575462,
-      "gridX": 34.0,
-      "gridY": 124.0,
+      "gridX": 32.0,
+      "gridY": 102.5,
       "lines": [
         "KJ",
         "SP"
@@ -1216,8 +1157,8 @@
       "name": "SRI RAMPAI",
       "lat": 3.1695,
       "lng": 101.742,
-      "gridX": 73.0,
-      "gridY": 38.0,
+      "gridX": 71.0,
+      "gridY": 18.5,
       "lines": [
         "KJ"
       ]
@@ -1227,8 +1168,8 @@
       "name": "SETIAWANGSA",
       "lat": 3.1594,
       "lng": 101.7382,
-      "gridX": 73.0,
-      "gridY": 42.0,
+      "gridX": 71.0,
+      "gridY": 21.0,
       "lines": [
         "KJ"
       ]
@@ -1238,8 +1179,8 @@
       "name": "JELATEK",
       "lat": 3.1558,
       "lng": 101.7321,
-      "gridX": 73.0,
-      "gridY": 46.0,
+      "gridX": 71.0,
+      "gridY": 24.0,
       "lines": [
         "KJ"
       ]
@@ -1249,8 +1190,8 @@
       "name": "DATO' KERAMAT",
       "lat": 3.16509,
       "lng": 101.73184,
-      "gridX": 73.0,
-      "gridY": 49.0,
+      "gridX": 71.0,
+      "gridY": 27.0,
       "lines": [
         "KJ"
       ]
@@ -1260,8 +1201,8 @@
       "name": "DAMAI",
       "lat": 3.1547,
       "lng": 101.7227,
-      "gridX": 73.0,
-      "gridY": 52.0,
+      "gridX": 71.0,
+      "gridY": 29.5,
       "lines": [
         "KJ"
       ]
@@ -1271,8 +1212,8 @@
       "name": "AMPANG PARK",
       "lat": 3.1599,
       "lng": 101.714,
-      "gridX": 73.0,
-      "gridY": 55.0,
+      "gridX": 71.0,
+      "gridY": 33.0,
       "lines": [
         "KJ",
         "PY"
@@ -1281,32 +1222,21 @@
     {
       "id": "KLANG",
       "name": "Klang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 14.0,
-      "gridY": 111.0,
-      "lines": [
-        "KT2"
-      ]
-    },
-    {
-      "id": "KLANG_JAYA",
-      "name": "Klang Jaya",
-      "lat": 3.005278,
-      "lng": 101.441667,
-      "gridX": 17.0,
-      "gridY": 114.0,
+      "lat": 3.043078,
+      "lng": 101.449543,
+      "gridX": 10.0,
+      "gridY": 91.5,
       "lines": [
         "KT2"
       ]
     },
     {
       "id": "KLIA",
-      "name": "KLIA",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 76.0,
-      "gridY": 138.0,
+      "name": "KLIA T1",
+      "lat": 2.7547334,
+      "lng": 101.7046397,
+      "gridX": 74.5,
+      "gridY": 112.0,
       "lines": [
         "ER6",
         "ER7"
@@ -1314,11 +1244,11 @@
     },
     {
       "id": "KLIA2",
-      "name": "KLIA2",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 68.0,
-      "gridY": 138.0,
+      "name": "KLIA T2",
+      "lat": 2.7445265,
+      "lng": 101.6851796,
+      "gridX": 74.5,
+      "gridY": 116.0,
       "lines": [
         "ER6",
         "ER7"
@@ -1327,10 +1257,10 @@
     {
       "id": "KUALA_KUBU_BHARU",
       "name": "Kuala Kubu Bharu",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 4.0,
-      "gridY": 48.0,
+      "lat": 3.553215,
+      "lng": 101.639591,
+      "gridX": 18.0,
+      "gridY": 10.0,
       "lines": [
         "KT2"
       ]
@@ -1338,21 +1268,22 @@
     {
       "id": "KUALA_LUMPUR",
       "name": "Kuala Lumpur",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 42.0,
-      "gridY": 73.0,
+      "lat": 3.139444,
+      "lng": 101.693333,
+      "gridX": 47.5,
+      "gridY": 51.5,
       "lines": [
+        "KT1",
         "KT2"
       ]
     },
     {
       "id": "KUANG",
       "name": "Kuang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 13.0,
-      "gridY": 64.0,
+      "lat": 3.258267,
+      "lng": 101.554794,
+      "gridX": 20.0,
+      "gridY": 24.5,
       "lines": [
         "KT2"
       ]
@@ -1360,10 +1291,10 @@
     {
       "id": "LABU",
       "name": "Labu",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 113.0,
+      "lat": 2.754501,
+      "lng": 101.826656,
+      "gridX": 86.0,
+      "gridY": 95.5,
       "lines": [
         "KT1"
       ]
@@ -1371,27 +1302,23 @@
     {
       "id": "MID_VALLEY",
       "name": "Mid Valley",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 54.0,
-      "gridY": 82.0,
+      "lat": 3.119211,
+      "lng": 101.678865,
+      "gridX": 56.0,
+      "gridY": 65.5,
       "lines": [
         "KT1"
       ]
     },
     {
       "id": "MR1",
-      "name": "KL SENTRAL - REDONE",
+      "name": "KL SENTRAL",
       "lat": 3.1343,
       "lng": 101.6861,
-      "gridX": 47.0,
-      "gridY": 79.0,
+      "gridX": 56.0,
+      "gridY": 59.0,
       "lines": [
-        "ER6",
-        "ER7",
         "KJ",
-        "KT1",
-        "KT2",
         "MR"
       ]
     },
@@ -1400,8 +1327,8 @@
       "name": "CHOW KIT",
       "lat": 3.1706,
       "lng": 101.6971,
-      "gridX": 61.0,
-      "gridY": 54.0,
+      "gridX": 62.0,
+      "gridY": 32.5,
       "lines": [
         "MR"
       ]
@@ -1411,8 +1338,8 @@
       "name": "TITIWANGSA",
       "lat": 3.1733,
       "lng": 101.6956,
-      "gridX": 57.0,
-      "gridY": 52.0,
+      "gridX": 56.0,
+      "gridY": 30.5,
       "lines": [
         "AG",
         "MR",
@@ -1425,8 +1352,8 @@
       "name": "TUN SAMBANTHAN",
       "lat": 3.13132,
       "lng": 101.69085,
-      "gridX": 59.0,
-      "gridY": 76.0,
+      "gridX": 62.0,
+      "gridY": 59.0,
       "lines": [
         "MR"
       ]
@@ -1436,8 +1363,8 @@
       "name": "MAHARAJALELA",
       "lat": 3.138743,
       "lng": 101.699268,
-      "gridX": 59.0,
-      "gridY": 73.0,
+      "gridX": 62.0,
+      "gridY": 57.0,
       "lines": [
         "MR"
       ]
@@ -1448,7 +1375,7 @@
       "lat": 3.1429,
       "lng": 101.7002,
       "gridX": 71.0,
-      "gridY": 71.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "MR",
@@ -1460,8 +1387,8 @@
       "name": "IMBI",
       "lat": 3.1451,
       "lng": 101.7084,
-      "gridX": 68.0,
-      "gridY": 66.0,
+      "gridX": 71.0,
+      "gridY": 46.5,
       "lines": [
         "MR"
       ]
@@ -1471,8 +1398,8 @@
       "name": "BUKIT BINTANG",
       "lat": 3.1465,
       "lng": 101.7113,
-      "gridX": 66.0,
-      "gridY": 63.0,
+      "gridX": 67.0,
+      "gridY": 42.5,
       "lines": [
         "KG",
         "MR"
@@ -1483,8 +1410,8 @@
       "name": "RAJA CHULAN",
       "lat": 3.1505,
       "lng": 101.7086,
-      "gridX": 68.0,
-      "gridY": 60.0,
+      "gridX": 67.0,
+      "gridY": 38.0,
       "lines": [
         "MR"
       ]
@@ -1494,8 +1421,8 @@
       "name": "BUKIT NANAS",
       "lat": 3.1525,
       "lng": 101.705,
-      "gridX": 68.0,
-      "gridY": 58.0,
+      "gridX": 67.0,
+      "gridY": 35.5,
       "lines": [
         "MR"
       ]
@@ -1505,8 +1432,8 @@
       "name": "MEDAN TUANKU",
       "lat": 3.1638,
       "lng": 101.6978,
-      "gridX": 63.0,
-      "gridY": 54.0,
+      "gridX": 62.0,
+      "gridY": 35.5,
       "lines": [
         "MR"
       ]
@@ -1514,10 +1441,10 @@
     {
       "id": "NILAI",
       "name": "Nilai",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 110.0,
+      "lat": 2.802356,
+      "lng": 101.799303,
+      "gridX": 86.0,
+      "gridY": 92.0,
       "lines": [
         "KT1"
       ]
@@ -1525,10 +1452,10 @@
     {
       "id": "PADANG_JAWA",
       "name": "Padang Jawa",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 14.0,
-      "gridY": 104.0,
+      "lat": 3.052532,
+      "lng": 101.492742,
+      "gridX": 10.0,
+      "gridY": 83.0,
       "lines": [
         "KT2"
       ]
@@ -1536,32 +1463,22 @@
     {
       "id": "PANTAI_DALAM",
       "name": "Pantai Dalam",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 47.0,
-      "gridY": 97.0,
+      "lat": 3.095607,
+      "lng": 101.669927,
+      "gridX": 47.5,
+      "gridY": 73.0,
       "lines": [
-        "KJ"
-      ]
-    },
-    {
-      "id": "PASAR_BESAR_KLANG",
-      "name": "Pasar Besar Klang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 113.0,
-      "lines": [
-        "KS"
+        "KJ",
+        "KT2"
       ]
     },
     {
       "id": "PELABUHAN_KLANG",
       "name": "Pelabuhan Klang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 127.0,
+      "lat": 2.999323,
+      "lng": 101.39179,
+      "gridX": 10.0,
+      "gridY": 112.5,
       "lines": [
         "KT2"
       ]
@@ -1569,32 +1486,21 @@
     {
       "id": "PETALING",
       "name": "Petaling",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 38.0,
-      "gridY": 91.0,
+      "lat": 3.086485,
+      "lng": 101.664338,
+      "gridX": 44.0,
+      "gridY": 79.0,
       "lines": [
         "KT2"
       ]
     },
     {
-      "id": "PUCHONG_JAYA",
-      "name": "Puchong Jaya",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 47.0,
-      "gridY": 112.0,
-      "lines": [
-        "SP"
-      ]
-    },
-    {
       "id": "PULAU_SEBANG",
       "name": "Pulau Sebang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 88.0,
-      "gridY": 131.0,
+      "lat": 2.46396,
+      "lng": 102.226308,
+      "gridX": 86.0,
+      "gridY": 117.0,
       "lines": [
         "KT1"
       ]
@@ -1604,10 +1510,11 @@
       "name": "Putra",
       "lat": 3.175,
       "lng": 101.695,
-      "gridX": 47.0,
-      "gridY": 53.0,
+      "gridX": 47.5,
+      "gridY": 41.5,
       "lines": [
-        "KT1"
+        "KT1",
+        "KT2"
       ]
     },
     {
@@ -1616,7 +1523,7 @@
       "lat": 3.1763324,
       "lng": 101.5721456,
       "gridX": 27.0,
-      "gridY": 76.0,
+      "gridY": 33.0,
       "lines": [
         "KG",
         "PY"
@@ -1627,8 +1534,8 @@
       "name": "KAMPUNG SELAMAT",
       "lat": 3.197266,
       "lng": 101.578499,
-      "gridX": 23.0,
-      "gridY": 71.0,
+      "gridX": 24.5,
+      "gridY": 30.0,
       "lines": [
         "PY"
       ]
@@ -1638,10 +1545,11 @@
       "name": "SUNGAI BULOH",
       "lat": 3.2026,
       "lng": 101.5936,
-      "gridX": 21.0,
-      "gridY": 67.0,
+      "gridX": 20.0,
+      "gridY": 27.5,
       "lines": [
-        "PY"
+        "PY",
+        "KT2"
       ]
     },
     {
@@ -1649,8 +1557,8 @@
       "name": "DAMANSARA DAMAI",
       "lat": 3.199892,
       "lng": 101.592623,
-      "gridX": 27.0,
-      "gridY": 56.0,
+      "gridX": 20.0,
+      "gridY": 24.0,
       "lines": [
         "PY"
       ]
@@ -1660,8 +1568,8 @@
       "name": "SRI DAMANSARA BARAT",
       "lat": 3.198197,
       "lng": 101.608302,
-      "gridX": 27.0,
-      "gridY": 52.0,
+      "gridX": 20.0,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1671,8 +1579,8 @@
       "name": "SRI DAMANSARA SENTRAL",
       "lat": 3.198815,
       "lng": 101.621396,
-      "gridX": 27.0,
-      "gridY": 48.0,
+      "gridX": 25.0,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1682,8 +1590,8 @@
       "name": "SRI DAMANSARA TIMUR",
       "lat": 3.207832,
       "lng": 101.628716,
-      "gridX": 33.0,
-      "gridY": 48.0,
+      "gridX": 31.0,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1693,8 +1601,8 @@
       "name": "METRO PRIMA",
       "lat": 3.214438,
       "lng": 101.639402,
-      "gridX": 39.0,
-      "gridY": 48.0,
+      "gridX": 41.5,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1704,8 +1612,8 @@
       "name": "KEPONG BARU",
       "lat": 3.211663,
       "lng": 101.648193,
-      "gridX": 42.0,
-      "gridY": 48.0,
+      "gridX": 45.5,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1715,8 +1623,8 @@
       "name": "JINJANG",
       "lat": 3.209544,
       "lng": 101.655829,
-      "gridX": 44.0,
-      "gridY": 48.0,
+      "gridX": 49.0,
+      "gridY": 21.0,
       "lines": [
         "PY"
       ]
@@ -1726,8 +1634,8 @@
       "name": "SRI DELIMA",
       "lat": 3.207108,
       "lng": 101.665749,
-      "gridX": 42.0,
-      "gridY": 53.0,
+      "gridX": 49.0,
+      "gridY": 24.0,
       "lines": [
         "PY"
       ]
@@ -1738,7 +1646,7 @@
       "lat": 3.205521,
       "lng": 101.675473,
       "gridX": 49.0,
-      "gridY": 36.0,
+      "gridY": 27.0,
       "lines": [
         "PY"
       ]
@@ -1749,7 +1657,7 @@
       "lat": 3.19563,
       "lng": 101.6797,
       "gridX": 49.0,
-      "gridY": 40.0,
+      "gridY": 30.5,
       "lines": [
         "PY"
       ]
@@ -1759,8 +1667,8 @@
       "name": "JALAN IPOH",
       "lat": 3.1754,
       "lng": 101.6912,
-      "gridX": 45.0,
-      "gridY": 42.0,
+      "gridX": 49.0,
+      "gridY": 33.5,
       "lines": [
         "PY"
       ]
@@ -1770,8 +1678,8 @@
       "name": "SENTUL BARAT",
       "lat": 3.179369,
       "lng": 101.684742,
-      "gridX": 45.0,
-      "gridY": 45.0,
+      "gridX": 49.0,
+      "gridY": 36.5,
       "lines": [
         "PY"
       ]
@@ -1781,8 +1689,8 @@
       "name": "TITIWANGSA",
       "lat": 3.1733,
       "lng": 101.6956,
-      "gridX": 57.0,
-      "gridY": 52.0,
+      "gridX": 56.0,
+      "gridY": 30.5,
       "lines": [
         "AG",
         "MR",
@@ -1795,8 +1703,8 @@
       "name": "HOSPITAL KUALA LUMPUR",
       "lat": 3.17405,
       "lng": 101.70239,
-      "gridX": 63.0,
-      "gridY": 51.0,
+      "gridX": 62.0,
+      "gridY": 30.5,
       "lines": [
         "PY"
       ]
@@ -1806,8 +1714,8 @@
       "name": "RAJA UDA",
       "lat": 3.16794,
       "lng": 101.71017,
-      "gridX": 66.0,
-      "gridY": 52.0,
+      "gridX": 67.0,
+      "gridY": 30.5,
       "lines": [
         "PY"
       ]
@@ -1817,8 +1725,8 @@
       "name": "AMPANG PARK",
       "lat": 3.1599,
       "lng": 101.714,
-      "gridX": 73.0,
-      "gridY": 55.0,
+      "gridX": 71.0,
+      "gridY": 33.0,
       "lines": [
         "KJ",
         "PY"
@@ -1829,8 +1737,8 @@
       "name": "PERSIARAN KLCC",
       "lat": 3.15712,
       "lng": 101.71834,
-      "gridX": 85.0,
-      "gridY": 55.0,
+      "gridX": 78.0,
+      "gridY": 33.0,
       "lines": [
         "PY"
       ]
@@ -1840,8 +1748,8 @@
       "name": "CONLAY",
       "lat": 3.15145,
       "lng": 101.71801,
-      "gridX": 85.0,
-      "gridY": 58.0,
+      "gridX": 78.0,
+      "gridY": 38.0,
       "lines": [
         "PY"
       ]
@@ -1851,8 +1759,8 @@
       "name": "TUN RAZAK EXCHANGE",
       "lat": 3.1425,
       "lng": 101.7196,
-      "gridX": 79.0,
-      "gridY": 61.0,
+      "gridX": 78.0,
+      "gridY": 42.5,
       "lines": [
         "KG",
         "PY"
@@ -1863,8 +1771,8 @@
       "name": "CHAN SOW LIN",
       "lat": 3.1425,
       "lng": 101.7335,
-      "gridX": 76.0,
-      "gridY": 66.0,
+      "gridX": 78.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "PY",
@@ -1876,8 +1784,8 @@
       "name": "KUCHAI",
       "lat": 3.089546,
       "lng": 101.694124,
-      "gridX": 57.0,
-      "gridY": 97.0,
+      "gridX": 61.0,
+      "gridY": 74.0,
       "lines": [
         "PY"
       ]
@@ -1887,8 +1795,8 @@
       "name": "TAMAN NAGA EMAS",
       "lat": 3.077688,
       "lng": 101.699867,
-      "gridX": 59.0,
-      "gridY": 100.0,
+      "gridX": 65.0,
+      "gridY": 74.0,
       "lines": [
         "PY"
       ]
@@ -1898,8 +1806,8 @@
       "name": "SUNGAI BESI",
       "lat": 3.063737,
       "lng": 101.7084,
-      "gridX": 63.0,
-      "gridY": 103.0,
+      "gridX": 71.0,
+      "gridY": 74.0,
       "lines": [
         "PY",
         "SP"
@@ -1910,8 +1818,8 @@
       "name": "SERDANG RAYA UTARA",
       "lat": 3.041674,
       "lng": 101.704928,
-      "gridX": 63.0,
-      "gridY": 106.0,
+      "gridX": 71.0,
+      "gridY": 78.0,
       "lines": [
         "PY"
       ]
@@ -1921,8 +1829,8 @@
       "name": "SERDANG RAYA SELATAN",
       "lat": 3.028463,
       "lng": 101.707514,
-      "gridX": 63.0,
-      "gridY": 109.0,
+      "gridX": 71.0,
+      "gridY": 81.0,
       "lines": [
         "PY"
       ]
@@ -1932,8 +1840,8 @@
       "name": "SERDANG JAYA",
       "lat": 3.0584,
       "lng": 101.6627,
-      "gridX": 63.0,
-      "gridY": 112.0,
+      "gridX": 71.0,
+      "gridY": 84.0,
       "lines": [
         "PY"
       ]
@@ -1943,8 +1851,8 @@
       "name": "UPM",
       "lat": 3.008489,
       "lng": 101.705396,
-      "gridX": 63.0,
-      "gridY": 115.0,
+      "gridX": 71.0,
+      "gridY": 87.0,
       "lines": [
         "PY"
       ]
@@ -1954,8 +1862,8 @@
       "name": "TAMAN EQUINE",
       "lat": 2.98942,
       "lng": 101.67244,
-      "gridX": 63.0,
-      "gridY": 118.0,
+      "gridX": 71.0,
+      "gridY": 90.0,
       "lines": [
         "PY"
       ]
@@ -1965,8 +1873,8 @@
       "name": "PUTRA PERMAI",
       "lat": 2.98339,
       "lng": 101.66099,
-      "gridX": 63.0,
-      "gridY": 121.0,
+      "gridX": 71.0,
+      "gridY": 93.0,
       "lines": [
         "PY"
       ]
@@ -1976,8 +1884,8 @@
       "name": "16 SIERRA",
       "lat": 2.964974,
       "lng": 101.654812,
-      "gridX": 63.0,
-      "gridY": 124.0,
+      "gridX": 71.0,
+      "gridY": 96.0,
       "lines": [
         "PY"
       ]
@@ -1987,8 +1895,8 @@
       "name": "CYBERJAYA UTARA",
       "lat": 2.95,
       "lng": 101.6573,
-      "gridX": 63.0,
-      "gridY": 127.0,
+      "gridX": 71.0,
+      "gridY": 99.0,
       "lines": [
         "PY"
       ]
@@ -1998,8 +1906,8 @@
       "name": "CYBERJAYA CITY CENTRE",
       "lat": 2.9384,
       "lng": 101.6659,
-      "gridX": 63.0,
-      "gridY": 130.0,
+      "gridX": 71.0,
+      "gridY": 102.0,
       "lines": [
         "PY"
       ]
@@ -2009,19 +1917,20 @@
       "name": "PUTRAJAYA SENTRAL",
       "lat": 2.9313,
       "lng": 101.6715,
-      "gridX": 68.0,
-      "gridY": 133.0,
+      "gridX": 74.5,
+      "gridY": 105.0,
       "lines": [
-        "PY"
+        "PY",
+        "ER7"
       ]
     },
     {
       "id": "RASA",
       "name": "Rasa",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 5.0,
-      "gridY": 52.0,
+      "lat": 3.500586,
+      "lng": 101.634113,
+      "gridX": 20.0,
+      "gridY": 13.0,
       "lines": [
         "KT2"
       ]
@@ -2029,10 +1938,10 @@
     {
       "id": "RAWANG",
       "name": "Rawang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 4.0,
-      "gridY": 64.0,
+      "lat": 3.318955,
+      "lng": 101.575012,
+      "gridX": 20.0,
+      "gridY": 21.5,
       "lines": [
         "KT2"
       ]
@@ -2040,10 +1949,10 @@
     {
       "id": "REMBAU",
       "name": "Rembau",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 128.0,
+      "lat": 2.593055,
+      "lng": 102.094653,
+      "gridX": 86.0,
+      "gridY": 113.5,
       "lines": [
         "KT1"
       ]
@@ -2051,44 +1960,32 @@
     {
       "id": "SALAK_TINGGI",
       "name": "Salak Tinggi",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 68.0,
-      "gridY": 136.0,
+      "lat": 2.825397,
+      "lng": 101.7130747,
+      "gridX": 74.5,
+      "gridY": 108.5,
       "lines": [
-        "ER6",
         "ER7"
       ]
     },
     {
       "id": "SEGAMBUT",
       "name": "Segambut",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 35.0,
-      "gridY": 61.0,
+      "lat": 3.186514,
+      "lng": 101.664032,
+      "gridX": 38.5,
+      "gridY": 41.5,
       "lines": [
         "KT2"
       ]
     },
     {
-      "id": "SEKSYEN7_SHAH_ALAM",
-      "name": "Seksyen 7 Shah Alam",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 107.0,
-      "lines": [
-        "KS"
-      ]
-    },
-    {
       "id": "SENAWANG",
       "name": "Senawang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 122.0,
+      "lat": 2.690138,
+      "lng": 101.972336,
+      "gridX": 86.0,
+      "gridY": 106.0,
       "lines": [
         "KT1"
       ]
@@ -2096,10 +1993,10 @@
     {
       "id": "SEPUTEH",
       "name": "Seputeh",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 57.0,
-      "gridY": 82.0,
+      "lat": 3.113612,
+      "lng": 101.681474,
+      "gridX": 63.5,
+      "gridY": 72.0,
       "lines": [
         "KT1"
       ]
@@ -2107,10 +2004,10 @@
     {
       "id": "SERDANG",
       "name": "Serdang",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 91.0,
+      "lat": 3.023404,
+      "lng": 101.716056,
+      "gridX": 78.0,
+      "gridY": 76.5,
       "lines": [
         "KT1"
       ]
@@ -2118,10 +2015,10 @@
     {
       "id": "SEREMBAN",
       "name": "Seremban",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 119.0,
+      "lat": 2.719169,
+      "lng": 101.940792,
+      "gridX": 86.0,
+      "gridY": 102.5,
       "lines": [
         "KT1"
       ]
@@ -2129,10 +2026,10 @@
     {
       "id": "SERENDAH",
       "name": "Serendah",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 4.0,
-      "gridY": 60.0,
+      "lat": 3.376172,
+      "lng": 101.614532,
+      "gridX": 20.0,
+      "gridY": 19.0,
       "lines": [
         "KT2"
       ]
@@ -2140,46 +2037,35 @@
     {
       "id": "SERI_SETIA",
       "name": "Seri Setia",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 27.0,
-      "gridY": 91.0,
+      "lat": 3.083373,
+      "lng": 101.61143,
+      "gridX": 33.0,
+      "gridY": 79.0,
       "lines": [
-        "KJ"
+        "KJ",
+        "KT2"
       ]
     },
     {
       "id": "SETIA_JAYA",
-      "name": "Setia Jaya",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 26.0,
-      "gridY": 98.0,
-      "lines": [
-        "BRT",
-        "KT1"
-      ]
-    },
-    {
-      "id": "SHAH_ALAM",
-      "name": "Shah Alam",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 14.0,
-      "gridY": 101.0,
+      "name": "Sunway-Setia Jaya",
+      "lat": 3.083373,
+      "lng": 101.61143,
+      "gridX": 26.5,
+      "gridY": 79.0,
       "lines": [
         "KT2"
       ]
     },
     {
-      "id": "SKYPARK_TERMINAL",
-      "name": "Skypark Terminal",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 6.0,
-      "gridY": 95.0,
+      "id": "SHAH_ALAM",
+      "name": "Shah Alam",
+      "lat": 3.056388,
+      "lng": 101.525302,
+      "gridX": 13.5,
+      "gridY": 79.0,
       "lines": [
-        "KS"
+        "KT2"
       ]
     },
     {
@@ -2187,8 +2073,8 @@
       "name": "SENTUL TIMUR",
       "lat": 3.1818,
       "lng": 101.6957,
-      "gridX": 57.0,
-      "gridY": 34.0,
+      "gridX": 56.0,
+      "gridY": 15.0,
       "lines": [
         "AG",
         "SP"
@@ -2199,8 +2085,8 @@
       "name": "PUDU",
       "lat": 3.1405,
       "lng": 101.7057,
-      "gridX": 71.0,
-      "gridY": 66.0,
+      "gridX": 74.5,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "SP"
@@ -2211,8 +2097,8 @@
       "name": "CHAN SOW LIN",
       "lat": 3.1425,
       "lng": 101.7335,
-      "gridX": 76.0,
-      "gridY": 66.0,
+      "gridX": 78.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "PY",
@@ -2224,8 +2110,8 @@
       "name": "CHERAS",
       "lat": 3.112609,
       "lng": 101.714178,
-      "gridX": 85.0,
-      "gridY": 76.0,
+      "gridX": 78.0,
+      "gridY": 63.0,
       "lines": [
         "SP"
       ]
@@ -2235,8 +2121,8 @@
       "name": "SALAK SELATAN",
       "lat": 3.102201,
       "lng": 101.706179,
-      "gridX": 85.0,
-      "gridY": 79.0,
+      "gridX": 78.0,
+      "gridY": 66.0,
       "lines": [
         "SP"
       ]
@@ -2246,8 +2132,8 @@
       "name": "BANDAR TUN RAZAK",
       "lat": 3.089576,
       "lng": 101.712466,
-      "gridX": 85.0,
-      "gridY": 82.0,
+      "gridX": 78.0,
+      "gridY": 69.0,
       "lines": [
         "SP"
       ]
@@ -2257,10 +2143,12 @@
       "name": "BANDAR TASIK SELATAN",
       "lat": 3.0762,
       "lng": 101.7121,
-      "gridX": 79.0,
-      "gridY": 85.0,
+      "gridX": 78.0,
+      "gridY": 72.0,
       "lines": [
-        "SP"
+        "SP",
+        "KT1",
+        "ER7"
       ]
     },
     {
@@ -2268,8 +2156,8 @@
       "name": "SUNGAI BESI",
       "lat": 3.063842,
       "lng": 101.708062,
-      "gridX": 63.0,
-      "gridY": 103.0,
+      "gridX": 71.0,
+      "gridY": 74.0,
       "lines": [
         "PY",
         "SP"
@@ -2280,8 +2168,8 @@
       "name": "BUKIT JALIL",
       "lat": 3.0583,
       "lng": 101.6917,
-      "gridX": 57.0,
-      "gridY": 100.0,
+      "gridX": 58.0,
+      "gridY": 74.0,
       "lines": [
         "SP"
       ]
@@ -2292,7 +2180,7 @@
       "lat": 3.0591,
       "lng": 101.6928,
       "gridX": 54.0,
-      "gridY": 100.0,
+      "gridY": 74.0,
       "lines": [
         "SP"
       ]
@@ -2302,8 +2190,8 @@
       "name": "AWAN BESAR",
       "lat": 3.062131,
       "lng": 101.670555,
-      "gridX": 51.0,
-      "gridY": 100.0,
+      "gridX": 50.0,
+      "gridY": 74.0,
       "lines": [
         "SP"
       ]
@@ -2313,8 +2201,8 @@
       "name": "SENTUL",
       "lat": 3.1936,
       "lng": 101.6881,
-      "gridX": 49.0,
-      "gridY": 43.0,
+      "gridX": 56.0,
+      "gridY": 20.0,
       "lines": [
         "AG",
         "SP"
@@ -2325,8 +2213,8 @@
       "name": "MUHIBBAH",
       "lat": 3.062229,
       "lng": 101.662552,
-      "gridX": 47.0,
-      "gridY": 100.0,
+      "gridX": 47.5,
+      "gridY": 78.0,
       "lines": [
         "SP"
       ]
@@ -2336,8 +2224,8 @@
       "name": "ALAM SUTERA",
       "lat": 3.0547,
       "lng": 101.656468,
-      "gridX": 47.0,
-      "gridY": 103.0,
+      "gridX": 47.5,
+      "gridY": 81.0,
       "lines": [
         "SP"
       ]
@@ -2347,8 +2235,8 @@
       "name": "KINRARA",
       "lat": 3.050506,
       "lng": 101.644294,
-      "gridX": 47.0,
-      "gridY": 106.0,
+      "gridX": 47.5,
+      "gridY": 84.0,
       "lines": [
         "SP"
       ]
@@ -2358,8 +2246,8 @@
       "name": "IOI PUCHONG JAYA",
       "lat": 3.048101,
       "lng": 101.62095,
-      "gridX": 47.0,
-      "gridY": 109.0,
+      "gridX": 47.5,
+      "gridY": 87.0,
       "lines": [
         "SP"
       ]
@@ -2369,8 +2257,8 @@
       "name": "PUSAT BANDAR PUCHONG",
       "lat": 3.033194,
       "lng": 101.616057,
-      "gridX": 47.0,
-      "gridY": 115.0,
+      "gridX": 47.5,
+      "gridY": 90.0,
       "lines": [
         "SP"
       ]
@@ -2380,8 +2268,8 @@
       "name": "TAMAN PERINDUSTRIAN PUCHONG",
       "lat": 3.022814,
       "lng": 101.613514,
-      "gridX": 47.0,
-      "gridY": 118.0,
+      "gridX": 47.5,
+      "gridY": 93.0,
       "lines": [
         "SP"
       ]
@@ -2391,8 +2279,8 @@
       "name": "BANDAR PUTERI",
       "lat": 3.017111,
       "lng": 101.612855,
-      "gridX": 47.0,
-      "gridY": 121.0,
+      "gridX": 47.5,
+      "gridY": 96.0,
       "lines": [
         "SP"
       ]
@@ -2402,8 +2290,8 @@
       "name": "PUCHONG PERDANA",
       "lat": 3.007913,
       "lng": 101.605021,
-      "gridX": 43.0,
-      "gridY": 124.0,
+      "gridX": 44.0,
+      "gridY": 102.5,
       "lines": [
         "SP"
       ]
@@ -2413,8 +2301,8 @@
       "name": "PUCHONG PRIMA",
       "lat": 2.999808,
       "lng": 101.596692,
-      "gridX": 39.0,
-      "gridY": 124.0,
+      "gridX": 38.0,
+      "gridY": 102.5,
       "lines": [
         "SP"
       ]
@@ -2424,8 +2312,8 @@
       "name": "TITIWANGSA",
       "lat": 3.1733,
       "lng": 101.6956,
-      "gridX": 57.0,
-      "gridY": 52.0,
+      "gridX": 56.0,
+      "gridY": 30.5,
       "lines": [
         "AG",
         "MR",
@@ -2438,8 +2326,8 @@
       "name": "PUTRA HEIGHTS",
       "lat": 2.996016,
       "lng": 101.575521,
-      "gridX": 34.0,
-      "gridY": 124.0,
+      "gridX": 32.0,
+      "gridY": 102.5,
       "lines": [
         "KJ",
         "SP"
@@ -2450,8 +2338,8 @@
       "name": "PWTC",
       "lat": 3.166333,
       "lng": 101.693586,
-      "gridX": 57.0,
-      "gridY": 56.0,
+      "gridX": 56.0,
+      "gridY": 36.5,
       "lines": [
         "AG",
         "SP"
@@ -2462,8 +2350,8 @@
       "name": "SULTAN ISMAIL",
       "lat": 3.161245,
       "lng": 101.694109,
-      "gridX": 57.0,
-      "gridY": 58.0,
+      "gridX": 56.0,
+      "gridY": 41.5,
       "lines": [
         "AG",
         "SP"
@@ -2474,8 +2362,8 @@
       "name": "BANDARAYA - UOB",
       "lat": 3.155567,
       "lng": 101.694485,
-      "gridX": 57.0,
-      "gridY": 61.0,
+      "gridX": 56.0,
+      "gridY": 46.0,
       "lines": [
         "AG",
         "SP"
@@ -2486,8 +2374,8 @@
       "name": "MASJID JAMEK",
       "lat": 3.1495,
       "lng": 101.6964,
-      "gridX": 54.0,
-      "gridY": 64.0,
+      "gridX": 56.0,
+      "gridY": 51.5,
       "lines": [
         "AG",
         "KJ",
@@ -2499,8 +2387,8 @@
       "name": "PLAZA RAKYAT",
       "lat": 3.144049,
       "lng": 101.702105,
-      "gridX": 57.0,
-      "gridY": 67.0,
+      "gridX": 62.0,
+      "gridY": 54.5,
       "lines": [
         "AG",
         "SP"
@@ -2512,7 +2400,7 @@
       "lat": 3.1429,
       "lng": 101.7002,
       "gridX": 71.0,
-      "gridY": 71.0,
+      "gridY": 58.0,
       "lines": [
         "AG",
         "MR",
@@ -2520,56 +2408,23 @@
       ]
     },
     {
-      "id": "SRI_ANDALAS",
-      "name": "Sri Andalas",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 17.0,
-      "gridY": 117.0,
-      "lines": [
-        "KT2"
-      ]
-    },
-    {
-      "id": "STADIUM_SHAH_ALAM",
-      "name": "Stadium Shah Alam",
-      "lat": 3.079722,
-      "lng": 101.548889,
-      "gridX": 9.0,
-      "gridY": 98.0,
-      "lines": [
-        "KS"
-      ]
-    },
-    {
       "id": "SUNGAI_GADUT",
       "name": "Sungai Gadut",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 125.0,
+      "lat": 2.660898,
+      "lng": 101.996158,
+      "gridX": 86.0,
+      "gridY": 110.0,
       "lines": [
         "KT1"
       ]
     },
     {
-      "id": "TAMAN_SELATAN",
-      "name": "Taman Selatan",
-      "lat": 3.026667,
-      "lng": 101.442222,
-      "gridX": 17.0,
-      "gridY": 111.0,
-      "lines": [
-        "KT2"
-      ]
-    },
-    {
       "id": "TAMAN_WAHYU",
       "name": "Taman Wahyu",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 49.0,
-      "gridY": 31.0,
+      "lat": 3.21451,
+      "lng": 101.672178,
+      "gridX": 47.5,
+      "gridY": 16.5,
       "lines": [
         "KT1"
       ]
@@ -2577,10 +2432,10 @@
     {
       "id": "TANJUNG_MALIM",
       "name": "Tanjung Malim",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 6.0,
-      "gridY": 44.0,
+      "lat": 3.685142,
+      "lng": 101.518165,
+      "gridX": 16.5,
+      "gridY": 10.0,
       "lines": [
         "KT2"
       ]
@@ -2588,10 +2443,10 @@
     {
       "id": "TELUK_GADONG",
       "name": "Teluk Gadong",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 118.0,
+      "lat": 3.033932,
+      "lng": 101.424947,
+      "gridX": 10.0,
+      "gridY": 100.0,
       "lines": [
         "KT2"
       ]
@@ -2599,10 +2454,10 @@
     {
       "id": "TELUK_PULAI",
       "name": "Teluk Pulai",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 9.0,
-      "gridY": 115.0,
+      "lat": 3.04089,
+      "lng": 101.432153,
+      "gridX": 10.0,
+      "gridY": 96.0,
       "lines": [
         "KT2"
       ]
@@ -2610,32 +2465,65 @@
     {
       "id": "TIROI",
       "name": "Tiroi",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 116.0,
+      "lat": 2.741459,
+      "lng": 101.871914,
+      "gridX": 86.0,
+      "gridY": 99.0,
       "lines": [
         "KT1"
       ]
     },
     {
-      "id": "UITM_SHAH_ALAM",
-      "name": "UiTM Shah Alam",
-      "lat": 3.0625,
-      "lng": 101.501111,
-      "gridX": 9.0,
-      "gridY": 104.0,
+      "id": "UKM",
+      "name": "UKM",
+      "lat": 2.939775,
+      "lng": 101.787623,
+      "gridX": 83.5,
+      "gridY": 81.0,
       "lines": [
-        "KS"
+        "KT1"
       ]
     },
     {
-      "id": "UKM",
-      "name": "UKM",
-      "lat": 0.0,
-      "lng": 0.0,
-      "gridX": 79.0,
-      "gridY": 101.0,
+      "id": "SENTUL",
+      "name": "Sentul",
+      "lat": 3.183581,
+      "lng": 101.688802,
+      "gridX": 47.5,
+      "gridY": 35.0,
+      "lines": [
+        "KT1"
+      ]
+    },
+    {
+      "id": "BATU_KENTONMEN",
+      "name": "Batu Kentonmen",
+      "lat": 3.198485,
+      "lng": 101.681138,
+      "gridX": 47.5,
+      "gridY": 29.0,
+      "lines": [
+        "KT1"
+      ]
+    },
+    {
+      "id": "KAMPUNG_BATU",
+      "name": "Kampung Batu",
+      "lat": 3.204892,
+      "lng": 101.675584,
+      "gridX": 47.5,
+      "gridY": 22.5,
+      "lines": [
+        "KT1"
+      ]
+    },
+    {
+      "id": "SALAK_SELATAN",
+      "name": "Salak Selatan",
+      "lat": 3.098413,
+      "lng": 101.705055,
+      "gridX": 70.5,
+      "gridY": 72.0,
       "lines": [
         "KT1"
       ]
@@ -3268,34 +3156,6 @@
     {
       "from": "SP31",
       "to": "SP29",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "SP31",
-      "to": "BATU_KENTONMEN_LRT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "BATU_KENTONMEN_LRT",
-      "to": "SP31",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "BATU_KENTONMEN_LRT",
-      "to": "PUCHONG_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "SP"
-    },
-    {
-      "from": "PUCHONG_JAYA",
-      "to": "BATU_KENTONMEN_LRT",
       "minutes": 2,
       "type": "standard_stop",
       "route": "SP"
@@ -4981,184 +4841,226 @@
       "route": "BRT"
     },
     {
-      "from": "BRT7",
-      "to": "SETIA_JAYA",
-      "minutes": 2,
+      "from": "PULAU_SEBANG",
+      "to": "REMBAU",
+      "minutes": 16,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "KT1"
     },
     {
-      "from": "SETIA_JAYA",
-      "to": "BRT7",
-      "minutes": 2,
+      "from": "REMBAU",
+      "to": "PULAU_SEBANG",
+      "minutes": 16,
       "type": "standard_stop",
-      "route": "BRT"
+      "route": "KT1"
     },
     {
-      "from": "BANGI",
+      "from": "REMBAU",
+      "to": "SUNGAI_GADUT",
+      "minutes": 13,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SUNGAI_GADUT",
+      "to": "REMBAU",
+      "minutes": 13,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SUNGAI_GADUT",
+      "to": "SENAWANG",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENAWANG",
+      "to": "SUNGAI_GADUT",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENAWANG",
+      "to": "SEREMBAN",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEREMBAN",
+      "to": "SENAWANG",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SEREMBAN",
+      "to": "TIROI",
+      "minutes": 9,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TIROI",
+      "to": "SEREMBAN",
+      "minutes": 9,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "TIROI",
+      "to": "LABU",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "LABU",
+      "to": "TIROI",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "LABU",
+      "to": "NILAI",
+      "minutes": 10,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "NILAI",
+      "to": "LABU",
+      "minutes": 10,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "NILAI",
       "to": "BATANG_BENAR",
-      "minutes": 2,
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATANG_BENAR",
+      "to": "NILAI",
+      "minutes": 6,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "BATANG_BENAR",
       "to": "BANGI",
-      "minutes": 2,
+      "minutes": 13,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
-      "from": "BATANG_BENAR",
-      "to": "NILAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "NILAI",
+      "from": "BANGI",
       "to": "BATANG_BENAR",
-      "minutes": 2,
+      "minutes": 13,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
-      "from": "NILAI",
-      "to": "LABU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "LABU",
-      "to": "NILAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "LABU",
-      "to": "TIROI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TIROI",
-      "to": "LABU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "TIROI",
-      "to": "SEREMBAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEREMBAN",
-      "to": "TIROI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SEREMBAN",
-      "to": "SENAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SENAWANG",
-      "to": "SEREMBAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SENAWANG",
-      "to": "SUNGAI_GADUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SUNGAI_GADUT",
-      "to": "SENAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "SUNGAI_GADUT",
-      "to": "REMBAU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "REMBAU",
-      "to": "SUNGAI_GADUT",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "REMBAU",
-      "to": "PULAU_SEBANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "PULAU_SEBANG",
-      "to": "REMBAU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT1"
-    },
-    {
-      "from": "PULAU_SEBANG",
+      "from": "BANGI",
       "to": "UKM",
-      "minutes": 2,
+      "minutes": 6,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "UKM",
-      "to": "PULAU_SEBANG",
-      "minutes": 2,
+      "to": "BANGI",
+      "minutes": 6,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "UKM",
+      "to": "KAJANG2",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KAJANG2",
+      "to": "UKM",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KAJANG2",
+      "to": "KG35",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KG35",
+      "to": "KAJANG2",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KG35",
       "to": "SERDANG",
-      "minutes": 2,
+      "minutes": 12,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "SERDANG",
-      "to": "UKM",
-      "minutes": 2,
+      "to": "KG35",
+      "minutes": 12,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "SERDANG",
+      "to": "SP15",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SP15",
+      "to": "SERDANG",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SP15",
+      "to": "SALAK_SELATAN",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SALAK_SELATAN",
+      "to": "SP15",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SALAK_SELATAN",
       "to": "SEPUTEH",
-      "minutes": 2,
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "SEPUTEH",
-      "to": "SERDANG",
-      "minutes": 2,
+      "to": "SALAK_SELATAN",
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT1"
     },
@@ -5178,258 +5080,328 @@
     },
     {
       "from": "MID_VALLEY",
+      "to": "KJ15",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KJ15",
+      "to": "MID_VALLEY",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KJ15",
+      "to": "KUALA_LUMPUR",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KUALA_LUMPUR",
+      "to": "KJ15",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KUALA_LUMPUR",
       "to": "BANK_NEGARA",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "BANK_NEGARA",
-      "to": "MID_VALLEY",
-      "minutes": 2,
+      "to": "KUALA_LUMPUR",
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "BANK_NEGARA",
       "to": "PUTRA",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "PUTRA",
       "to": "BANK_NEGARA",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "PUTRA",
-      "to": "TAMAN_WAHYU",
+      "to": "SENTUL",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENTUL",
+      "to": "PUTRA",
+      "minutes": 6,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "SENTUL",
+      "to": "BATU_KENTONMEN",
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATU_KENTONMEN",
+      "to": "SENTUL",
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "BATU_KENTONMEN",
+      "to": "KAMPUNG_BATU",
       "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KAMPUNG_BATU",
+      "to": "BATU_KENTONMEN",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT1"
+    },
+    {
+      "from": "KAMPUNG_BATU",
+      "to": "TAMAN_WAHYU",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "TAMAN_WAHYU",
-      "to": "PUTRA",
-      "minutes": 2,
+      "to": "KAMPUNG_BATU",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "TAMAN_WAHYU",
       "to": "BATU_CAVES",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
       "from": "BATU_CAVES",
       "to": "TAMAN_WAHYU",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KT1"
     },
     {
-      "from": "BATU_CAVES",
-      "to": "SETIA_JAYA",
+      "from": "PELABUHAN_KLANG",
+      "to": "JALAN_KASTAM",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "JALAN_KASTAM",
+      "to": "PELABUHAN_KLANG",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "JALAN_KASTAM",
+      "to": "KAMPUNG_RAJA_UDA",
       "minutes": 2,
       "type": "standard_stop",
-      "route": "KT1"
+      "route": "KT2"
+    },
+    {
+      "from": "KAMPUNG_RAJA_UDA",
+      "to": "JALAN_KASTAM",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KAMPUNG_RAJA_UDA",
+      "to": "TELUK_GADONG",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_GADONG",
+      "to": "KAMPUNG_RAJA_UDA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_GADONG",
+      "to": "TELUK_PULAI",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_PULAI",
+      "to": "TELUK_GADONG",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "TELUK_PULAI",
+      "to": "KLANG",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG",
+      "to": "TELUK_PULAI",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KLANG",
+      "to": "BUKIT_BADAK",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BUKIT_BADAK",
+      "to": "KLANG",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BUKIT_BADAK",
+      "to": "PADANG_JAWA",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PADANG_JAWA",
+      "to": "BUKIT_BADAK",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PADANG_JAWA",
+      "to": "SHAH_ALAM",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SHAH_ALAM",
+      "to": "PADANG_JAWA",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SHAH_ALAM",
+      "to": "BATU_TIGA",
+      "minutes": 8,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATU_TIGA",
+      "to": "SHAH_ALAM",
+      "minutes": 8,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BATU_TIGA",
+      "to": "KJ28",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ28",
+      "to": "BATU_TIGA",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ28",
+      "to": "SETIA_JAYA",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
     },
     {
       "from": "SETIA_JAYA",
-      "to": "BATU_CAVES",
-      "minutes": 2,
+      "to": "KJ28",
+      "minutes": 5,
       "type": "standard_stop",
-      "route": "KT1"
+      "route": "KT2"
     },
     {
-      "from": "BANDAR_BUKIT_TINGGI",
-      "to": "SRI_ANDALAS",
+      "from": "SETIA_JAYA",
+      "to": "SERI_SETIA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SERI_SETIA",
+      "to": "SETIA_JAYA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SERI_SETIA",
+      "to": "KAMPUNG_DATO_HARUN",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "SRI_ANDALAS",
-      "to": "BANDAR_BUKIT_TINGGI",
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "SERI_SETIA",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "SRI_ANDALAS",
-      "to": "KLANG_JAYA",
-      "minutes": 2,
+      "from": "KAMPUNG_DATO_HARUN",
+      "to": "JALAN_TEMPLER",
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "KLANG_JAYA",
-      "to": "SRI_ANDALAS",
-      "minutes": 2,
+      "from": "JALAN_TEMPLER",
+      "to": "KAMPUNG_DATO_HARUN",
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "KLANG_JAYA",
-      "to": "TAMAN_SELATAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TAMAN_SELATAN",
-      "to": "KLANG_JAYA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TAMAN_SELATAN",
-      "to": "KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG",
-      "to": "TAMAN_SELATAN",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KLANG",
-      "to": "BUKIT_BADAK",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BUKIT_BADAK",
-      "to": "KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BUKIT_BADAK",
-      "to": "PADANG_JAWA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PADANG_JAWA",
-      "to": "BUKIT_BADAK",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PADANG_JAWA",
-      "to": "SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SHAH_ALAM",
-      "to": "PADANG_JAWA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SHAH_ALAM",
-      "to": "BATU_TIGA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATU_TIGA",
-      "to": "SHAH_ALAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATU_TIGA",
-      "to": "TELUK_PULAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_PULAI",
-      "to": "BATU_TIGA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_PULAI",
-      "to": "TELUK_GADONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_GADONG",
-      "to": "TELUK_PULAI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "TELUK_GADONG",
-      "to": "KAMPUNG_RAJA_UDA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KAMPUNG_RAJA_UDA",
-      "to": "TELUK_GADONG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KAMPUNG_RAJA_UDA",
-      "to": "JALAN_KASTAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "JALAN_KASTAM",
-      "to": "KAMPUNG_RAJA_UDA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "JALAN_KASTAM",
-      "to": "PELABUHAN_KLANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PELABUHAN_KLANG",
-      "to": "JALAN_KASTAM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "PELABUHAN_KLANG",
+      "from": "JALAN_TEMPLER",
       "to": "PETALING",
       "minutes": 2,
       "type": "standard_stop",
@@ -5437,274 +5409,358 @@
     },
     {
       "from": "PETALING",
-      "to": "PELABUHAN_KLANG",
+      "to": "JALAN_TEMPLER",
       "minutes": 2,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "PETALING",
-      "to": "KUALA_LUMPUR",
-      "minutes": 2,
+      "to": "PANTAI_DALAM",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "KUALA_LUMPUR",
+      "from": "PANTAI_DALAM",
       "to": "PETALING",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PANTAI_DALAM",
+      "to": "ANGKASAPURI",
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "PANTAI_DALAM",
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "ANGKASAPURI",
+      "to": "KJ17",
       "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ17",
+      "to": "ANGKASAPURI",
+      "minutes": 2,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ17",
+      "to": "KJ15",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ15",
+      "to": "KJ17",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KJ15",
+      "to": "KUALA_LUMPUR",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KUALA_LUMPUR",
-      "to": "SEGAMBUT",
-      "minutes": 2,
+      "to": "KJ15",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "SEGAMBUT",
+      "from": "KUALA_LUMPUR",
+      "to": "BANK_NEGARA",
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BANK_NEGARA",
       "to": "KUALA_LUMPUR",
-      "minutes": 2,
+      "minutes": 4,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "BANK_NEGARA",
+      "to": "PUTRA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PUTRA",
+      "to": "BANK_NEGARA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "PUTRA",
+      "to": "SEGAMBUT",
+      "minutes": 5,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "SEGAMBUT",
+      "to": "PUTRA",
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "SEGAMBUT",
       "to": "KEPONG",
-      "minutes": 2,
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KEPONG",
       "to": "SEGAMBUT",
-      "minutes": 2,
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KEPONG",
       "to": "KEPONG_SENTRAL",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KEPONG_SENTRAL",
       "to": "KEPONG",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KEPONG_SENTRAL",
-      "to": "TANJUNG_MALIM",
-      "minutes": 2,
+      "to": "PY04",
+      "minutes": 7,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "TANJUNG_MALIM",
+      "from": "PY04",
       "to": "KEPONG_SENTRAL",
-      "minutes": 2,
+      "minutes": 7,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "TANJUNG_MALIM",
-      "to": "KUALA_KUBU_BHARU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_KUBU_BHARU",
-      "to": "TANJUNG_MALIM",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "KUALA_KUBU_BHARU",
-      "to": "RASA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RASA",
-      "to": "KUALA_KUBU_BHARU",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RASA",
-      "to": "BATANG_KALI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATANG_KALI",
-      "to": "RASA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "BATANG_KALI",
-      "to": "SERENDAH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SERENDAH",
-      "to": "BATANG_KALI",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "SERENDAH",
-      "to": "RAWANG",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RAWANG",
-      "to": "SERENDAH",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "KT2"
-    },
-    {
-      "from": "RAWANG",
+      "from": "PY04",
       "to": "KUANG",
-      "minutes": 2,
+      "minutes": 8,
+      "type": "standard_stop",
+      "route": "KT2"
+    },
+    {
+      "from": "KUANG",
+      "to": "PY04",
+      "minutes": 8,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
       "from": "KUANG",
       "to": "RAWANG",
-      "minutes": 2,
+      "minutes": 8,
       "type": "standard_stop",
       "route": "KT2"
     },
     {
-      "from": "BANDAR_BARU_KLANG",
-      "to": "PASAR_BESAR_KLANG",
-      "minutes": 2,
+      "from": "RAWANG",
+      "to": "KUANG",
+      "minutes": 8,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "PASAR_BESAR_KLANG",
-      "to": "BANDAR_BARU_KLANG",
-      "minutes": 2,
+      "from": "RAWANG",
+      "to": "SERENDAH",
+      "minutes": 9,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "PASAR_BESAR_KLANG",
-      "to": "JALAN_MERU",
-      "minutes": 2,
+      "from": "SERENDAH",
+      "to": "RAWANG",
+      "minutes": 9,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "JALAN_MERU",
-      "to": "PASAR_BESAR_KLANG",
-      "minutes": 2,
+      "from": "SERENDAH",
+      "to": "BATANG_KALI",
+      "minutes": 8,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "JALAN_MERU",
-      "to": "UITM_SHAH_ALAM",
-      "minutes": 2,
+      "from": "BATANG_KALI",
+      "to": "SERENDAH",
+      "minutes": 8,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "UITM_SHAH_ALAM",
-      "to": "JALAN_MERU",
-      "minutes": 2,
+      "from": "BATANG_KALI",
+      "to": "RASA",
+      "minutes": 3,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "UITM_SHAH_ALAM",
-      "to": "DATO_MENTERI",
-      "minutes": 2,
+      "from": "RASA",
+      "to": "BATANG_KALI",
+      "minutes": 3,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "DATO_MENTERI",
-      "to": "UITM_SHAH_ALAM",
-      "minutes": 2,
+      "from": "RASA",
+      "to": "KUALA_KUBU_BHARU",
+      "minutes": 5,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "DATO_MENTERI",
-      "to": "STADIUM_SHAH_ALAM",
-      "minutes": 2,
+      "from": "KUALA_KUBU_BHARU",
+      "to": "RASA",
+      "minutes": 5,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "STADIUM_SHAH_ALAM",
-      "to": "DATO_MENTERI",
-      "minutes": 2,
+      "from": "KUALA_KUBU_BHARU",
+      "to": "TANJUNG_MALIM",
+      "minutes": 14,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "STADIUM_SHAH_ALAM",
-      "to": "SKYPARK_TERMINAL",
-      "minutes": 2,
+      "from": "TANJUNG_MALIM",
+      "to": "KUALA_KUBU_BHARU",
+      "minutes": 14,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "KT2"
     },
     {
-      "from": "SKYPARK_TERMINAL",
-      "to": "STADIUM_SHAH_ALAM",
-      "minutes": 2,
+      "from": "KJ15",
+      "to": "KLIA",
+      "minutes": 28,
       "type": "standard_stop",
-      "route": "KS"
+      "route": "ER6"
     },
     {
       "from": "KLIA",
-      "to": "SALAK_TINGGI",
-      "minutes": 2,
+      "to": "KJ15",
+      "minutes": 28,
       "type": "standard_stop",
       "route": "ER6"
+    },
+    {
+      "from": "KLIA",
+      "to": "KLIA2",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "ER6"
+    },
+    {
+      "from": "KLIA2",
+      "to": "KLIA",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "ER6"
+    },
+    {
+      "from": "KJ15",
+      "to": "SP15",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "SP15",
+      "to": "KJ15",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "SP15",
+      "to": "PY41",
+      "minutes": 12,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "PY41",
+      "to": "SP15",
+      "minutes": 12,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "PY41",
+      "to": "SALAK_TINGGI",
+      "minutes": 10,
+      "type": "standard_stop",
+      "route": "ER7"
     },
     {
       "from": "SALAK_TINGGI",
-      "to": "KLIA",
-      "minutes": 2,
-      "type": "standard_stop",
-      "route": "ER6"
-    },
-    {
-      "from": "KLIA",
-      "to": "SALAK_TINGGI",
-      "minutes": 2,
+      "to": "PY41",
+      "minutes": 10,
       "type": "standard_stop",
       "route": "ER7"
     },
     {
       "from": "SALAK_TINGGI",
       "to": "KLIA",
-      "minutes": 2,
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "KLIA",
+      "to": "SALAK_TINGGI",
+      "minutes": 7,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "KLIA",
+      "to": "KLIA2",
+      "minutes": 3,
+      "type": "standard_stop",
+      "route": "ER7"
+    },
+    {
+      "from": "KLIA2",
+      "to": "KLIA",
+      "minutes": 3,
       "type": "standard_stop",
       "route": "ER7"
     },
@@ -5802,6 +5858,34 @@
     {
       "from": "SP2",
       "to": "AG2",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "AG2",
+      "to": "SENTUL",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SENTUL",
+      "to": "AG2",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SP2",
+      "to": "SENTUL",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SENTUL",
+      "to": "SP2",
       "minutes": 3,
       "type": "interchange",
       "route": "INTERCHANGE"
@@ -6031,6 +6115,20 @@
       "route": "INTERCHANGE"
     },
     {
+      "from": "BRT1",
+      "to": "SETIA_JAYA",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SETIA_JAYA",
+      "to": "BRT1",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
       "from": "BRT7",
       "to": "KJ31",
       "minutes": 3,
@@ -6143,6 +6241,20 @@
       "route": "INTERCHANGE"
     },
     {
+      "from": "PY13",
+      "to": "KAMPUNG_BATU",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "KAMPUNG_BATU",
+      "to": "PY13",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
       "from": "PY29",
       "to": "SP16",
       "minutes": 3,
@@ -6152,6 +6264,20 @@
     {
       "from": "SP16",
       "to": "PY29",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SP13",
+      "to": "SALAK_SELATAN",
+      "minutes": 3,
+      "type": "interchange",
+      "route": "INTERCHANGE"
+    },
+    {
+      "from": "SALAK_SELATAN",
+      "to": "SP13",
       "minutes": 3,
       "type": "interchange",
       "route": "INTERCHANGE"

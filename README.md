@@ -259,7 +259,7 @@ A boring GPS recalculates your ETA every second, which is why it says "12 min", 
 |---|---|
 | Station catalog / network | `scripts/train_stops_kl.csv`, `app/assets/data/transit_network.json` (233 stations, 656 connections) |
 | Schematic map layout | `app/assets/schematic_layout.json` (100×140 grid) |
-| Map background | `app/assets/images/klang_valley_map.jpeg` |
+| Map background | None — schematic grid canvas drawn in `app/lib/widgets/interactive_schematic_map.dart` |
 | Scheduled arrivals | Malaysia GTFS static feed `rapid-rail-kl` (parsed by `gtfs_service.py`) |
 | Crowd forecasts | Python ML pipeline (synthetic-then-real training data) |
 | Crowd reports | Riders via the app |

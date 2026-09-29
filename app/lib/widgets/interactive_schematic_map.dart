@@ -167,30 +167,35 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                   minScale: _minScale,
                   maxScale: _maxScale,
                   boundaryMargin: const EdgeInsets.all(160),
-                  child: GestureDetector(
-                    onTapUp: (details) {
-                      final station = _stationAt(details.localPosition);
-                      if (station != null) widget.onStationTap(station);
-                    },
-                    child: SizedBox(
-                      width: _canvasSize.width,
-                      height: _canvasSize.height,
-                      child: AnimatedBuilder(
-                        animation: _blink,
-                        builder: (context, _) => CustomPaint(
-                          size: _canvasSize,
-                          painter: _SchematicPainter(
-                            layout: widget.layout,
-                            segments: segments,
-                            hasRoute: hasRoute,
-                            routeStationIds: routeStationIds,
-                            fromId: fromId,
-                            toId: toId,
-                            blinkValue: _blink.value,
-                            toPixel: _toPixel,
-                            hiddenLineIds: widget.hiddenLineIds,
-                            backgroundColor: scheme.surface,
-                            gridColor: scheme.onSurface.withValues(alpha: 0.05),
+                  child: Semantics(
+                    container: true,
+                    label: 'Transit map. Tap a station to select it.',
+                    child: GestureDetector(
+                      onTapUp: (details) {
+                        final station = _stationAt(details.localPosition);
+                        if (station != null) widget.onStationTap(station);
+                      },
+                      child: SizedBox(
+                        width: _canvasSize.width,
+                        height: _canvasSize.height,
+                        child: AnimatedBuilder(
+                          animation: _blink,
+                          builder: (context, _) => CustomPaint(
+                            size: _canvasSize,
+                            painter: _SchematicPainter(
+                              layout: widget.layout,
+                              segments: segments,
+                              hasRoute: hasRoute,
+                              routeStationIds: routeStationIds,
+                              fromId: fromId,
+                              toId: toId,
+                              blinkValue: _blink.value,
+                              toPixel: _toPixel,
+                              hiddenLineIds: widget.hiddenLineIds,
+                              backgroundColor: scheme.surface,
+                              gridColor:
+                                  scheme.onSurface.withValues(alpha: 0.05),
+                            ),
                           ),
                         ),
                       ),
@@ -203,7 +208,8 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
         ),
         Positioned(
           left: 12,
-          top: 12,
+          right: 76,
+          bottom: 12,
           child: _LineLegend(
             lines: widget.layout.lines.values
                 .where((l) => !widget.hiddenLineIds.contains(l.id))
@@ -216,9 +222,17 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ZoomButton(icon: Icons.add_rounded, onTap: () => _zoomBy(1.3)),
+              _ZoomButton(
+                icon: Icons.add_rounded,
+                label: 'Zoom in',
+                onTap: () => _zoomBy(1.3),
+              ),
               const SizedBox(height: 8),
-              _ZoomButton(icon: Icons.remove_rounded, onTap: () => _zoomBy(0.75)),
+              _ZoomButton(
+                icon: Icons.remove_rounded,
+                label: 'Zoom out',
+                onTap: () => _zoomBy(0.75),
+              ),
             ],
           ),
         ),
@@ -232,56 +246,58 @@ class _LineLegend extends StatelessWidget {
 
   final List<SchematicLayoutLine> lines;
 
+  String _shortLabel(String label) {
+    var text = label
+        .replaceAll(' (Coming Soon)', '')
+        .replaceAll(' Line', '')
+        .trim();
+    if (text.length > 24) {
+      text = '${text.substring(0, 22)}…';
+    }
+    return text;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: scheme.surface.withValues(alpha: 0.9),
+      color: scheme.surface.withValues(alpha: 0.92),
       elevation: 2,
       borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'LINES',
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                color: scheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-            const SizedBox(height: 6),
-            for (final line in lines)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1.5),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: line.color,
-                        borderRadius: BorderRadius.circular(2),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final line in lines)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: line.color,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      line.label,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurface.withValues(alpha: 0.8),
+                      const SizedBox(width: 4),
+                      Text(
+                        _shortLabel(line.label),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurface.withValues(alpha: 0.8),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -289,25 +305,34 @@ class _LineLegend extends StatelessWidget {
 }
 
 class _ZoomButton extends StatelessWidget {
-  const _ZoomButton({required this.icon, required this.onTap});
+  const _ZoomButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surface,
-      elevation: 3,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: scheme.surface,
+        elevation: 3,
         borderRadius: BorderRadius.circular(10),
-        child: SizedBox(
-          width: 40,
-          height: 40,
-          child: Icon(icon, size: 22, color: scheme.onSurface),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(icon, size: 22, color: scheme.onSurface),
+          ),
         ),
       ),
     );

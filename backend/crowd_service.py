@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
@@ -15,6 +16,8 @@ from supabase import Client as SupabaseClient
 from supabase import create_client as create_supabase_client
 
 load_dotenv()
+
+logger = logging.getLogger("smart_commuter.crowd")
 
 MALAYSIA_TZ = timezone(timedelta(hours=8), name="MYT")
 
@@ -154,6 +157,7 @@ class CrowdService:
                     return False, remaining_minutes
             return True, None
         except Exception:
+            logger.warning("Rate limit check failed open", exc_info=True)
             return True, None
 
     def check_consensus(
@@ -191,6 +195,7 @@ class CrowdService:
                 return True, "corroborated"
             return False, "conflicting"
         except Exception:
+            logger.warning("Consensus check failed open", exc_info=True)
             return True, "error_fallback"
 
     def submit_report(
@@ -275,8 +280,9 @@ class CrowdService:
                 stop_id=stop_id,
                 occupancy_level=occupancy_level,
             )
-        except Exception as e:
+        except Exception:
+            logger.exception("Failed to submit crowd report for %s", stop_id)
             return CrowdReportResult(
                 accepted=False,
-                message=f"Failed to submit report: {e}",
+                message="Failed to submit report. Please try again.",
             )

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import '../constants/app_features.dart';
+import '../services/accessibility_service.dart';
 import '../services/auth_service.dart';
+import '../services/offline_mode_service.dart';
 import '../services/education_service.dart';
 import '../services/location_privacy_service.dart';
+import '../services/ml_consent_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../services/theme_controller.dart';
@@ -22,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _offlineModeEnabled = false;
   bool _accessibilityEnabled = false;
   bool _locationConsent = false;
+  bool _mlConsent = false;
   final AuthService _authService = AuthService();
   MasteryStats? _mastery;
 
@@ -29,12 +35,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadPrivacyConsent();
-    _loadMastery();
+    if (AppFeatures.educationEnabled) {
+      _loadMastery();
+    }
+    _offlineModeEnabled = OfflineModeService.instance.enabled.value;
+    _accessibilityEnabled = AccessibilityService.instance.enabled.value;
   }
 
   Future<void> _loadPrivacyConsent() async {
     final consented = await LocationPrivacyService.hasConsent();
-    if (mounted) setState(() => _locationConsent = consented);
+    await MlConsentService.instance.load();
+    if (mounted) {
+      setState(() {
+        _locationConsent = consented;
+        _mlConsent = MlConsentService.instance.granted;
+      });
+    }
+  }
+
+  Future<void> _requestLocationPermission() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showProfileMessage('Turn on Location Services to use nearby stations.');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _showProfileMessage('Location permission denied in system settings.');
+      }
+    } catch (_) {}
+  }
+
+  void _showProfileMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   Future<void> _loadMastery() async {
@@ -46,8 +87,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = _authService.currentUser.value;
-    final userName = user?.name ?? 'User';
-    final userEmail = user?.email ?? 'no-email@example.com';
+    final anonymous = _authService.isAnonymous;
+    final userName = anonymous ? 'Commuter' : (user?.name ?? 'User');
+    final userEmail = anonymous
+        ? 'No account needed — reports are anonymous'
+        : (user?.email ?? 'no-email@example.com');
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 78,
@@ -104,11 +148,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _showEditProfile(context),
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit profile',
-                ),
+                if (!anonymous)
+                  IconButton(
+                    onPressed: () => _showEditProfile(context),
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: 'Edit profile',
+                  ),
               ],
             ),
           ),
@@ -130,7 +175,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Divider(height: 1),
               SwitchListTile(
                 value: _offlineModeEnabled,
-                onChanged: (v) => setState(() => _offlineModeEnabled = v),
+                onChanged: (v) async {
+                  await OfflineModeService.instance.setEnabled(v);
+                  if (!mounted) return;
+                  setState(() => _offlineModeEnabled = v);
+                },
                 title: const Text('Offline Mode'),
                 subtitle: const Text('Cache schedules for weak coverage'),
               ),
@@ -139,17 +188,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 value: _locationConsent,
                 onChanged: (v) async {
                   await LocationPrivacyService.setConsent(v);
+                  if (v) {
+                    await _requestLocationPermission();
+                  }
+                  if (!mounted) return;
                   setState(() => _locationConsent = v);
                 },
                 title: const Text('Location Sharing'),
                 subtitle: const Text(
-                  'Coordinates rounded to ~1 km before sending',
+                  'Used for nearby stations; sent rounded to ~1 km',
+                ),
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                value: _mlConsent,
+                onChanged: (v) async {
+                  await MlConsentService.instance.setConsent(v);
+                  setState(() => _mlConsent = v);
+                },
+                title: const Text('Improve predictions with my trip data'),
+                subtitle: const Text(
+                  'Optional. Uses your reports and trip times for model training',
                 ),
               ),
               const Divider(height: 1),
               SwitchListTile(
                 value: _accessibilityEnabled,
-                onChanged: (v) => setState(() => _accessibilityEnabled = v),
+                onChanged: (v) async {
+                  await AccessibilityService.instance.setEnabled(v);
+                  if (!mounted) return;
+                  setState(() => _accessibilityEnabled = v);
+                },
                 title: const Text('Accessibility'),
                 subtitle: const Text('Larger labels and stronger contrast'),
               ),
@@ -206,22 +275,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       MaterialPageRoute(
                           builder: (_) => const RouteBuilderScreen()))),
               const Divider(height: 1),
-              _ActionRow(
-                  icon: Icons.people_outline,
-                  title: 'Friends',
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const FriendsScreen()))),
-              const Divider(height: 1),
-              _ActionRow(
-                  icon: Icons.school_outlined,
-                  title: 'Learn the Rails',
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const EducationScreen()))),
-              const Divider(height: 1),
+              if (AppFeatures.socialEnabled) ...[
+                _ActionRow(
+                    icon: Icons.people_outline,
+                    title: 'Friends',
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const FriendsScreen()))),
+                const Divider(height: 1),
+              ],
+              if (AppFeatures.educationEnabled) ...[
+                _ActionRow(
+                    icon: Icons.school_outlined,
+                    title: 'Learn the Rails',
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const EducationScreen()))),
+                const Divider(height: 1),
+              ],
               _ActionRow(
                   icon: Icons.favorite_outline,
                   title: 'Favorite Routes',
@@ -256,22 +329,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () async {
-              await _authService.logout();
-            },
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.secondary,
+          if (!anonymous) ...[
+            OutlinedButton.icon(
+              onPressed: () async {
+                await _authService.logout();
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.secondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
+          ],
           TextButton(
             onPressed: () => _confirmDeleteAccount(context),
-            child: const Text(
-              'Delete Account',
-              style: TextStyle(color: Colors.red),
+            child: Text(
+              anonymous ? 'Delete my data' : 'Delete Account',
+              style: const TextStyle(color: Colors.red),
             ),
           ),
         ],
@@ -373,13 +448,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final anonymousUser = _authService.isAnonymous;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: const Text(
-          'This permanently deletes your account, profile, and travel history. '
-          'This cannot be undone.',
+        title: Text(anonymousUser ? 'Delete my data?' : 'Delete account?'),
+        content: Text(
+          anonymousUser
+              ? 'This permanently deletes your contributed reports and anonymous '
+                  'device profile. This cannot be undone.'
+              : 'This permanently deletes your account, profile, and travel history. '
+                  'This cannot be undone.',
         ),
         actions: [
           TextButton(

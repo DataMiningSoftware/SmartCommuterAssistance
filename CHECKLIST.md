@@ -108,19 +108,23 @@
 - [x] Real keys scrubbed from `.env.example`
 - [x] Rotate Supabase service_role key (old one exposed in git history)
 - [ ] Verify RLS policies on all Supabase tables (anon key should only have minimum permissions)
-- [ ] Enable Android ProGuard / R8 minification for release (`flutter build appbundle --release`)
-- [ ] Add app icon (adaptive icon for Android)
-- [ ] Add splash screen / launch screen
+- [x] Enable Android ProGuard / R8 minification for release (`flutter build appbundle --release`)
+- [x] Add app icon (adaptive icon for Android)
+- [x] Add splash screen / launch screen
+- [x] Require verified Supabase JWT for race and account endpoints (`x-user-id` no longer trusted)
+- [x] Restrict CORS to configured origins (no wildcard in production)
+- [x] Add API-wide rate limiting middleware (120 req/min per client)
+- [x] Pin Python dependencies across all requirements files
 - [ ] Add app version + build number to settings/about page
 - [ ] Review Sentry dashboard for crashes after first deployment week
 - [ ] Add basic page-view analytics (Sentry performance or similar)
-- [ ] Rate-limit report endpoint on backend (prevent abuse beyond 2h cooldown)
 
 ## 8. Testing
 
-- [ ] Run `dart analyze lib/` — zero errors, zero warnings
-- [ ] Run `flutter test` — all pass
-- [ ] Run Python tests (`pytest tests/`)
+- [x] Run `dart analyze lib/` — zero errors, zero warnings
+- [x] Run `flutter test` — all pass
+- [x] Run Python tests (`pytest tests/`)
+- [x] Integration test scaffold (`app/integration_test/app_test.dart`)
 - [ ] Manual smoke test: auth → browse stations → view crowd board → submit report → plan route → view map → toggle theme
 - [ ] Test offline: disable network, verify SQLite cache serves stops + routes
 

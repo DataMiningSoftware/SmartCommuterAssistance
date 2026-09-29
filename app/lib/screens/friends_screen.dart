@@ -113,14 +113,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
                             TextButton(
                               onPressed: () async {
                                 await _social.respondToRequest(r.id, true);
-                                _load();
+                                await _load();
                               },
                               child: const Text('Accept'),
                             ),
                             TextButton(
                               onPressed: () async {
                                 await _social.respondToRequest(r.id, false);
-                                _load();
+                                await _load();
                               },
                               child: const Text('Decline'),
                             ),

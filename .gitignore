@@ -31,3 +31,5 @@ scripts/train_stops_kl_with_categories.csv
 
 # Scratch notes
 TODO_*.md
+
+backend/data/gtfs/ktmb.zip

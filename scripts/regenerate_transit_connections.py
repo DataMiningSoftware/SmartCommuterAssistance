@@ -4,6 +4,8 @@ from collections import defaultdict
 from pathlib import Path
 
 TN = Path("app/assets/data/transit_network.json")
+SEQUENCES = Path("app/assets/data/line_sequences.json")
+SEGMENT_TIMES = Path("app/assets/data/segment_times.json")
 
 LINE_PREFIXES = {
     "AG": "AG",
@@ -108,18 +110,30 @@ def order_line(line: str, stations: dict) -> list:
 
 def regenerate(data: dict) -> list:
     stations = {s["id"]: s for s in data["stations"]}
+    sequences = (
+        json.loads(SEQUENCES.read_text(encoding="utf-8")) if SEQUENCES.exists() else {}
+    )
+    segments = (
+        json.loads(SEGMENT_TIMES.read_text(encoding="utf-8"))
+        if SEGMENT_TIMES.exists()
+        else {}
+    )
     connections = []
     seen = set()
 
     for line in LINE_PREFIXES:
-        ordered = order_line(line, stations)
+        if line in sequences:
+            ordered = [sid for sid in sequences[line] if sid in stations]
+        else:
+            ordered = order_line(line, stations)
         for a, b in zip(ordered, ordered[1:]):
+            minutes = segments.get(line, {}).get(f"{a}|{b}", 2)
             for f, t in ((a, b), (b, a)):
                 key = (f, t, line, "standard_stop")
                 if key not in seen:
                     seen.add(key)
                     connections.append(
-                        {"from": f, "to": t, "minutes": 2, "type": "standard_stop", "route": line}
+                        {"from": f, "to": t, "minutes": minutes, "type": "standard_stop", "route": line}
                     )
 
     by_name = defaultdict(list)

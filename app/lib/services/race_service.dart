@@ -130,7 +130,6 @@ class RaceService {
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-        if (userId != null) 'x-user-id': userId!,
       };
 
   Future<RaceInfo?> startRace({

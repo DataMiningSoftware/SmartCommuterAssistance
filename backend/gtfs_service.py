@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import math
 import ssl
 import urllib.error
@@ -9,10 +10,17 @@ import urllib.request
 import zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
 GTFS_STATIC_URL = "https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl"
+KTMB_STATIC_URL = "https://api.data.gov.my/gtfs-static/ktmb"
+KTMB_ROUTE_MAP = {
+    "KC05_KB18": ("KT1", "KTM Seremban Line", "KTM Batu Caves - Pulau Sebang", "1B3A6B"),
+    "KA15_KD19": ("KT2", "KTM Port Klang Line", "KTM Tanjung Malim - Pelabuhan Klang", "E4032E"),
+}
+KTMB_STOP_MAP_PATH = Path(__file__).resolve().parents[1] / "app" / "assets" / "data" / "ktmb_stop_map.json"
 MALAYSIA_TZ = timezone(timedelta(hours=8), name="MYT")
 
 
@@ -92,6 +100,7 @@ class GtfsScheduleService:
         backend_dir = Path(__file__).resolve().parent
         self.cache_dir = cache_dir or backend_dir / "data" / "gtfs"
         self.cache_path = self.cache_dir / "rapid-rail-kl.zip"
+        self.ktmb_cache_path = self.cache_dir / "ktmb.zip"
         self.cache_ttl = timedelta(hours=24)
         self._feed: _GtfsFeed | None = None
 
@@ -108,6 +117,19 @@ class GtfsScheduleService:
             "routes": len(feed.routes),
             "trips": len(feed.trips),
         }
+
+    def cache_metadata(self) -> dict:
+        metadata = {
+            "source": GTFS_STATIC_URL,
+            "cache_path": str(self.cache_path),
+            "cached": self.cache_path.exists(),
+        }
+        if self.cache_path.exists():
+            metadata["cache_updated_at"] = datetime.fromtimestamp(
+                self.cache_path.stat().st_mtime,
+                tz=MALAYSIA_TZ,
+            ).isoformat()
+        return metadata
 
     def nearest_stops(
         self,
@@ -245,34 +267,16 @@ class GtfsScheduleService:
     def _load_feed(self) -> "_GtfsFeed":
         self._ensure_cache()
         if self._feed is None:
-            self._feed = _GtfsFeed.from_zip(self.cache_path)
+            feeds = [_GtfsFeed.from_zip(self.cache_path)]
+            if self.ktmb_cache_path.exists():
+                feeds.append(_load_ktmb_feed(self.ktmb_cache_path))
+            self._feed = _merge_feeds(feeds)
         return self._feed
 
     def _ensure_cache(self) -> None:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        if self.cache_path.exists():
-            age = datetime.now() - datetime.fromtimestamp(
-                self.cache_path.stat().st_mtime
-            )
-            if age < self.cache_ttl:
-                return
-
-        tmp_path = self.cache_path.with_suffix(".zip.tmp")
-        try:
-            with urllib.request.urlopen(GTFS_STATIC_URL, timeout=30) as response:
-                tmp_path.write_bytes(response.read())
-        except (ssl.SSLCertVerificationError, urllib.error.URLError) as error:
-            reason = getattr(error, "reason", error)
-            if not isinstance(reason, ssl.SSLCertVerificationError):
-                raise
-            context = ssl._create_unverified_context()
-            with urllib.request.urlopen(
-                GTFS_STATIC_URL,
-                timeout=30,
-                context=context,
-            ) as response:
-                tmp_path.write_bytes(response.read())
-        tmp_path.replace(self.cache_path)
+        _ensure_feed_cache(GTFS_STATIC_URL, self.cache_path, self.cache_ttl)
+        _ensure_feed_cache(KTMB_STATIC_URL, self.ktmb_cache_path, self.cache_ttl)
         self._feed = None
 
 
@@ -324,8 +328,151 @@ class _GtfsFeed:
         )
 
 
+def _ensure_feed_cache(url: str, path: Path, ttl: timedelta) -> bool:
+    if path.exists():
+        age = datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)
+        if age < ttl:
+            return True
+    tmp_path = path.with_suffix(".zip.tmp")
+    try:
+        try:
+            with urllib.request.urlopen(url, timeout=30) as response:
+                tmp_path.write_bytes(response.read())
+        except ssl.SSLCertVerificationError:
+            context = ssl._create_unverified_context()
+            with urllib.request.urlopen(url, timeout=30, context=context) as response:
+                tmp_path.write_bytes(response.read())
+        tmp_path.replace(path)
+        return True
+    except (urllib.error.URLError, OSError):
+        return path.exists()
+
+
+@lru_cache(maxsize=1)
+def _load_ktmb_stop_map() -> dict[str, str]:
+    if not KTMB_STOP_MAP_PATH.exists():
+        return {}
+    return json.loads(KTMB_STOP_MAP_PATH.read_text(encoding="utf-8"))
+
+
+def _empty_feed() -> "_GtfsFeed":
+    return _GtfsFeed(
+        stops={},
+        routes={},
+        trips={},
+        calendars={},
+        stop_times_by_trip={},
+        frequencies_by_trip={},
+    )
+
+
+def _load_ktmb_feed(path: Path) -> "_GtfsFeed":
+    feed = _GtfsFeed.from_zip(path)
+    stop_map = _load_ktmb_stop_map()
+    trips: dict[str, GtfsTrip] = {}
+    for trip_id, trip in feed.trips.items():
+        mapping = KTMB_ROUTE_MAP.get(trip.route_id)
+        if mapping is None:
+            continue
+        trips[trip_id] = GtfsTrip(
+            route_id=mapping[0],
+            service_id=f"ktmb|{trip.service_id}",
+            trip_id=trip.trip_id,
+            headsign=trip.headsign,
+            direction_id=trip.direction_id,
+        )
+    if not trips:
+        return _empty_feed()
+
+    stops: dict[str, GtfsStop] = {}
+    stop_times_by_trip: dict[str, list[GtfsStopTime]] = {}
+    for trip_id, trip in trips.items():
+        converted: list[GtfsStopTime] = []
+        for stop_time in feed.stop_times_by_trip.get(trip_id, []):
+            mapped_id = stop_map.get(stop_time.stop_id)
+            if mapped_id is None:
+                continue
+            converted.append(
+                GtfsStopTime(
+                    trip_id=stop_time.trip_id,
+                    stop_id=mapped_id,
+                    arrival_secs=stop_time.arrival_secs,
+                    departure_secs=stop_time.departure_secs,
+                    stop_sequence=stop_time.stop_sequence,
+                )
+            )
+            if mapped_id not in stops:
+                source = feed.stops.get(stop_time.stop_id)
+                if source is not None:
+                    stops[mapped_id] = GtfsStop(
+                        stop_id=mapped_id,
+                        stop_name=source.stop_name,
+                        stop_lat=source.stop_lat,
+                        stop_lon=source.stop_lon,
+                        route_id=trip.route_id,
+                    )
+        if converted:
+            stop_times_by_trip[trip_id] = converted
+
+    for trip_id, converted in stop_times_by_trip.items():
+        trip = trips[trip_id]
+        if not trip.headsign and converted:
+            destination = stops.get(converted[-1].stop_id)
+            if destination is not None:
+                trips[trip_id] = GtfsTrip(
+                    route_id=trip.route_id,
+                    service_id=trip.service_id,
+                    trip_id=trip.trip_id,
+                    headsign=destination.stop_name,
+                    direction_id=trip.direction_id,
+                )
+
+    calendars = {
+        f"ktmb|{service_id}": GtfsCalendar(
+            service_id=f"ktmb|{service_id}",
+            active_weekdays=calendar.active_weekdays,
+            start_date=calendar.start_date,
+            end_date=calendar.end_date,
+        )
+        for service_id, calendar in feed.calendars.items()
+    }
+    routes = {
+        mapping[0]: GtfsRoute(
+            route_id=mapping[0],
+            short_name=mapping[1],
+            long_name=mapping[2],
+            color=mapping[3],
+        )
+        for mapping in KTMB_ROUTE_MAP.values()
+    }
+    return _GtfsFeed(
+        stops=stops,
+        routes=routes,
+        trips=trips,
+        calendars=calendars,
+        stop_times_by_trip=stop_times_by_trip,
+        frequencies_by_trip={},
+    )
+
+
+def _merge_feeds(feeds: list["_GtfsFeed"]) -> "_GtfsFeed":
+    merged = _empty_feed()
+    for feed in feeds:
+        merged.stops.update(feed.stops)
+        merged.routes.update(feed.routes)
+        merged.trips.update(feed.trips)
+        merged.calendars.update(feed.calendars)
+        merged.stop_times_by_trip.update(feed.stop_times_by_trip)
+        merged.frequencies_by_trip.update(feed.frequencies_by_trip)
+    return merged
+
+
 def _read_csv(archive: zipfile.ZipFile, name: str) -> list[dict[str, str]]:
-    with archive.open(name) as raw:
+    try:
+        raw = archive.open(name)
+    except KeyError:
+        return []
+    with raw:
         text = io.TextIOWrapper(raw, encoding="utf-8-sig", newline="")
         return list(csv.DictReader(text))
 

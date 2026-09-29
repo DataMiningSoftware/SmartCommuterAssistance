@@ -1,6 +1,6 @@
 # Privacy Policy — Smart Commuter Assistant+
 
-**Last updated:** 13 September 2026
+**Last updated:** 29 September 2026
 
 Smart Commuter Assistant+ ("the app") is a Klang Valley rail transit companion
 that provides route planning, crowd forecasts, and journey tracking. This policy
@@ -10,7 +10,8 @@ explains what data the app collects, why, and how you can control or delete it.
 
 | Data | Purpose | Required? |
 |---|---|---|
-| Email address & password | Account creation and authentication (via Supabase Auth) | Only if you create an account (guest mode is optional) |
+| Anonymous device identifier | Pseudonymous identity for rate limits, community consensus checks and — with your consent — model training. No name or email is collected. | Automatic |
+| Email address & password | Optional account sync, if you choose to create an account later | Only if you create an account (not required) |
 | Display name / handle / bio / avatar | Your public profile shown to friends and party members | Optional |
 | Precise location (GPS) | Nearest-station detection, arrival lookup, and the 500 m station geofence | Only while the app is in use and you grant permission |
 | Coarse station location | Party/race member positions are shared only as a **nearest station**, never raw coordinates | Only during an active party/race |
@@ -22,10 +23,15 @@ Location is **foreground-only**. The app does not track you in the background.
 
 ## 2. How data is used
 
-- To authenticate you and let you use social features (friends, parties, races).
-- To compute routes, arrivals, and crowd forecasts.
-- To improve the routing agent using anonymised predicted-vs-actual trip feedback.
-- To show other party members which station you are near (coarse station only).
+- To authenticate you and let you use the app.
+- To compute routes, arrivals, crowd forecasts and fares.
+- To show you nearby stations and live crowd levels.
+- **Model training (optional, off by default):** with your explicit consent, we
+  use your crowd and delay reports and your predicted-vs-actual trip times to
+  train our crowd-prediction and ETA models. This improves crowd forecasts,
+  wait-time estimates and schedule planning for all riders. Only anonymised,
+  aggregated data is used; we never sell your data. You can grant or withdraw
+  this consent at any time in **Profile → Improve predictions with my trip data**.
 
 We do **not** sell your data.
 
@@ -42,15 +48,21 @@ We do **not** sell your data.
 
 - Account data is retained until you delete your account.
 - Crowd reports are retained to power crowd forecasting (location rounded to ~1 km).
-- Party/race location data is ephemeral — it is deleted when a party closes or a member leaves.
+- Trip feedback is retained only while you have granted model-training consent;
+  withdrawing consent excludes your data from all future training runs.
 
 ## 5. Your rights & account deletion
 
-You can delete your account at any time from **Profile → Delete Account** in the app.
-Deleting your account permanently removes your profile, friendships, and trip history.
+You can delete your data at any time from **Profile → Delete my data** in the app.
+This permanently removes your anonymous device profile, contributed reports and
+trip feedback. There is no account to delete unless you voluntarily created one.
+
+You can withdraw model-training consent at any time in **Profile → Improve
+predictions with my trip data**; your data is then excluded from all future
+training runs.
 
 If you are unable to open the app, you may request deletion at:
-**https://<your-deletion-url>.com** (or email us at **support@example.com**).
+**https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues**.
 
 ## 6. Children's privacy
 
@@ -59,7 +71,7 @@ from children under 13.
 
 ## 7. Contact
 
-Questions about this policy: **support@example.com**
+Questions about this policy: **https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues**
 
 > **Disclaimer:** Smart Commuter Assistant+ is an independent, unofficial app and
 > is not affiliated with, endorsed by, or sponsored by Rapid KL or Prasarana Malaysia.

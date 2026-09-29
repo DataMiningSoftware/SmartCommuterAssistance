@@ -79,6 +79,7 @@ def generate(
                 "stop_id": stop.stop_id,
                 "stop_name": stop.stop_name,
                 "route_id": stop.route_id,
+                "timestamp": when.isoformat(),
                 "hour": hour,
                 "day_of_week": day_of_week,
                 "is_weekend": is_weekend,

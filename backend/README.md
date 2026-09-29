@@ -26,7 +26,7 @@ Health check: `http://127.0.0.1:8000/health`
 |----------|----------|-------------|
 | `SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | Yes | Supabase service_role key (for crowd validation) |
-| `CORS_ORIGINS` | No | Comma-separated allowed origins. Defaults to `*` for local development. |
+| `CORS_ORIGINS` | No | Comma-separated allowed origins. When unset, no cross-origin browser requests are allowed. |
 
 ## Deploy
 
@@ -34,7 +34,7 @@ Render settings when the service root is the repository root:
 
 ```text
 Build Command: pip install -r backend/requirements.txt
-Start Command: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+Start Command: cd backend && gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2}
 Health Check Path: /health
 ```
 
@@ -68,7 +68,7 @@ Returns the nearest station to given GPS coordinates plus its scheduled arrivals
 ### `POST /crowd/report`
 Submit a crowd report with validation.
 
-**Headers:** `x-user-id` (required — user UUID from Supabase Auth)
+**Headers:** `Authorization: Bearer <supabase-access-token>` (optional — anonymous reports are accepted; `x-user-id` is not trusted)
 
 **Body:**
 ```json

@@ -34,6 +34,7 @@ _DOW_REFERENCE_DATES = [
 ]
 
 _PAGE_SIZE = 1000
+MIN_REAL_ROWS = 500
 
 
 def _paginated_select(supabase, table: str, columns: str, cutoff: str) -> list[dict]:
@@ -56,11 +57,19 @@ def _paginated_select(supabase, table: str, columns: str, cutoff: str) -> list[d
     return rows
 
 
+def _safe_select(supabase, table: str, columns: str, cutoff: str) -> list[dict]:
+    try:
+        return _paginated_select(supabase, table, columns, cutoff)
+    except Exception as error:
+        print(f"  Skipping {table}: {error}")
+        return []
+
+
 def pull_real_reports(supabase, days: int = 90) -> pd.DataFrame:
     cutoff = (datetime.now(tz=KL_TZ) - timedelta(days=days)).isoformat()
-    rows = _paginated_select(
+    rows = _safe_select(
         supabase,
-        "crowd_reports",
+        "ml_training_crowd_reports",
         "stop_id,occupancy_level,source_type,created_at,user_id",
         cutoff,
     )
@@ -76,9 +85,9 @@ def pull_real_reports(supabase, days: int = 90) -> pd.DataFrame:
 
 def pull_trip_feedback(supabase, days: int = 90) -> pd.DataFrame:
     cutoff = (datetime.now(tz=KL_TZ) - timedelta(days=days)).isoformat()
-    rows = _paginated_select(
+    rows = _safe_select(
         supabase,
-        "trip_feedback",
+        "ml_training_trip_feedback",
         (
             "route_id,origin_stop,dest_stop,predicted_min,actual_min,deviation_min,"
             "crowd_at_start,time_of_day,day_of_week,is_weekend,created_at"
@@ -90,9 +99,9 @@ def pull_trip_feedback(supabase, days: int = 90) -> pd.DataFrame:
 
 def pull_route_choice_feedback(supabase, days: int = 90) -> pd.DataFrame:
     cutoff = (datetime.now(tz=KL_TZ) - timedelta(days=days)).isoformat()
-    rows = _paginated_select(
+    rows = _safe_select(
         supabase,
-        "route_choice_feedback",
+        "ml_training_route_choice_feedback",
         (
             "user_id,route_id,origin_stop,dest_stop,agent_path,chosen_path,"
             "agent_predicted_min,chosen_actual_min,route_source,created_at"
@@ -190,10 +199,10 @@ def main():
     print("Building training dataframe from real data...")
     training_df = build_training_dataframe(reports, stop_metadata, extra_holidays)
 
-    if training_df.empty:
+    if training_df.empty or len(training_df) < MIN_REAL_ROWS:
         print(
-            "  Not enough real data to build a training set. "
-            "Falling back to simulated data."
+            "  Not enough consented real data to build a reliable training set "
+            f"(need {MIN_REAL_ROWS} rows). Falling back to simulated data."
         )
         simulated = script_dir / "simulated_crowd_data.csv"
         if simulated.exists():
