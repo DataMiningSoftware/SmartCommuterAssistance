@@ -17,7 +17,9 @@ import '../services/transit_network_service.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
 
 class StationsScreen extends StatefulWidget {
-  const StationsScreen({super.key});
+  final bool asTrackTab;
+
+  const StationsScreen({super.key, this.asTrackTab = false});
 
   @override
   State<StationsScreen> createState() => _StationsScreenState();
@@ -1239,7 +1241,7 @@ class _StationsScreenState extends State<StationsScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.stationsTitle),
+        title: Text(widget.asTrackTab ? l10n.navTrack : l10n.stationsTitle),
         actions: [
           IconButton(
             onPressed: _isFindingNearest ? null : _findNearestStations,
@@ -1406,7 +1408,7 @@ class _StationsScreenState extends State<StationsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
           itemCount: _filteredStations.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          separatorBuilder: (_, __) => const SizedBox.shrink(),
           itemBuilder: (context, index) {
             final station = _filteredStations[index];
             final crowdUi = _stationCrowdLevelUi(station);
@@ -1795,7 +1797,7 @@ class _StationsSkeleton extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
       physics: const NeverScrollableScrollPhysics(),
       itemCount: 6,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => const SizedBox.shrink(),
       itemBuilder: (context, index) {
         return Container(
           height: 84,
@@ -1872,11 +1874,9 @@ class _StationCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE6E9EF)),
+        padding: const EdgeInsets.fromLTRB(4, 14, 4, 14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFE6E9EF))),
         ),
         child: Row(
           children: [

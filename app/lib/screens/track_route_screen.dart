@@ -2767,12 +2767,7 @@ class _LegacyTrackHeader extends StatelessWidget {
     final crowdLabel = _crowdLabel(l10n, trip.highestCrowdLevel);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDCE6F5)),
-      ),
+      padding: const EdgeInsets.fromLTRB(2, 4, 2, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3284,10 +3279,6 @@ class _InfoBlock extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4F7FB),
-          borderRadius: BorderRadius.circular(8),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3525,16 +3516,7 @@ class _TrackStopTile extends StatelessWidget {
                 4,
                 isCurrent ? 10 : 16,
               ),
-              decoration: isCurrent
-                  ? BoxDecoration(
-                      color: Color.lerp(
-                        const Color(0xFFFFF7DB),
-                        const Color(0xFFFFE9A8),
-                        flashValue,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    )
-                  : null,
+              decoration: null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

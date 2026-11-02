@@ -46,6 +46,26 @@ class StationOrRouteCard extends StatelessWidget {
   }
 }
 
+class _SheetShell extends StatelessWidget {
+  final Widget child;
+
+  const _SheetShell({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE6E9EF)),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
 
@@ -53,27 +73,59 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      color: const Color(0xFFFEF2F2),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 18, color: Color(0xFFD7263D)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Color(0xFFD7263D),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFBD5D5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 16,
+            color: Color(0xFFD7263D),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFB42318),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LineBullet extends StatelessWidget {
+  final String lineId;
+
+  const _LineBullet({required this.lineId});
+
+  @override
+  Widget build(BuildContext context) {
+    final id = resolveSchematicLineId(lineId);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: getRouteColor(id),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        normalizeRouteId(id),
+        style: TextStyle(
+          color: getRouteOnColor(id),
+          fontWeight: FontWeight.w800,
+          fontSize: 9.5,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -86,53 +138,57 @@ class _StationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    return Card(
-      margin: const EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(station.name, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
+    final lines = station.lines
+        .map(resolveSchematicLineId)
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    return _SheetShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            station.name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+            ),
+          ),
+          if (lines.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: station.lines
-                  .map((lineId) => resolveSchematicLineId(lineId))
-                  .where((lineId) => lineId.isNotEmpty)
-                  .map(
-                    (lineId) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: getRouteColor(lineId),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        getRouteDisplayName(lineId),
-                        style: TextStyle(
-                          color: getRouteOnColor(lineId),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.mapTapAnotherStation,
-              style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667085)),
+              children: [for (final id in lines) _LineBullet(lineId: id)],
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(
+                Icons.touch_app_rounded,
+                size: 15,
+                color: Color(0xFF8B97AB),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.mapTapAnotherStation,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF8B97AB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -140,24 +196,26 @@ class _StationCard extends StatelessWidget {
 
 class _LoadingCard extends StatelessWidget {
   const _LoadingCard();
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+    return _SheetShell(
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            AppLocalizations.of(context).mapFindingRoute,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(width: 12),
-            Text(AppLocalizations.of(context).mapFindingRoute),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -178,77 +236,157 @@ class _RouteSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final transferCount = route.steps.where((s) => s.type == RouteStepType.transfer).length;
-    return Card(
-      margin: const EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.trip_origin_rounded, size: 14, color: Color(0xFF0F6FFF)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(route.origin, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16)),
+    final transfers =
+        route.steps.where((s) => s.type == RouteStepType.transfer).length;
+    final lines = <String>[];
+    String? previous;
+    for (final step in route.steps) {
+      if (step.type == RouteStepType.transfer) continue;
+      final id = normalizeRouteId(step.line);
+      if (id == previous) continue;
+      lines.add(id);
+      previous = id;
+    }
+
+    return _SheetShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      route.origin,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      route.destination,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: Color(0xFF8B97AB),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFD7263D)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(route.destination, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.mapRouteSummary(
-                route.formattedDuration,
-                l10n.homeTransferCount(transferCount),
-                route.crowdLevel,
               ),
-              style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667085)),
-            ),
-            const SizedBox(height: 12),
-            if (!confirmed)
-              Row(
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: onCancel,
-                      child: Text(l10n.mapChooseDifferent),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: onConfirm,
-                      child: Text(l10n.mapStartJourney),
-                    ),
-                  ),
-                ],
-              )
-            else
-              Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
-                  const SizedBox(width: 8),
                   Text(
-                    l10n.mapJourneyStarted,
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.green),
+                    route.formattedDuration,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  Text(
+                    l10n.homeTransferCount(transfers),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF8B97AB),
+                    ),
                   ),
                 ],
               ),
+            ],
+          ),
+          if (lines.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [for (final id in lines) _LineBullet(lineId: id)],
+            ),
           ],
-        ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.mapRouteSummary(
+                    route.formattedDuration,
+                    l10n.homeTransferCount(transfers),
+                    route.crowdLevel,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF8B97AB),
+                  ),
+                ),
+              ),
+              if (route.fare > 0)
+                Text(
+                  route.formattedFare,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (!confirmed)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCancel,
+                    child: Text(l10n.mapChooseDifferent),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onConfirm,
+                    child: Text(l10n.mapStartJourney),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF16A34A),
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.mapJourneyStarted,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

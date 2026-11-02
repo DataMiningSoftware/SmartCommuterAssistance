@@ -19,7 +19,6 @@ import '../services/train_arrival_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
-import 'station_crowd_board_screen.dart';
 import 'stations_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -1194,54 +1193,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  _StationCrowdBoard(
-                    nearestCrowdFuture: _nearestCrowdFuture,
-                    onRefresh: _refreshCrowdBoard,
-                    onOpenAllStations: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StationCrowdBoardScreen(),
-                      ),
-                    ),
+                  _ActionTile(
+                    icon: Icons.train_rounded,
+                    label: l10n.homeAllStations,
+                    subtitle: l10n.homeAllStationsSubtitle,
+                    onTap: () => NavigationState.instance.goTo(2),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ActionTile(
-                          icon: Icons.train_rounded,
-                          label: l10n.homeAllStations,
-                          subtitle: l10n.homeAllStationsSubtitle,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const StationsScreen(),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ValueListenableBuilder<ActiveTrip?>(
-                          valueListenable: _activeTripService.activeTrip,
-                          builder: (context, trip, _) {
-                            return _ActionTile(
-                              icon: Icons.route_rounded,
-                              label: trip == null
-                                  ? l10n.homeTrackRoute
-                                  : l10n.homeResumeTrip,
-                              subtitle: trip == null
-                                  ? l10n.homeStartTripHint
-                                  : l10n.homeTripDirection(
-                                      trip.originName,
-                                      trip.destinationName,
-                                    ),
-                              onTap: () => NavigationState.instance.goTo(2),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  const Divider(height: 1, color: Color(0xFFE6E9EF)),
+                  ValueListenableBuilder<ActiveTrip?>(
+                    valueListenable: _activeTripService.activeTrip,
+                    builder: (context, trip, _) {
+                      return _ActionTile(
+                        icon: Icons.route_rounded,
+                        label: trip == null
+                            ? l10n.homeTrackRoute
+                            : l10n.homeResumeTrip,
+                        subtitle: trip == null
+                            ? l10n.homeStartTripHint
+                            : l10n.homeTripDirection(
+                                trip.originName,
+                                trip.destinationName,
+                              ),
+                        onTap: () => NavigationState.instance.goTo(2),
+                      );
+                    },
                   ),
                 ]),
               ),
@@ -2971,46 +2946,48 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(8),
       child: Ink(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE6E9EF)),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(
-                icon,
-                size: 17,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 17,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: Color(0xFF8B97AB),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 12.5,
-                letterSpacing: -0.2,
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 27),
+              child: Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF8B97AB),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Color(0xFF667085)),
             ),
           ],
         ),
@@ -3416,15 +3393,12 @@ class _NextDepartures extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE6E9EF)),
-      ),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(

@@ -14,6 +14,7 @@ import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/race_screen.dart';
+import 'screens/stations_screen.dart';
 import 'screens/track_route_screen.dart';
 import 'services/accessibility_service.dart';
 import 'services/active_trip_service.dart';
@@ -844,7 +845,16 @@ class _MainNavigationState extends State<MainNavigation> {
     return <Widget>[
       HomeScreen(key: ValueKey('home_${screenGenerations[0]}')),
       MapScreen(key: ValueKey('map_${screenGenerations[1]}')),
-      TrackRouteScreen(key: ValueKey('track_${screenGenerations[2]}')),
+      ValueListenableBuilder<ActiveTrip?>(
+        valueListenable: ActiveTripService.instance.activeTrip,
+        builder: (context, trip, _) {
+          final key = ValueKey('track_${screenGenerations[2]}');
+          if (trip == null) {
+            return StationsScreen(key: key, asTrackTab: true);
+          }
+          return TrackRouteScreen(key: key);
+        },
+      ),
       if (AppFeatures.racingEnabled)
         RaceScreen(key: ValueKey('race_${screenGenerations[3]}')),
       ProfileScreen(key: ValueKey('profile_${screenGenerations[4]}')),

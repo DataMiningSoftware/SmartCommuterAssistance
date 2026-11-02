@@ -302,24 +302,43 @@ class _MapScreenState extends State<MapScreen>
 
   Widget _buildModeSwitch(AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
       child: Align(
         alignment: Alignment.centerLeft,
         child: SegmentedButton<_MapMode>(
           segments: [
             ButtonSegment<_MapMode>(
               value: _MapMode.geographic,
-              icon: const Icon(Icons.public_rounded),
+              icon: const Icon(Icons.public_rounded, size: 16),
               label: Text(l10n.mapGeographic),
             ),
             ButtonSegment<_MapMode>(
               value: _MapMode.schematic,
-              icon: const Icon(Icons.schema_rounded),
+              icon: const Icon(Icons.schema_rounded, size: 16),
               label: Text(l10n.mapTransitMap),
             ),
           ],
           selected: {_mode},
-          onSelectionChanged: (selection) => setState(() => _mode = selection.first),
+          onSelectionChanged: (selection) =>
+              setState(() => _mode = selection.first),
+          style: SegmentedButton.styleFrom(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF55627A),
+            selectedBackgroundColor:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+            selectedForegroundColor: Theme.of(context).colorScheme.primary,
+            side: const BorderSide(color: Color(0xFFE6E9EF)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            visualDensity: VisualDensity.compact,
+          ),
         ),
       ),
     );
