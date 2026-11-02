@@ -9,6 +9,8 @@ import '../services/auth_service.dart';
 import '../services/offline_mode_service.dart';
 import '../services/education_service.dart';
 import '../services/locale_controller.dart';
+import '../services/theme_preset_controller.dart';
+import '../theme/app_themes.dart';
 import '../services/location_privacy_service.dart';
 import '../services/ml_consent_service.dart';
 import '../services/notification_service.dart';
@@ -245,6 +247,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _showLanguageDialog(context),
               ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.palette_outlined,
+                    color: theme.colorScheme.primary),
+                title: Text(l10n.themeTitle),
+                subtitle: Text(_currentThemeLabel(context)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showThemeDialog(context),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -461,6 +472,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await LocaleController.instance.setLocale(Locale(selected));
       }
     });
+  }
+
+  String _currentThemeLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return _themeLabel(l10n, ThemePresetController.instance.preset.value);
+  }
+
+  void _showThemeDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final current = ThemePresetController.instance.preset.value;
+    showDialog<AppThemePreset>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(l10n.themeTitle),
+        children: [
+          for (final preset in AppThemePreset.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, preset),
+              child: Row(
+                children: [
+                  Icon(
+                    current == preset
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(_themeLabel(l10n, preset))),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ).then((selected) async {
+      if (selected == null) return;
+      await ThemePresetController.instance.setPreset(selected);
+    });
+  }
+
+  String _themeLabel(AppLocalizations l10n, AppThemePreset preset) {
+    switch (preset) {
+      case AppThemePreset.departureBoard:
+        return l10n.themeDepartureBoard;
+      case AppThemePreset.transitMap:
+        return l10n.themeTransitMap;
+      case AppThemePreset.softTint:
+        return l10n.themeSoftTint;
+      case AppThemePreset.editorial:
+        return l10n.themeEditorial;
+    }
   }
 
   String _currentLanguageLabel(AppLocalizations l10n) {

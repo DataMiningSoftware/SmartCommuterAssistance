@@ -162,6 +162,21 @@ class AppLocalizationsTa extends AppLocalizations {
   String get languageTitle => 'மொழி';
 
   @override
+  String get themeTitle => 'Theme';
+
+  @override
+  String get themeDepartureBoard => 'Departure Board';
+
+  @override
+  String get themeTransitMap => 'Transit Map';
+
+  @override
+  String get themeSoftTint => 'Soft Tint';
+
+  @override
+  String get themeEditorial => 'Editorial';
+
+  @override
   String get languageSystemOption => 'கணினி இயல்பு';
 
   @override

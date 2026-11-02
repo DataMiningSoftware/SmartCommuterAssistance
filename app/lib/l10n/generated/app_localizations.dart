@@ -384,6 +384,36 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get languageTitle;
 
+  /// No description provided for @themeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeTitle;
+
+  /// No description provided for @themeDepartureBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure Board'**
+  String get themeDepartureBoard;
+
+  /// No description provided for @themeTransitMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Transit Map'**
+  String get themeTransitMap;
+
+  /// No description provided for @themeSoftTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft Tint'**
+  String get themeSoftTint;
+
+  /// No description provided for @themeEditorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Editorial'**
+  String get themeEditorial;
+
   /// No description provided for @languageSystemOption.
   ///
   /// In en, this message translates to:

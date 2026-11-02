@@ -162,6 +162,21 @@ class AppLocalizationsMs extends AppLocalizations {
   String get languageTitle => 'Bahasa';
 
   @override
+  String get themeTitle => 'Tema';
+
+  @override
+  String get themeDepartureBoard => 'Papan Perlepasan';
+
+  @override
+  String get themeTransitMap => 'Peta Transit';
+
+  @override
+  String get themeSoftTint => 'Warna Lembut';
+
+  @override
+  String get themeEditorial => 'Editorial';
+
+  @override
   String get languageSystemOption => 'Ikut sistem';
 
   @override

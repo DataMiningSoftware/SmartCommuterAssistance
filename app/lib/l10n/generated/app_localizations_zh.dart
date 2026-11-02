@@ -162,6 +162,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageTitle => '语言';
 
   @override
+  String get themeTitle => 'Theme';
+
+  @override
+  String get themeDepartureBoard => 'Departure Board';
+
+  @override
+  String get themeTransitMap => 'Transit Map';
+
+  @override
+  String get themeSoftTint => 'Soft Tint';
+
+  @override
+  String get themeEditorial => 'Editorial';
+
+  @override
   String get languageSystemOption => '跟随系统';
 
   @override

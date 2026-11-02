@@ -75,6 +75,11 @@
   },
 
   "languageTitle": "Language",
+  "themeTitle": "Theme",
+  "themeDepartureBoard": "Departure Board",
+  "themeTransitMap": "Transit Map",
+  "themeSoftTint": "Soft Tint",
+  "themeEditorial": "Editorial",
   "languageSystemOption": "System default",
   "languageEnglishOption": "English",
   "languageMalayOption": "Bahasa Melayu",

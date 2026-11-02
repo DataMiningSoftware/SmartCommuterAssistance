@@ -53,6 +53,11 @@
   "startupFailed": "Gagal memulakan aplikasi.\n\n{error}",
 
   "languageTitle": "Bahasa",
+  "themeTitle": "Tema",
+  "themeDepartureBoard": "Papan Perlepasan",
+  "themeTransitMap": "Peta Transit",
+  "themeSoftTint": "Warna Lembut",
+  "themeEditorial": "Editorial",
   "languageSystemOption": "Ikut sistem",
   "languageEnglishOption": "English",
   "languageMalayOption": "Bahasa Melayu",

@@ -162,6 +162,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageTitle => 'Language';
 
   @override
+  String get themeTitle => 'Theme';
+
+  @override
+  String get themeDepartureBoard => 'Departure Board';
+
+  @override
+  String get themeTransitMap => 'Transit Map';
+
+  @override
+  String get themeSoftTint => 'Soft Tint';
+
+  @override
+  String get themeEditorial => 'Editorial';
+
+  @override
   String get languageSystemOption => 'System default';
 
   @override
