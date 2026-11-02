@@ -1396,10 +1396,7 @@ class _StationsScreenState extends State<StationsScreen> {
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: _RouteLegend(),
-        ),
+        const SizedBox(height: 2),
         Expanded(
           child: snapshot.hasError
               ? _buildStationsErrorState(snapshot.error.toString())
@@ -1470,7 +1467,6 @@ class _StationsScreenState extends State<StationsScreen> {
             final crowdUi = _stationCrowdLevelUi(station);
             return _StationCard(
               name: _stationName(station),
-              codes: _stationCodeList(station),
               routeIds: _stationRouteIdList(station),
               crowdLevelUi: crowdUi,
               distanceMeters: _userPosition == null
@@ -1478,13 +1474,51 @@ class _StationsScreenState extends State<StationsScreen> {
                   : _distanceMeters(station, _userPosition!),
               onTap:
                   _isPlanningRoute ? () {} : () => _planRouteToStation(station),
-              onArrivalsTap: () => _showScheduledArrivals(station),
-              onReportTap: () => _reportCrowdLevel(station),
+              onLongPress:
+                  _isPlanningRoute ? null : () => _showStationActions(station),
             );
           },
         ),
       ),
     );
+  }
+
+  Future<void> _showStationActions(Map<String, dynamic> station) async {
+    final l10n = AppLocalizations.of(context);
+    final action = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(_stationName(station)),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop('arrivals'),
+            child: Row(
+              children: [
+                const Icon(Icons.schedule_rounded, size: 18),
+                const SizedBox(width: 10),
+                Text(l10n.stationsArrivalsButton),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop('report'),
+            child: Row(
+              children: [
+                const Icon(Icons.campaign_rounded, size: 18),
+                const SizedBox(width: 10),
+                Text(l10n.trackReport),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || action == null) return;
+    if (action == 'arrivals') {
+      await _showScheduledArrivals(station);
+    } else if (action == 'report') {
+      await _reportCrowdLevel(station);
+    }
   }
 
   Future<void> _showScheduledArrivals(Map<String, dynamic> station) async {
@@ -1904,35 +1938,34 @@ class _CrowdLevelUi {
 
 class _StationCard extends StatelessWidget {
   final String name;
-  final List<String> codes;
   final List<String> routeIds;
   final _CrowdLevelUi? crowdLevelUi;
   final double? distanceMeters;
   final VoidCallback onTap;
-  final VoidCallback onArrivalsTap;
-  final VoidCallback onReportTap;
+  final VoidCallback? onLongPress;
 
   const _StationCard({
     required this.name,
-    required this.codes,
     required this.routeIds,
     required this.crowdLevelUi,
     required this.distanceMeters,
     required this.onTap,
-    required this.onArrivalsTap,
-    required this.onReportTap,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.55);
+    final hasMeta = crowdLevelUi != null || distanceMeters != null;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      onLongPress: onLongPress,
+      borderRadius: BorderRadius.circular(14),
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(4, 14, 4, 14),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFFE6E9EF))),
+        padding: const EdgeInsets.fromLTRB(2, 13, 2, 13),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: theme.dividerColor)),
         ),
         child: Row(
           children: [
@@ -1944,93 +1977,52 @@ class _StationCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                       letterSpacing: -0.2,
                     ),
                   ),
-                  if (crowdLevelUi != null) ...[
-                    const SizedBox(height: 4),
+                  if (hasMeta) ...[
+                    const SizedBox(height: 3),
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: crowdLevelUi!.color,
-                            shape: BoxShape.circle,
+                        if (crowdLevelUi != null) ...[
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: crowdLevelUi!.color,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
+                          const SizedBox(width: 6),
+                          Text(
                             crowdLevelUi!.label,
                             style: TextStyle(
                               color: crowdLevelUi!.color,
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                        ],
+                        if (crowdLevelUi != null && distanceMeters != null)
+                          Text('   ·   ', style: TextStyle(color: muted, fontSize: 12)),
+                        if (distanceMeters != null)
+                          Text(
+                            _formatDistance(distanceMeters!),
+                            style: TextStyle(fontSize: 12, color: muted),
+                          ),
                       ],
                     ),
                   ],
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  alignment: WrapAlignment.end,
-                  children: codes
-                      .map((code) => _StationCodeChip(code: code))
-                      .toList(),
-                ),
-                if (distanceMeters != null) ...[
-                  const SizedBox(height: 5),
-                  Text(
-                    _formatDistance(distanceMeters!),
-                    style:
-                        const TextStyle(fontSize: 12, color: Color(0xFF667085)),
-                  ),
-                ],
-                const SizedBox(height: 2),
-                TextButton.icon(
-                  onPressed: onArrivalsTap,
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  icon: const Icon(Icons.schedule_rounded, size: 14),
-                  label: Text(
-                    l10n.stationsArrivalsButton,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: onReportTap,
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  icon: const Icon(Icons.campaign_rounded, size: 14),
-                  label: Text(
-                    l10n.trackReport,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, size: 20, color: muted),
           ],
         ),
       ),
@@ -2135,131 +2127,6 @@ class _RouteSegmentsPainter extends CustomPainter {
   }
 }
 
-class _RouteLegend extends StatelessWidget {
-  const _RouteLegend();
-
-  static const List<_LegendEntry> _entries = <_LegendEntry>[
-    _LegendEntry(label: 'KJ', routeId: 'KJ'),
-    _LegendEntry(label: 'MRT / KG', routeId: 'MRT'),
-    _LegendEntry(label: 'PYL / PY', routeId: 'PYL'),
-    _LegendEntry(label: 'AG', routeId: 'AG'),
-    _LegendEntry(label: 'PH / SP', routeId: 'PH'),
-    _LegendEntry(label: 'MR', routeId: 'MR'),
-    _LegendEntry(label: 'BRT', routeId: 'BRT'),
-    _LegendEntry(label: 'KTM Seremban', routeId: 'KT1'),
-    _LegendEntry(label: 'KTM Port Klang', routeId: 'KT2'),
-    _LegendEntry(label: 'KLIA Ekspres', routeId: 'ER6'),
-    _LegendEntry(label: 'KLIA Transit', routeId: 'ER7'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE3EAF7)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context).stationsLineColors,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children:
-                _entries.map((entry) => _LegendChip(entry: entry)).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegendEntry {
-  final String label;
-  final String routeId;
-
-  const _LegendEntry({
-    required this.label,
-    required this.routeId,
-  });
-}
-
-class _LegendChip extends StatelessWidget {
-  final _LegendEntry entry;
-
-  const _LegendChip({
-    required this.entry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7FAFF),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFDDE6F5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: getRouteColor(entry.routeId),
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            entry.label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StationCodeChip extends StatelessWidget {
-  final String code;
-
-  const _StationCodeChip({
-    required this.code,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final routePrefixMatch = RegExp(r'^[A-Za-z]+').firstMatch(code);
-    final routeId =
-        normalizeRouteId((routePrefixMatch?.group(0) ?? 'N/A').toUpperCase());
-    return Container(
-      constraints: const BoxConstraints(minHeight: 28),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: getRouteColor(routeId),
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        code,
-        style: TextStyle(
-          color: getRouteOnColor(routeId),
-          fontWeight: FontWeight.w800,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
 
 class _RpcRouteResult {
   final String destinationStopId;

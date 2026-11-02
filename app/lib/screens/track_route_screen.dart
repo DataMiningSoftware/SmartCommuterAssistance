@@ -3504,11 +3504,6 @@ class _TrackStopTile extends StatelessWidget {
             : routeColor;
     final metaColor =
         isPassed ? const Color(0xFF98A2B3) : const Color(0xFF667085);
-    final crowdColor = crowdLevel == null
-        ? const Color(0xFF667085)
-        : crowdLevelColor(crowdLevel!);
-    final crowdLabel =
-        crowdLevel == null ? null : localizedCrowdLevelLabel(l10n, crowdLevel!);
 
     return IntrinsicHeight(
       child: Row(
@@ -3636,30 +3631,9 @@ class _TrackStopTile extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (crowdLabel != null) ...[
-                    const SizedBox(height: 4),
-                    _TrackTimelineFlag(
-                      label: l10n.trackForecast(crowdLabel),
-                      color: crowdColor,
-                      backgroundColor: crowdColor.withValues(alpha: 0.10),
-                    ),
-                  ],
                 ],
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Icon(
-            switch (status) {
-              _TrackStopStatus.passed => Icons.check_circle_rounded,
-              _TrackStopStatus.current => Icons.my_location_rounded,
-              _TrackStopStatus.upcoming => Icons.radio_button_unchecked_rounded,
-            },
-            color: switch (status) {
-              _TrackStopStatus.passed => const Color(0xFF98A2B3),
-              _TrackStopStatus.current => const Color(0xFFF59E0B),
-              _TrackStopStatus.upcoming => const Color(0xFF98A2B3),
-            },
           ),
         ],
       ),
