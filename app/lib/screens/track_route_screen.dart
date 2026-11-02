@@ -13,6 +13,7 @@ import '../constants/routing_weights.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
+import '../services/fare_service.dart';
 import '../services/navigation_state.dart';
 import '../services/notification_service.dart';
 import '../services/transit_network_service.dart';
@@ -2360,6 +2361,36 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     return _routeStops[_resolvedCurrentIndex].stopName;
   }
 
+  FareBreakdown get _tripFare {
+    if (_routeEdges.isEmpty) return FareBreakdown.empty;
+    final inputs = <FareSegmentInput>[];
+    for (final edge in _routeEdges) {
+      if (edge.connectionType.toLowerCase().contains('transfer')) continue;
+      final from = _stopsById[edge.fromStopId];
+      final to = _stopsById[edge.toStopId];
+      var distanceKm = 0.0;
+      if (from != null && to != null) {
+        distanceKm = Geolocator.distanceBetween(
+              from.latitude,
+              from.longitude,
+              to.latitude,
+              to.longitude,
+            ) /
+            1000;
+      }
+      inputs.add(
+        FareSegmentInput(
+          line: edge.routeId,
+          fromStopId: edge.fromStopId,
+          toStopId: edge.toStopId,
+          distanceKm: distanceKm,
+        ),
+      );
+    }
+    if (inputs.isEmpty) return FareBreakdown.empty;
+    return FareService.forSegments(inputs);
+  }
+
   void _openReportMenu() {
     if (_reportMenuVisible) return;
     setState(() => _reportMenuVisible = true);
@@ -2604,6 +2635,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                     estimatedMinutes: liveRemaining,
                     estimatedArrivalTime: _estimatedArrivalTime,
                     highestCrowdLevel: _displayHighestCrowdLevel,
+                    fare: _tripFare,
                     progress: _progressValue,
                     currentStationName: _currentStationName,
                     onChangeDestination:
@@ -3038,6 +3070,7 @@ class _TrackHeader extends StatelessWidget {
   final int? estimatedMinutes;
   final DateTime? estimatedArrivalTime;
   final int highestCrowdLevel;
+  final FareBreakdown fare;
   final int remainingStops;
   final double progress;
   final String currentStationName;
@@ -3052,6 +3085,7 @@ class _TrackHeader extends StatelessWidget {
     required this.estimatedMinutes,
     required this.estimatedArrivalTime,
     required this.highestCrowdLevel,
+    required this.fare,
     required this.remainingStops,
     required this.progress,
     required this.currentStationName,
@@ -3248,6 +3282,16 @@ class _TrackHeader extends StatelessWidget {
               ),
             ],
           ),
+          if (fare.legs.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).dividerColor,
+            ),
+            const SizedBox(height: 10),
+            _TripFareRow(fare: fare, crowdLevel: highestCrowdLevel),
+          ],
         ],
       ),
     );
@@ -4655,3 +4699,108 @@ String _formatMeters(double meters) {
   if (meters < 1000) return '${meters.toStringAsFixed(0)} m';
   return '${(meters / 1000).toStringAsFixed(2)} km';
 }
+
+class _TripFareRow extends StatelessWidget {
+  final FareBreakdown fare;
+  final int crowdLevel;
+
+  const _TripFareRow({required this.fare, required this.crowdLevel});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final crowdColor = crowdLevelColor(crowdLevel);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: _SummaryCell(
+            label: l10n.trackCrowdLabel,
+            child: Row(
+              children: [
+                for (var i = 1; i <= 5; i++)
+                  Container(
+                    width: 15,
+                    height: 6,
+                    margin: const EdgeInsets.only(right: 3),
+                    decoration: BoxDecoration(
+                      color:
+                          i <= crowdLevel ? crowdColor : theme.dividerColor,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    localizedCrowdLevelLabel(l10n, crowdLevel),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: crowdColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        _SummaryCell(
+          label: l10n.trackTicketsLabel,
+          child: Text(
+            '${fare.ticketCount}',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        const SizedBox(width: 18),
+        _SummaryCell(
+          label: l10n.trackFareLabel,
+          child: Text(
+            l10n.stationsSegmentFare(fare.total.toStringAsFixed(2)),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryCell extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _SummaryCell({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+        ),
+        const SizedBox(height: 5),
+        child,
+      ],
+    );
+  }
+}
+

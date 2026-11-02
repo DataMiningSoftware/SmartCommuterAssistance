@@ -43,6 +43,7 @@ class AppThemeTokens {
   final bool monoNumerals;
   final Brightness brightness;
   final String? displayFontFamily;
+  final String bodyFontFamily;
 
   const AppThemeTokens({
     required this.background,
@@ -56,6 +57,7 @@ class AppThemeTokens {
     required this.monoNumerals,
     required this.brightness,
     this.displayFontFamily,
+    this.bodyFontFamily = 'Inter',
   });
 
   bool get isDark => brightness == Brightness.dark;
@@ -82,6 +84,8 @@ AppThemeTokens themeTokens(AppThemePreset preset, Brightness brightness) {
         line: dark ? const Color(0xFF232A32) : const Color(0xFFDDE1E6),
         radius: 6,
         monoNumerals: true,
+        displayFontFamily: 'JetBrainsMono',
+        bodyFontFamily: 'JetBrainsMono',
         brightness: brightness,
       );
     case AppThemePreset.transitMap:
@@ -96,6 +100,8 @@ AppThemeTokens themeTokens(AppThemePreset preset, Brightness brightness) {
         line: dark ? const Color(0xFF2A2A2A) : const Color(0xFFE5E5E5),
         radius: 2,
         monoNumerals: true,
+        displayFontFamily: 'Archivo',
+        bodyFontFamily: 'Archivo',
         brightness: brightness,
       );
     case AppThemePreset.softTint:
@@ -110,6 +116,8 @@ AppThemeTokens themeTokens(AppThemePreset preset, Brightness brightness) {
         line: dark ? const Color(0xFF2A2640) : const Color(0xFFEDE9E2),
         radius: 24,
         monoNumerals: false,
+        displayFontFamily: 'Nunito',
+        bodyFontFamily: 'Nunito',
         brightness: brightness,
       );
     case AppThemePreset.editorial:
@@ -126,6 +134,7 @@ AppThemeTokens themeTokens(AppThemePreset preset, Brightness brightness) {
         monoNumerals: false,
         brightness: brightness,
         displayFontFamily: 'DMSerif',
+        bodyFontFamily: 'Inter',
       );
   }
 }
@@ -152,7 +161,7 @@ ThemeData buildAppTheme(AppThemePreset preset, Brightness brightness) {
 
   final base = ThemeData(
     useMaterial3: true,
-    fontFamily: 'Inter',
+    fontFamily: t.bodyFontFamily,
     brightness: brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: t.background,
@@ -325,38 +334,40 @@ ThemeData buildAppTheme(AppThemePreset preset, Brightness brightness) {
 
   final display = t.displayFontFamily;
   if (display == null) return base;
+  final displayWeight =
+      display == 'DMSerif' ? FontWeight.w400 : FontWeight.w700;
 
   final text = base.textTheme;
   return base.copyWith(
     textTheme: text.copyWith(
       displaySmall: text.displaySmall!.copyWith(
         fontFamily: display,
-        fontWeight: FontWeight.w400,
+        fontWeight: displayWeight,
         letterSpacing: -0.5,
         height: 1.02,
       ),
       headlineMedium: text.headlineMedium!.copyWith(
         fontFamily: display,
-        fontWeight: FontWeight.w400,
+        fontWeight: displayWeight,
         letterSpacing: -0.3,
         height: 1.08,
       ),
       headlineSmall: text.headlineSmall!.copyWith(
         fontFamily: display,
-        fontWeight: FontWeight.w400,
+        fontWeight: displayWeight,
         letterSpacing: -0.2,
         height: 1.08,
       ),
       titleLarge: text.titleLarge!.copyWith(
         fontFamily: display,
-        fontWeight: FontWeight.w400,
+        fontWeight: displayWeight,
         letterSpacing: 0,
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
       titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(
         fontFamily: display,
-        fontWeight: FontWeight.w400,
+        fontWeight: displayWeight,
         letterSpacing: -0.2,
       ),
     ),

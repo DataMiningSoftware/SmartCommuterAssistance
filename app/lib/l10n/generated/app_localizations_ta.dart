@@ -804,6 +804,15 @@ class AppLocalizationsTa extends AppLocalizations {
   String get homeLessCrowdedTitle => '🌿 குறைந்த நெரிசல்';
 
   @override
+  String get trackCrowdLabel => 'CROWD';
+
+  @override
+  String get trackTicketsLabel => 'TICKETS';
+
+  @override
+  String get trackFareLabel => 'FARE';
+
+  @override
   String get homeFewerChangesTitle => '🔁 Fewer changes';
 
   @override

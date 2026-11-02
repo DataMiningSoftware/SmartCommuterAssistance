@@ -813,6 +813,15 @@ class AppLocalizationsMs extends AppLocalizations {
   String get homeLessCrowdedTitle => '🌿 Kurang sesak';
 
   @override
+  String get trackCrowdLabel => 'SESAK';
+
+  @override
+  String get trackTicketsLabel => 'TIKET';
+
+  @override
+  String get trackFareLabel => 'TAMBANG';
+
+  @override
   String get homeFewerChangesTitle => '🔁 Kurang pertukaran';
 
   @override

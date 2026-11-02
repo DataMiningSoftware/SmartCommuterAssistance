@@ -1501,6 +1501,24 @@ abstract class AppLocalizations {
   /// **'🌿 Less crowded'**
   String get homeLessCrowdedTitle;
 
+  /// No description provided for @trackCrowdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CROWD'**
+  String get trackCrowdLabel;
+
+  /// No description provided for @trackTicketsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TICKETS'**
+  String get trackTicketsLabel;
+
+  /// No description provided for @trackFareLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FARE'**
+  String get trackFareLabel;
+
   /// No description provided for @homeFewerChangesTitle.
   ///
   /// In en, this message translates to:
