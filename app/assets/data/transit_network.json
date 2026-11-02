@@ -408,17 +408,6 @@
       ]
     },
     {
-      "id": "JOHAN_SETIA",
-      "name": "Johan Setia",
-      "lat": 2.976111,
-      "lng": 101.459167,
-      "gridX": 17.0,
-      "gridY": 127.0,
-      "lines": [
-        "JS"
-      ]
-    },
-    {
       "id": "KAJANG2",
       "name": "Kajang 2",
       "lat": 2.96264,

@@ -46,6 +46,32 @@ class TransitGraph {
 
   static const int transferPenalty = 8;
 
+  static const Map<String, String> _lineOperator = {
+    'KJ': 'rapid',
+    'KG': 'rapid',
+    'PY': 'rapid',
+    'PYL': 'rapid',
+    'AG': 'rapid',
+    'SP': 'rapid',
+    'PH': 'rapid',
+    'MR': 'rapid',
+    'BRT': 'rapid',
+    'JS': 'rapid',
+    'KT1': 'ktm',
+    'KT2': 'ktm',
+    'KS': 'ktm',
+    'ER6': 'erl',
+    'ER7': 'erl',
+  };
+
+  static String operatorForLine(String line) {
+    final id = line.trim().toUpperCase();
+    if (_lineOperator.containsKey(id)) return _lineOperator[id]!;
+    if (id.startsWith('KT')) return 'ktm';
+    if (id.startsWith('ER')) return 'erl';
+    return 'rapid';
+  }
+
   TransitGraph();
 
   TransitStation? station(String id) => stations[id];
@@ -175,6 +201,7 @@ class TransitGraph {
     String destinationId, {
     DateTime? departureTime,
     int transferPenalty = 8,
+    int crossNetworkPenalty = 5,
   }) {
     if (!stations.containsKey(originId) || !stations.containsKey(destinationId)) {
       return null;
@@ -204,7 +231,12 @@ class TransitGraph {
             prev.line != 'INTERCHANGE' &&
             prev.line != edge.line;
         var cost = edge.minutes;
-        if (switching) cost += transferPenalty;
+        if (switching) {
+          cost += transferPenalty;
+          if (operatorForLine(prev.line!) != operatorForLine(edge.line)) {
+            cost += crossNetworkPenalty;
+          }
+        }
 
         final newCost = currentCost + cost;
         if (newCost < (distances[nextId] ?? 999999)) {

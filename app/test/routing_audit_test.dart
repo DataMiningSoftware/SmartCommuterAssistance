@@ -149,7 +149,6 @@ void main() {
     // ignore: avoid_print
     print('unreachable from KL Sentral: ${unreachable.length} '
         '${unreachable.take(10).toList()}');
-    // Johan Setia is the Shah Alam line, still not connected in the data.
-    expect(unreachable, ['JOHAN_SETIA']);
+    expect(unreachable, isEmpty);
   });
 }
