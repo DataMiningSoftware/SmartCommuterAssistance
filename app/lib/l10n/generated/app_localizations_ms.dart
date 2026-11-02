@@ -813,6 +813,13 @@ class AppLocalizationsMs extends AppLocalizations {
   String get homeLessCrowdedTitle => '🌿 Kurang sesak';
 
   @override
+  String get homeFewerChangesTitle => '🔁 Kurang pertukaran';
+
+  @override
+  String get homeTakeFewerChangesRoute =>
+      'Ambil laluan dengan kurang pertukaran';
+
+  @override
   String get homeKeepFastRoute => 'Kekal dengan laluan pantas';
 
   @override

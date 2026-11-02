@@ -351,6 +351,8 @@
   },
   "homeFastRouteTitle": "⚡ Fast route",
   "homeLessCrowdedTitle": "🌿 Less crowded",
+  "homeFewerChangesTitle": "🔁 Fewer changes",
+  "homeTakeFewerChangesRoute": "Take the route with fewer changes",
   "homeKeepFastRoute": "Keep with fast route",
   "homeTakeLessCrowdedRoute": "Take a less crowded route",
   "languageChineseOption": "中文",

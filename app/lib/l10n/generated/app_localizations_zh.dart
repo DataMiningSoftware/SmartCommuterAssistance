@@ -804,6 +804,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeLessCrowdedTitle => '🌿 较少人潮';
 
   @override
+  String get homeFewerChangesTitle => '🔁 Fewer changes';
+
+  @override
+  String get homeTakeFewerChangesRoute => 'Take the route with fewer changes';
+
+  @override
   String get homeKeepFastRoute => '保留快速路线';
 
   @override

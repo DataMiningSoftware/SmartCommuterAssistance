@@ -1501,6 +1501,18 @@ abstract class AppLocalizations {
   /// **'🌿 Less crowded'**
   String get homeLessCrowdedTitle;
 
+  /// No description provided for @homeFewerChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🔁 Fewer changes'**
+  String get homeFewerChangesTitle;
+
+  /// No description provided for @homeTakeFewerChangesRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Take the route with fewer changes'**
+  String get homeTakeFewerChangesRoute;
+
   /// No description provided for @homeKeepFastRoute.
   ///
   /// In en, this message translates to:

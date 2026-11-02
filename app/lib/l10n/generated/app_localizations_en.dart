@@ -804,6 +804,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLessCrowdedTitle => '🌿 Less crowded';
 
   @override
+  String get homeFewerChangesTitle => '🔁 Fewer changes';
+
+  @override
+  String get homeTakeFewerChangesRoute => 'Take the route with fewer changes';
+
+  @override
   String get homeKeepFastRoute => 'Keep with fast route';
 
   @override

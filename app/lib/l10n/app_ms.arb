@@ -248,6 +248,8 @@
   },
   "homeFastRouteTitle": "⚡ Laluan pantas",
   "homeLessCrowdedTitle": "🌿 Kurang sesak",
+  "homeFewerChangesTitle": "🔁 Kurang pertukaran",
+  "homeTakeFewerChangesRoute": "Ambil laluan dengan kurang pertukaran",
   "homeKeepFastRoute": "Kekal dengan laluan pantas",
   "homeTakeLessCrowdedRoute": "Ambil laluan kurang sesak",
   "languageChineseOption": "中文",

@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<Map<String, bool>> _stationClosedByStopFuture;
   Timer? _nearestAutoRefreshTimer;
   Timer? _routeProgressTimer;
+  Position? _lastProgressPosition;
   bool _isLoadingMap = true;
   String? _mapError;
   final Map<String, _MapStop> _mapStopsById = <String, _MapStop>{};
@@ -311,8 +312,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
               _CrowdOptionCard(
-                overline: dL10n.homeLessCrowdedTitle,
-                title: dL10n.homeTakeLessCrowdedRoute,
+                overline: relaxedPreview.transferCount <
+                        efficientPreview.transferCount
+                    ? dL10n.homeFewerChangesTitle
+                    : dL10n.homeLessCrowdedTitle,
+                title: relaxedPreview.transferCount <
+                        efficientPreview.transferCount
+                    ? dL10n.homeTakeFewerChangesRoute
+                    : dL10n.homeTakeLessCrowdedRoute,
                 detail:
                     '${relaxedPreview.totalMinutes} ${dL10n.homeMinutesShort} · '
                     '${dL10n.homeTransferCount(relaxedPreview.transferCount)}',
@@ -372,14 +379,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_sameRouteResult(efficientPreview.result, relaxedPreview.result)) {
       return false;
     }
+
+    final timeDelta =
+        relaxedPreview.totalMinutes - efficientPreview.totalMinutes;
+    final transferSaving =
+        efficientPreview.transferCount - relaxedPreview.transferCount;
+    if (transferSaving >= 1 && timeDelta <= 12) return true;
+
     if (efficientPreview.highestCrowdLevel <= 2) return false;
 
     final crowdImprovement =
         efficientPreview.highestCrowdLevel - relaxedPreview.highestCrowdLevel;
     if (crowdImprovement <= 0) return false;
 
-    final timeDelta =
-        relaxedPreview.totalMinutes - efficientPreview.totalMinutes;
     if (timeDelta <= 0) return true;
     if (crowdImprovement >= 2) return timeDelta <= 12;
     return timeDelta <= 6;
@@ -564,15 +576,28 @@ class _HomeScreenState extends State<HomeScreen> {
     if (trip.currentStopIndex >= trip.stops.length - 1) return;
 
     final position = await _bestAvailablePosition();
-    int? candidate;
-    if (position != null) {
-      final nearest = _nearestTripStopIndex(trip, position);
-      if (nearest != null) candidate = nearest;
-    }
-    candidate ??= _estimatedTripStopIndex(trip);
-    if (candidate == null) return;
+    if (position == null) return;
 
-    final capped = math.min(candidate, trip.currentStopIndex + 2);
+    final fixAge = DateTime.now().difference(position.timestamp);
+    if (fixAge > const Duration(minutes: 2)) return;
+    if (position.accuracy > 150) return;
+
+    final last = _lastProgressPosition;
+    if (last != null) {
+      final moved = Geolocator.distanceBetween(
+        last.latitude,
+        last.longitude,
+        position.latitude,
+        position.longitude,
+      );
+      if (moved < 60) return;
+    }
+
+    final nearest = _nearestTripStopIndex(trip, position);
+    if (nearest == null) return;
+
+    _lastProgressPosition = position;
+    final capped = math.min(nearest, trip.currentStopIndex + 1);
     await _activeTripService.updateProgress(capped);
   }
 
@@ -889,10 +914,14 @@ class _HomeScreenState extends State<HomeScreen> {
         final arrivingEdge = previousEdge[current];
         final boarding =
             arrivingEdge == null || arrivingEdge.routeId != edge.routeId;
+        final switching =
+            arrivingEdge != null && arrivingEdge.routeId != edge.routeId;
         final penalty = preferComfort && boarding
             ? _crowdPenaltyForStop(crowdByStopId, edge.toStopId)
             : 0;
-        final candidate = currentDistance + edge.travelMinutes + penalty;
+        final transferCost = preferComfort && switching ? 20 : 0;
+        final candidate =
+            currentDistance + edge.travelMinutes + penalty + transferCost;
         if (candidate < (distances[edge.toStopId] ?? (1 << 30))) {
           distances[edge.toStopId] = candidate;
           previousNode[edge.toStopId] = current;
