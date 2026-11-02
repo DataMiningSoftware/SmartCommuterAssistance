@@ -774,6 +774,12 @@ class AppLocalizationsMs extends AppLocalizations {
   String get homeYouAreHere => 'Anda di sini';
 
   @override
+  String get homeMinutesShort => 'minit';
+
+  @override
+  String get homeGreeting => 'Ke mana hari ini?';
+
+  @override
   String homeTripEtaTo(int minutes, String destination) {
     return '$minutes min ke $destination';
   }

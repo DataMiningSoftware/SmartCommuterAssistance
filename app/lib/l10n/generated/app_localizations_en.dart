@@ -766,6 +766,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeYouAreHere => 'You are here';
 
   @override
+  String get homeMinutesShort => 'min';
+
+  @override
+  String get homeGreeting => 'Where to today?';
+
+  @override
   String homeTripEtaTo(int minutes, String destination) {
     return '$minutes min to $destination';
   }

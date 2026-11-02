@@ -231,6 +231,8 @@
   "homeRelaxedRoutingActive": "Laluan santai sedang aktif.",
   "homeLiveTrackingReady": "Penjejakan langsung sedia.",
   "homeYouAreHere": "Anda di sini",
+  "homeMinutesShort": "minit",
+  "homeGreeting": "Ke mana hari ini?",
   "homeTripEtaTo": "{minutes} min ke {destination}",
   "@homeTripEtaTo": {
     "placeholders": {

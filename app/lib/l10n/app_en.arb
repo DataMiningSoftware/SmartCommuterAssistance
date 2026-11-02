@@ -334,6 +334,8 @@
   "homeRelaxedRoutingActive": "Relaxed routing is active.",
   "homeLiveTrackingReady": "Live tracking is ready.",
   "homeYouAreHere": "You are here",
+  "homeMinutesShort": "min",
+  "homeGreeting": "Where to today?",
   "homeTripEtaTo": "{minutes} min to {destination}",
   "@homeTripEtaTo": {
     "placeholders": {

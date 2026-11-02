@@ -522,6 +522,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  int _walkMinutesToOrigin(ActiveTrip trip) {
+    final position = _position;
+    final stop = _mapStopsById[trip.originStopId];
+    if (position == null || stop == null) return 0;
+    final distance = Geolocator.distanceBetween(
+      position.latitude,
+      position.longitude,
+      stop.latitude,
+      stop.longitude,
+    );
+    if (distance <= 100) return 0;
+    return (distance / 80).round().clamp(1, 30);
+  }
+
   void _startActiveTripProgressRefresh() {
     _routeProgressTimer?.cancel();
     _routeProgressTimer = Timer.periodic(
@@ -1107,18 +1121,19 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _HeroCard(
-                    theme: Theme.of(context),
-                    title: l10n.homeHeroTitle,
-                    subtitle: l10n.homeHeroSubtitle,
+                  _HomeGreeting(
+                    dateLabel: MaterialLocalizations.of(context)
+                        .formatMediumDate(DateTime.now()),
+                    title: l10n.homeGreeting,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   ValueListenableBuilder<ActiveTrip?>(
                     valueListenable: _activeTripService.activeTrip,
                     builder: (context, trip, _) {
                       if (trip != null) {
                         return _LiveTripSummary(
                           trip: trip,
+                          walkMinutes: _walkMinutesToOrigin(trip),
                           onOpenMap: _openMapTab,
                         );
                       }
@@ -1929,6 +1944,43 @@ class _HomeCrowdUi {
   }
 }
 
+class _HomeGreeting extends StatelessWidget {
+  final String dateLabel;
+  final String title;
+
+  const _HomeGreeting({
+    required this.dateLabel,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            dateLabel.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+              color: Color(0xFF8B97AB),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            title,
+            style: theme.textTheme.headlineMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HeroCard extends StatelessWidget {
   final ThemeData theme;
   final String title;
@@ -2035,10 +2087,12 @@ class _InlineHomeError extends StatelessWidget {
 
 class _LiveTripSummary extends StatelessWidget {
   final ActiveTrip trip;
+  final int walkMinutes;
   final VoidCallback onOpenMap;
 
   const _LiveTripSummary({
     required this.trip,
+    required this.walkMinutes,
     required this.onOpenMap,
   });
 
@@ -2049,15 +2103,23 @@ class _LiveTripSummary extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final progressWindow = buildTripProgressWindow(trip);
     final crowdUi = _HomeCrowdUi.fromLevel(l10n, trip.highestCrowdLevel);
-    final estimatedArrivalTime = trip.estimatedArrivalTime;
+    final pinnedArrival = ActiveTripService.instance.pinnedArrivalTime.value;
+    final totalMinutes = trip.estimatedTotalMinutes;
+    final projectedMinutes =
+        totalMinutes == null ? null : totalMinutes + walkMinutes;
+    final estimatedArrivalTime = pinnedArrival ??
+        (projectedMinutes == null
+            ? null
+            : DateTime.now().add(Duration(minutes: projectedMinutes)));
     final arrivalLabel = switch (estimatedArrivalTime) {
       null => l10n.homeEtaSyncing,
       final value when value.isBefore(DateTime.now()) => l10n.homeArrivingNow,
       final value => l10n.homeArriveBy(
           localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))),
     };
-    final minutesToDestination =
-        estimatedArrivalTime?.difference(DateTime.now()).inMinutes;
+    final minutesToDestination = pinnedArrival != null
+        ? pinnedArrival.difference(DateTime.now()).inMinutes
+        : projectedMinutes;
     final progressLabel = switch (minutesToDestination) {
       null => trip.routePreference == 'comfort'
           ? l10n.homeRelaxedRoutingActive
@@ -2067,115 +2129,145 @@ class _LiveTripSummary extends StatelessWidget {
     };
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: appCardShadows(context, prominent: true),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.22),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.directions_railway_filled_rounded,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  l10n.homeLiveTrip,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: theme.colorScheme.onPrimary,
+                  l10n.homeLiveTrip.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: Color(0x9EFFFFFF),
                   ),
                 ),
               ),
-              TextButton.icon(
-                onPressed: onOpenMap,
-                icon:
-                    Icon(Icons.map_rounded, color: theme.colorScheme.onPrimary),
-                label: Text(
-                  l10n.homeViewMap,
-                  style: TextStyle(color: theme.colorScheme.onPrimary),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: crowdUi.color.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: crowdUi.color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      crowdUi.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: crowdUi.color,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _HomeTripProgressRail(window: progressWindow),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                minutesToDestination == null
+                    ? '—'
+                    : math.max(0, minutesToDestination).toString(),
+                style: const TextStyle(
+                  fontSize: 52,
+                  height: 0.92,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -2,
+                  color: Colors.white,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  l10n.homeMinutesShort,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xA8FFFFFF),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
-            progressLabel,
+            '${trip.destinationName} · $arrivalLabel',
             style: const TextStyle(
-              color: Color(0xFFCFD8EA),
-              fontWeight: FontWeight.w600,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: Color(0xB3FFFFFF),
             ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          const SizedBox(height: 20),
+          _HomeTripProgressRail(window: progressWindow),
+          const SizedBox(height: 20),
+          Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: crowdUi.color.withValues(alpha: 0.48),
-                  ),
-                ),
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      color: Color(0xFF344054),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    children: [
-                      TextSpan(text: l10n.homeCrowdLevelPrefix),
-                      TextSpan(
-                        text: crowdUi.label,
-                        style: TextStyle(
-                          color: crowdUi.color,
-                          fontWeight: FontWeight.w900,
-                        ),
+              Expanded(
+                child: SizedBox(
+                  height: 42,
+                  child: ElevatedButton(
+                    onPressed: () => NavigationState.instance.goTo(2),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: theme.colorScheme.primary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                    ),
+                    child: Text(l10n.homeOpenTracking),
                   ),
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                  ),
-                ),
-                child: Text(
-                  arrivalLabel,
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => NavigationState.instance.goTo(2),
-                icon: const Icon(Icons.track_changes_rounded),
-                label: Text(l10n.homeOpenTracking),
-                style: ElevatedButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 42,
+                  child: OutlinedButton(
+                    onPressed: onOpenMap,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.28),
+                      ),
+                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(l10n.homeViewMap),
                   ),
                 ),
               ),
@@ -2445,7 +2537,10 @@ class _StationCrowdBoard extends StatelessWidget {
                     Text(
                       l10n.homeStationCrowdBoard,
                       style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.w900),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(

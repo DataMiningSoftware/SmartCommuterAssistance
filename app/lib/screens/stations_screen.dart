@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -1851,19 +1850,18 @@ class _StationCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: Ink(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE3EAF7)),
-          boxShadow: appCardShadows(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE6E9EF)),
         ),
         child: Row(
           children: [
             _RouteBadge(routeIds: routeIds),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1871,8 +1869,9 @@ class _StationCard extends StatelessWidget {
                   Text(
                     name,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      letterSpacing: -0.2,
                     ),
                   ),
                   if (crowdLevelUi != null) ...[
@@ -1978,15 +1977,21 @@ class _RouteBadge extends StatelessWidget {
     final ids = routeIds.where((id) => id.isNotEmpty && id != 'N/A').toList();
     if (ids.length <= 1) {
       final route = ids.isEmpty ? 'N/A' : ids.first;
-      return CircleAvatar(
-        radius: 22,
-        backgroundColor: getRouteColor(route),
+      return Container(
+        width: 44,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: getRouteColor(route),
+          borderRadius: BorderRadius.circular(9),
+        ),
         child: Text(
           normalizeRouteId(route),
           style: TextStyle(
             color: getRouteOnColor(route),
             fontWeight: FontWeight.w800,
-            fontSize: 12,
+            fontSize: 11,
+            letterSpacing: 0.2,
           ),
         ),
       );
@@ -2266,8 +2271,65 @@ class _RouteTimeline {
   });
 }
 
-class _RoutePlanSheet extends StatelessWidget {
-  final String originName;
+class _FareTicketStub extends StatelessWidget {
+  final FareBreakdown fare;
+
+  const _FareTicketStub({required this.fare});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBFCFE),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFCBD4E2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.stationsFareTicketCount(fare.ticketCount),
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  fare.legs
+                      .map((leg) => getRouteDisplayName(leg.line))
+                      .toSet()
+                      .join(' · '),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8B97AB),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            l10n.stationsSegmentFare(fare.total.toStringAsFixed(2)),
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoutePlanSheet extends StatelessWidget {  final String originName;
   final String originStopId;
   final String destinationName;
   final String destinationStopId;
@@ -2370,20 +2432,6 @@ class _RoutePlanSheet extends StatelessWidget {
                   borderColor: tripCrowdUi.color.withValues(alpha: 0.45),
                 ),
                 _InfoChip(label: l10n.stationsStopCount(totalStops)),
-                if (fare.legs.isNotEmpty)
-                  _InfoChip(
-                    label: l10n.stationsFareTotal(
-                      fare.total.toStringAsFixed(2),
-                    ),
-                    textColor: const Color(0xFF0B5FFF),
-                    borderColor: const Color(0xFFB9D0FF),
-                  ),
-                if (fare.hasSeparateTickets)
-                  _InfoChip(
-                    label: l10n.stationsFareTicketCount(fare.ticketCount),
-                    textColor: const Color(0xFF99168C),
-                    borderColor: const Color(0xFFE7BEE2),
-                  ),
                 if (usedDisruptionReroute)
                   _InfoChip(
                     label: l10n.stationsReroutedAroundDisruption,
@@ -2589,6 +2637,10 @@ class _RoutePlanSheet extends StatelessWidget {
                   },
                 ),
               ),
+            if (fare.legs.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              _FareTicketStub(fare: fare),
+            ],
           ],
         ),
       ),

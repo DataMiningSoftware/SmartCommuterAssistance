@@ -1425,6 +1425,18 @@ abstract class AppLocalizations {
   /// **'You are here'**
   String get homeYouAreHere;
 
+  /// No description provided for @homeMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get homeMinutesShort;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Where to today?'**
+  String get homeGreeting;
+
   /// No description provided for @homeTripEtaTo.
   ///
   /// In en, this message translates to:

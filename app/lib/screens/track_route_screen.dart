@@ -91,7 +91,6 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   String? _weatherAtStart;
   bool _proximityChecked = false;
   DateTime? _routeResolvedAt;
-  bool _routeCountsWalk = true;
 
   _PositionRecord? _lastMovement;
   bool _inactivityDialogOpen = false;
@@ -465,7 +464,6 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _inactivityDialogOpen = false;
     _routeResolvedAt =
         originOverride == null ? baseTrip.createdAt : DateTime.now();
-    _routeCountsWalk = originOverride == null;
     _appliedDelaySignals.clear();
     _communityDelayNotifier.value = null;
     _lastCommunityDelayCheck = null;
@@ -1854,10 +1852,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     if (predictedMinutes != null) {
       final baseline = _routeResolvedAt ?? trip.createdAt;
       final actualMinutes = DateTime.now().difference(baseline).inMinutes;
-      final predictedWithWalk =
-          predictedMinutes + (_routeCountsWalk ? _walkMinutesToOrigin : 0);
-      final walkDistanceM =
-          _routeCountsWalk ? _walkMinutesToOrigin * 80.0 : 0.0;
+      final predictedWithWalk = predictedMinutes;
+      const walkDistanceM = 0.0;
       await _crowdReportsService.submitTripFeedback(
         routeId: _routeStops.isEmpty ? '' : _routeStops.last.routeId,
         originStop: trip.originStopId,
@@ -2233,9 +2229,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     if (adaptive != null) return adaptive + walk;
     if (_routeEdges.isEmpty) return (_estimatedTotalMinutes ?? 0) + walk;
     if (_resolvedCurrentIndex >= _routeEdges.length) return walk;
-    return walk + _routeEdges
-        .skip(_resolvedCurrentIndex)
-        .fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
+    return walk +
+        _routeEdges
+            .skip(_resolvedCurrentIndex)
+            .fold<int>(0, (sum, edge) => sum + edge.travelMinutes);
   }
 
   DateTime? get _estimatedArrivalTime {
