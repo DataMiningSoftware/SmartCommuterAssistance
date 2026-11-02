@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
 import '../services/fare_service.dart';
@@ -544,6 +545,19 @@ class _StationsScreenState extends State<StationsScreen> {
         departureTime: departureTime,
       );
       if (!mounted) return;
+      if (widget.asTrackTab) {
+        await _startTrackedTrip(
+          originStopId: originStopId,
+          originName: _stationName(originStation),
+          destinationStopId: resolvedDestinationStopId,
+          destinationName: _stationName(destinationStation),
+          edges: resolvedPlan.edges,
+          namesByStopId: namesByStopId,
+          totalMinutes: baseRouteMinutes,
+          highestCrowdLevel: timeline.highestCrowdLevel,
+        );
+        return;
+      }
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
@@ -575,6 +589,48 @@ class _StationsScreenState extends State<StationsScreen> {
     } finally {
       if (mounted) setState(() => _isPlanningRoute = false);
     }
+  }
+
+  Future<void> _startTrackedTrip({
+    required String originStopId,
+    required String originName,
+    required String destinationStopId,
+    required String destinationName,
+    required List<_RouteEdge> edges,
+    required Map<String, String> namesByStopId,
+    required int totalMinutes,
+    required int highestCrowdLevel,
+  }) async {
+    if (edges.isEmpty) return;
+    final stops = <ActiveTripStop>[
+      ActiveTripStop(
+        stopId: originStopId,
+        stopName: originName,
+        routeId: edges.first.routeId,
+      ),
+    ];
+    for (final edge in edges) {
+      stops.add(
+        ActiveTripStop(
+          stopId: edge.toStopId,
+          stopName: namesByStopId[edge.toStopId] ?? edge.toStopId,
+          routeId: edge.routeId,
+        ),
+      );
+    }
+    await ActiveTripService.instance.saveTrip(
+      ActiveTrip(
+        originStopId: originStopId,
+        destinationStopId: destinationStopId,
+        originName: originName,
+        destinationName: destinationName,
+        routePreference: 'efficiency',
+        highestCrowdLevel: highestCrowdLevel,
+        createdAt: DateTime.now(),
+        estimatedTotalMinutes: totalMinutes,
+        stops: stops,
+      ),
+    );
   }
 
   List<String> _destinationStopIdsForStation(Map<String, dynamic> station) {
