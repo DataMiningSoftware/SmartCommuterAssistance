@@ -719,9 +719,7 @@ class _MainNavigationState extends State<MainNavigation> {
   // recreated accurately in external design tools.
   static const double _bottomToolbarHeight = 88;
   static const double _bottomToolbarNavigationHeight = 76;
-  static const double _bottomToolbarHorizontalMargin = 14;
   static const double _bottomToolbarBottomMargin = 14;
-  static const double _bottomToolbarRadius = 30;
 
   final Connectivity connectivity = Connectivity();
   StreamSubscription<dynamic>? connectivitySubscription;
@@ -932,41 +930,15 @@ class _MainNavigationState extends State<MainNavigation> {
         children: [
           SafeArea(
             top: false,
-            minimum: const EdgeInsets.fromLTRB(
-              _bottomToolbarHorizontalMargin,
-              10,
-              _bottomToolbarHorizontalMargin,
-              _bottomToolbarBottomMargin,
-            ),
+            minimum: EdgeInsets.zero,
             child: Container(
               height: _bottomToolbarHeight,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    scheme.surface,
-                    Color.lerp(scheme.surface, scheme.primary, 0.03) ??
-                        scheme.surface,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                color: theme.cardColor,
+                border: Border(
+                  top: BorderSide(color: theme.dividerColor),
                 ),
-                borderRadius: BorderRadius.circular(_bottomToolbarRadius),
-                border: Border.all(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.10),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                  const BoxShadow(
-                    color: Color(0x14101828),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
               ),
               child: NavigationBarTheme(
                 data: NavigationBarThemeData(
@@ -977,25 +949,25 @@ class _MainNavigationState extends State<MainNavigation> {
                   labelTextStyle: WidgetStateProperty.resolveWith((states) {
                     final selected = states.contains(WidgetState.selected);
                     return TextStyle(
-                      fontSize: 12,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
                       color: selected
                           ? scheme.primary
-                          : scheme.onSurface.withValues(alpha: 0.62),
+                          : scheme.onSurface.withValues(alpha: 0.55),
                     );
                   }),
                   iconTheme: WidgetStateProperty.resolveWith((states) {
                     final selected = states.contains(WidgetState.selected);
                     return IconThemeData(
-                      size: selected ? 25 : 22,
+                      size: 22,
                       color: selected
                           ? scheme.primary
-                          : scheme.onSurface.withValues(alpha: 0.62),
+                          : scheme.onSurface.withValues(alpha: 0.55),
                     );
                   }),
-                  indicatorColor: scheme.primary.withValues(alpha: 0.12),
+                  indicatorColor: scheme.primary.withValues(alpha: 0.10),
                   indicatorShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(13),
                   ),
                 ),
                 child: NavigationBar(

@@ -2977,29 +2977,35 @@ class _ActionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.06)),
-          boxShadow: appCardShadows(context),
+          border: Border.all(color: const Color(0xFFE6E9EF)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
                 color: Theme.of(context)
                     .colorScheme
                     .primary
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                    .withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+              child: Icon(
+                icon,
+                size: 17,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+                letterSpacing: -0.2,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
