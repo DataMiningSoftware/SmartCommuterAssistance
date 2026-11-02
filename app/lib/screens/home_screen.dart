@@ -884,7 +884,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
       for (final edge in adjacency[current] ?? const <_HomeRouteConnection>[]) {
         if (visited.contains(edge.toStopId)) continue;
-        final penalty = preferComfort
+        final arrivingEdge = previousEdge[current];
+        final boarding =
+            arrivingEdge == null || arrivingEdge.routeId != edge.routeId;
+        final penalty = preferComfort && boarding
             ? _crowdPenaltyForStop(crowdByStopId, edge.toStopId)
             : 0;
         final candidate = currentDistance + edge.travelMinutes + penalty;
@@ -921,13 +924,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _crowdPenaltyForStop(Map<String, int> crowdByStopId, String stopId) {
     switch (crowdByStopId[stopId] ?? 0) {
       case 2:
-        return 3;
+        return 1;
       case 3:
-        return 8;
+        return 2;
       case 4:
-        return 14;
+        return 4;
       case 5:
-        return 18;
+        return 6;
       default:
         return 0;
     }
@@ -1193,31 +1196,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  _ActionTile(
-                    icon: Icons.train_rounded,
-                    label: l10n.homeAllStations,
-                    subtitle: l10n.homeAllStationsSubtitle,
-                    onTap: () => NavigationState.instance.goTo(2),
-                  ),
-                  const Divider(height: 1, color: Color(0xFFE6E9EF)),
-                  ValueListenableBuilder<ActiveTrip?>(
-                    valueListenable: _activeTripService.activeTrip,
-                    builder: (context, trip, _) {
-                      return _ActionTile(
-                        icon: Icons.route_rounded,
-                        label: trip == null
-                            ? l10n.homeTrackRoute
-                            : l10n.homeResumeTrip,
-                        subtitle: trip == null
-                            ? l10n.homeStartTripHint
-                            : l10n.homeTripDirection(
-                                trip.originName,
-                                trip.destinationName,
-                              ),
-                        onTap: () => NavigationState.instance.goTo(2),
-                      );
-                    },
-                  ),
                 ]),
               ),
             ),
@@ -1581,6 +1559,9 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                       },
                       optionsViewBuilder: (context, onSelected, options) {
                         final optionList = options.toList();
+                        if (optionList.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
                         return Align(
                           alignment: Alignment.topLeft,
                           child: Material(
