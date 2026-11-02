@@ -3370,7 +3370,7 @@ class _NextDepartures extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           const SizedBox(height: 12),
           Row(
             children: [

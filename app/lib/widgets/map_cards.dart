@@ -166,23 +166,23 @@ class _StationCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.touch_app_rounded,
                 size: 15,
-                color: Color(0xFF8B97AB),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   l10n.mapTapAnotherStation,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF8B97AB),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
                 ),
               ),
@@ -275,11 +275,11 @@ class _RouteSummaryCard extends StatelessWidget {
                       route.destination,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
-                        color: Color(0xFF8B97AB),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                       ),
                     ),
                   ],
@@ -300,10 +300,10 @@ class _RouteSummaryCard extends StatelessWidget {
                   ),
                   Text(
                     l10n.homeTransferCount(transfers),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF8B97AB),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
                   ),
                 ],
@@ -319,7 +319,7 @@ class _RouteSummaryCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFE6E9EF)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -330,10 +330,10 @@ class _RouteSummaryCard extends StatelessWidget {
                     l10n.homeTransferCount(transfers),
                     route.crowdLevel,
                   ),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF8B97AB),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
                 ),
               ),
