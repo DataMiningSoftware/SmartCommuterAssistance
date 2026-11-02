@@ -42,6 +42,7 @@ class AppThemeTokens {
   final double radius;
   final bool monoNumerals;
   final Brightness brightness;
+  final String? displayFontFamily;
 
   const AppThemeTokens({
     required this.background,
@@ -54,6 +55,7 @@ class AppThemeTokens {
     required this.radius,
     required this.monoNumerals,
     required this.brightness,
+    this.displayFontFamily,
   });
 
   bool get isDark => brightness == Brightness.dark;
@@ -123,6 +125,7 @@ AppThemeTokens themeTokens(AppThemePreset preset, Brightness brightness) {
         radius: 4,
         monoNumerals: false,
         brightness: brightness,
+        displayFontFamily: 'DMSerif',
       );
   }
 }
@@ -320,7 +323,44 @@ ThemeData buildAppTheme(AppThemePreset preset, Brightness brightness) {
     ),
   );
 
-  return base;
+  final display = t.displayFontFamily;
+  if (display == null) return base;
+
+  final text = base.textTheme;
+  return base.copyWith(
+    textTheme: text.copyWith(
+      displaySmall: text.displaySmall!.copyWith(
+        fontFamily: display,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.5,
+        height: 1.02,
+      ),
+      headlineMedium: text.headlineMedium!.copyWith(
+        fontFamily: display,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.3,
+        height: 1.08,
+      ),
+      headlineSmall: text.headlineSmall!.copyWith(
+        fontFamily: display,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.2,
+        height: 1.08,
+      ),
+      titleLarge: text.titleLarge!.copyWith(
+        fontFamily: display,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
+    ),
+    appBarTheme: base.appBarTheme.copyWith(
+      titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(
+        fontFamily: display,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.2,
+      ),
+    ),
+  );
 }
 
 List<BoxShadow> themeShadows(AppThemeTokens t, {bool prominent = false}) {
