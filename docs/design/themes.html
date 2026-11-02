@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Smart Commuter — Theme directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#DDE1E7;font-family:'Inter',sans-serif;color:#111;padding:34px 38px 44px;-webkit-font-smoothing:antialiased}
+  .top{max-width:1660px;margin:0 auto 22px}
+  .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#7A8595;font-weight:700;margin-bottom:6px}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.03em}
+  h1 span{color:#7A8595;font-weight:600}
+  .panels{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:1660px;margin:0 auto}
+  .panel{border-radius:18px;padding:18px 18px 20px;background:#E9ECF1;border:1px solid #D2D8E1}
+  .phead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .phead .nm{font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+  .phead .ds{font-size:10.5px;color:#6B7688;font-weight:600;margin-top:2px}
+  .dots{display:flex;gap:5px}
+  .dots i{width:13px;height:13px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.08)}
+  .pair{display:flex;gap:14px}
+  .phone{width:360px;height:740px;border-radius:30px;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.10);position:relative}
+  .sb{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:11px;font-weight:600;flex:0 0 auto}
+  .body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .pad{padding:0 20px}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+  /* ============ A. DEPARTURE BOARD ============ */
+  .t-board{background:#0C0F12;color:#F2F5F7}
+  .t-board .sb{color:#7E8B99}
+  .t-board .rule{height:1px;background:#232A32}
+  .t-board .eyebrow2{font-size:9px;letter-spacing:.18em;font-weight:700;color:#7E8B99;text-transform:uppercase}
+  .t-board .big{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .t-board .hero{margin:0 20px;background:#14181D;border:1px solid #232A32;border-radius:8px;padding:16px}
+  .t-board .eta{font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:700;color:#FFB020;line-height:.95;letter-spacing:-.03em}
+  .t-board .eta small{font-size:13px;color:#7E8B99;font-family:'Inter';font-weight:600;letter-spacing:0}
+  .t-board .mono{font-family:'JetBrains Mono',monospace;font-weight:600}
+  .t-board .row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #1B2128}
+  .t-board .row:last-child{border-bottom:0}
+  .t-board .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#FFB020;width:52px}
+  .t-board .ln{font-size:12.5px;font-weight:700}
+  .t-board .sub{font-size:9.5px;color:#7E8B99;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;font-weight:600}
+  .t-board .m{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:#4ADE80}
+  .t-board .bl{display:inline-flex;align-items:center;justify-content:center;height:18px;min-width:30px;padding:0 6px;border-radius:3px;font-size:9px;font-weight:800;color:#0C0F12}
+  .t-board .spine{position:relative;padding-left:20px}
+  .t-board .sp{display:flex;gap:12px}
+  .t-board .sp .tr{width:12px;flex:0 0 12px;display:flex;flex-direction:column;align-items:center}
+  .t-board .sp .dot{width:9px;height:9px;border-radius:50%;background:#FFB020;margin-top:5px;flex:0 0 auto}
+  .t-board .sp .dot.o{background:#0C0F12;border:2px solid #FFB020}
+  .t-board .sp .line{width:2px;flex:1;background:#2A323C;margin:3px 0}
+  .t-board .sp .c{padding-bottom:16px;flex:1}
+  .t-board .sp .n{font-size:13px;font-weight:700}
+  .t-board .sp .cde{font-size:9px;letter-spacing:.12em;color:#7E8B99;margin-top:3px;font-weight:700}
+
+  /* ============ B. TRANSIT MAP / SWISS ============ */
+  .t-map{background:#FFFFFF;color:#0A0A0A}
+  .t-map .sb{color:#0A0A0A}
+  .t-map .eyebrow2{font-size:9px;letter-spacing:.22em;font-weight:800;text-transform:uppercase}
+  .t-map .disp{font-size:34px;font-weight:800;letter-spacing:-.055em;line-height:.95}
+  .t-map .rule2{height:2px;background:#0A0A0A}
+  .t-map .row{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid #E5E5E5}
+  .t-map .t{font-size:13px;font-weight:800;width:48px}
+  .t-map .ln{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+  .t-map .sub{font-size:9px;letter-spacing:.14em;font-weight:700;color:#6B7280;text-transform:uppercase;margin-top:2px}
+  .t-map .m{margin-left:auto;font-size:11px;font-weight:800}
+  .t-map .bl{display:inline-flex;align-items:center;justify-content:center;height:17px;min-width:28px;padding:0 5px;border-radius:2px;font-size:8.5px;font-weight:800;color:#fff}
+  .t-map .stage{position:relative;padding-left:26px}
+  .t-map .stage::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:5px;background:#3EA4B4}
+  .t-map .st{position:relative;padding-bottom:18px}
+  .t-map .st::before{content:"";position:absolute;left:-22px;top:5px;width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #3EA4B4}
+  .t-map .st.on::before{background:#3EA4B4}
+  .t-map .n{font-size:14px;font-weight:800;letter-spacing:-.02em}
+  .t-map .cde{font-size:9px;letter-spacing:.14em;font-weight:700;color:#6B7280;margin-top:3px}
+  .t-map .big2{font-size:64px;font-weight:800;letter-spacing:-.06em;line-height:.85}
+
+  /* ============ C. SOFT TINT ============ */
+  .t-soft{background:#FAF8F5;color:#1B1B2F}
+  .t-soft .sb{color:#8B8794}
+  .t-soft .eyebrow2{font-size:10px;letter-spacing:.14em;font-weight:700;color:#8B8794;text-transform:uppercase}
+  .t-soft .disp{font-size:28px;font-weight:800;letter-spacing:-.035em;line-height:1.1}
+  .t-soft .hero{margin:0 18px;background:#5B6CFF;border-radius:26px;padding:20px;color:#fff;box-shadow:0 16px 34px -18px rgba(91,108,255,.75)}
+  .t-soft .eta{font-size:46px;font-weight:800;letter-spacing:-.05em;line-height:.9}
+  .t-soft .row{display:flex;align-items:center;gap:11px;padding:12px 0}
+  .t-soft .row + .row{border-top:1px solid #EDE9E2}
+  .t-soft .t{font-size:14px;font-weight:800;width:50px}
+  .t-soft .ln{font-size:12.5px;font-weight:700}
+  .t-soft .sub{font-size:10.5px;color:#8B8794;margin-top:2px;font-weight:500}
+  .t-soft .m{margin-left:auto;font-size:11px;font-weight:800;color:#5B6CFF;background:#EEF0FF;padding:5px 9px;border-radius:9px}
+  .t-soft .bl{display:inline-flex;align-items:center;justify-content:center;height:20px;min-width:32px;padding:0 7px;border-radius:8px;font-size:9.5px;font-weight:800;color:#fff}
+  .t-soft .st{display:flex;gap:12px}
+  .t-soft .st .tr{width:14px;flex:0 0 14px;display:flex;flex-direction:column;align-items:center}
+  .t-soft .st .dot{width:12px;height:12px;border-radius:50%;background:#3EA4B4;margin-top:4px;flex:0 0 auto}
+  .t-soft .st .dot.o{background:#fff;border:3px solid #3EA4B4}
+  .t-soft .st .line{width:3px;flex:1;background:#CFEAEE;margin:3px 0;border-radius:2px}
+  .t-soft .st .c{padding-bottom:16px;flex:1}
+  .t-soft .st .n{font-size:13.5px;font-weight:800;letter-spacing:-.02em}
+  .t-soft .st .cde{font-size:9.5px;color:#8B8794;margin-top:3px;font-weight:600}
+
+  /* ============ D. EDITORIAL ============ */
+  .t-edit{background:#F7F3EC;color:#1C1A17}
+  .t-edit .sb{color:#8A8378}
+  .t-edit .eyebrow2{font-size:9px;letter-spacing:.2em;font-weight:700;text-transform:uppercase;color:#8A8378}
+  .t-edit .serif{font-family:'DM Serif Display',serif;font-size:32px;line-height:1.02;letter-spacing:-.01em}
+  .t-edit .rule3{height:1px;background:#D9D1C3}
+  .t-edit .row{display:flex;align-items:baseline;gap:10px;padding:12px 0;border-bottom:1px solid #E4DCCE}
+  .t-edit .t{font-size:12.5px;font-weight:700;width:48px;color:#1F4D3A}
+  .t-edit .ln{font-size:12.5px;font-weight:600}
+  .t-edit .sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#8A8378;margin-top:2px;font-weight:700}
+  .t-edit .m{margin-left:auto;font-size:11px;font-weight:700;color:#1F4D3A}
+  .t-edit .bl{display:inline-flex;align-items:center;justify-content:center;height:17px;min-width:28px;padding:0 5px;border-radius:2px;font-size:8.5px;font-weight:800;color:#fff}
+  .t-edit .st{display:flex;gap:12px}
+  .t-edit .st .tr{width:10px;flex:0 0 10px;display:flex;flex-direction:column;align-items:center}
+  .t-edit .st .dot{width:9px;height:9px;border-radius:50%;background:#1F4D3A;margin-top:5px;flex:0 0 auto}
+  .t-edit .st .dot.o{background:#F7F3EC;border:2px solid #1F4D3A}
+  .t-edit .st .line{width:1px;flex:1;background:#C9C0B0;margin:3px 0}
+  .t-edit .st .c{padding-bottom:16px;flex:1}
+  .t-edit .st .n{font-family:'DM Serif Display',serif;font-size:16px}
+  .t-edit .st .cde{font-size:8.5px;letter-spacing:.14em;color:#8A8378;margin-top:2px;font-weight:700}
+  .t-edit .eta{font-family:'DM Serif Display',serif;font-size:54px;line-height:.9;color:#1F4D3A}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="eyebrow">Theme directions</div>
+  <h1>Smart Commuter Assistant+ <span>— four visual languages</span></h1>
+</div>
+
+<div class="panels">
+
+  <!-- ================= A. DEPARTURE BOARD ================= -->
+  <div class="panel">
+    <div class="phead">
+      <div><div class="nm">A · Departure Board</div><div class="ds">Dark, mono numerals, signage. Reads at a glance in sunlight or on a platform.</div></div>
+      <div class="dots"><i style="background:#0C0F12"></i><i style="background:#FFB020"></i><i style="background:#4ADE80"></i><i style="background:#F2F5F7"></i></div>
+    </div>
+    <div class="pair">
+
+      <div class="phone t-board">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px"><div class="eyebrow2">Mon 2 Nov · Home</div><div class="big" style="margin-top:6px">NEXT<br>DEPARTURES</div></div>
+          <div class="hero" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow2">Live trip</span><span style="font-size:9px;font-weight:700;color:#FF6B6B">● HEAVY</span></div>
+            <div class="eta num" style="margin-top:8px">32<small> min</small></div>
+            <div style="font-size:11px;color:#7E8B99;margin-top:6px">KL Sentral · 14:58</div>
+            <div style="display:flex;gap:6px;margin-top:12px"><span class="bl" style="background:#3EA4B4">ER7</span><span style="font-size:11px;color:#B9C3CE">Putrajaya → KL Sentral</span></div>
+          </div>
+          <div class="pad" style="margin-top:16px">
+            <div class="eyebrow2" style="margin-bottom:2px">From Putrajaya Sentral</div>
+            <div class="row"><span class="t num">14:28</span><span class="bl" style="background:#F2C200">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">4m</span></div>
+            <div class="row"><span class="t num">14:38</span><span class="bl" style="background:#F2C200">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">14m</span></div>
+            <div class="row"><span class="t num">14:48</span><span class="bl" style="background:#F2C200">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">24m</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone t-board">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px"><div class="eyebrow2">Tracking · 2 of 3 stops</div><div class="big" style="margin-top:6px">PUTRAJAYA<br>SENTRAL</div><div style="font-size:11px;color:#7E8B99;margin-top:6px">to KL Sentral · 1 transfer</div></div>
+          <div class="pad" style="margin-top:14px;display:flex;justify-content:space-between;align-items:flex-end">
+            <div><div class="eyebrow2">Time left</div><div class="num" style="font-family:'JetBrains Mono';font-size:30px;font-weight:700;color:#FFB020;line-height:1.1">32m</div></div>
+            <div style="text-align:right"><div class="eyebrow2">Arrive</div><div class="num" style="font-size:14px;font-weight:700">14:58</div></div>
+          </div>
+          <div class="pad" style="margin-top:8px"><div style="height:4px;background:#1B2128"><div style="width:12%;height:100%;background:#FFB020"></div></div></div>
+          <div class="pad" style="margin-top:18px;flex:1">
+            <div class="spine">
+              <div class="sp"><div class="tr"><div class="dot"></div><div class="line"></div></div><div class="c"><div class="n">Putrajaya Sentral</div><div class="cde">PY41 · START · 14:44</div></div></div>
+              <div class="sp"><div class="tr"><div class="dot o"></div><div class="line"></div></div><div class="c"><div class="n">Bandar Tasik Selatan</div><div class="cde">SP15 · 14:56</div></div></div>
+              <div class="sp"><div class="tr"><div class="dot"></div></div><div class="c"><div class="n">KL Sentral</div><div class="cde">KJ15 · ARRIVE 15:03</div></div></div>
+            </div>
+            <div class="rule"></div>
+            <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:40px;border:1px solid #2A323C;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#B9C3CE">End trip</div><div style="flex:1;height:40px;background:#FFB020;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0C0F12">Report</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= B. TRANSIT MAP / SWISS ================= -->
+  <div class="panel">
+    <div class="phead">
+      <div><div class="nm">B · Transit Map</div><div class="ds">Swiss grid, black type, colour as geometry. The line becomes the layout.</div></div>
+      <div class="dots"><i style="background:#FFFFFF"></i><i style="background:#0A0A0A"></i><i style="background:#3EA4B4"></i><i style="background:#F2C200"></i></div>
+    </div>
+    <div class="pair">
+
+      <div class="phone t-map">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px">
+            <div style="display:flex;justify-content:space-between"><span class="eyebrow2">Home</span><span class="eyebrow2">Mon 2 Nov</span></div>
+            <div class="disp" style="margin-top:10px">Where<br>to today</div>
+            <div class="rule2" style="margin-top:12px"></div>
+          </div>
+          <div class="pad" style="margin-top:12px">
+            <div class="row"><span class="t num">14:28</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">4 min</span></div>
+            <div class="row"><span class="t num">14:38</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">14 min</span></div>
+            <div class="row"><span class="t num">14:48</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">24 min</span></div>
+            <div style="margin-top:18px" class="eyebrow2">Active</div>
+            <div style="display:flex;align-items:flex-end;gap:10px;margin-top:2px"><span class="big2 num">32</span><span style="font-size:11px;font-weight:800;padding-bottom:8px">MIN</span></div>
+            <div style="font-size:12px;font-weight:600;color:#6B7280;margin-top:6px">Putrajaya Sentral → KL Sentral</div>
+            <div style="display:flex;gap:5px;margin-top:10px"><span class="bl" style="background:#3EA4B4;color:#08333A">ER7</span><span class="bl" style="background:#E34262">KJ</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone t-map">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px">
+            <div style="display:flex;justify-content:space-between"><span class="eyebrow2">Tracking</span><span class="eyebrow2">On time</span></div>
+            <div class="disp" style="margin-top:10px">32 min<br>to go</div>
+            <div class="rule2" style="margin-top:12px"></div>
+          </div>
+          <div class="pad" style="margin-top:14px;flex:1">
+            <div class="stage">
+              <div class="st on"><div class="n">Putrajaya Sentral</div><div class="cde">PY41 · 14:44 · START</div></div>
+              <div class="st"><div class="n">Bandar Tasik Selatan</div><div class="cde">SP15 · 14:56 · STAY ON</div></div>
+              <div class="st"><div class="n">KL Sentral</div><div class="cde">KJ15 · 15:03 · ARRIVE</div></div>
+            </div>
+            <div style="height:2px;background:#0A0A0A"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px"><span class="eyebrow2">Fare</span><span style="font-size:13px;font-weight:800">RM 14.00</span></div>
+            <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:42px;border:2px solid #0A0A0A;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">End</div><div style="flex:1;height:42px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">Report</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= C. SOFT TINT ================= -->
+  <div class="panel">
+    <div class="phead">
+      <div><div class="nm">C · Soft Tint</div><div class="ds">Warm off-white, periwinkle accent, generous radii. Friendly and consumer-facing.</div></div>
+      <div class="dots"><i style="background:#FAF8F5"></i><i style="background:#5B6CFF"></i><i style="background:#EEF0FF"></i><i style="background:#3EA4B4"></i></div>
+    </div>
+    <div class="pair">
+
+      <div class="phone t-soft">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px"><div class="eyebrow2">Monday, 2 Nov</div><div class="disp" style="margin-top:6px">Where to today?</div></div>
+          <div class="hero">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;letter-spacing:.14em;font-weight:700;opacity:.7">LIVE TRIP</span><span style="font-size:9.5px;font-weight:700;background:rgba(255,255,255,.18);padding:4px 8px;border-radius:8px">Heavy</span></div>
+            <div class="eta" style="margin-top:10px">32<span style="font-size:13px;font-weight:600;opacity:.75"> min</span></div>
+            <div style="font-size:11.5px;opacity:.8;margin-top:6px">KL Sentral · 14:58</div>
+            <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:38px;border-radius:12px;background:#fff;color:#5B6CFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">Open</div><div style="flex:1;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">Map</div></div>
+          </div>
+          <div class="pad" style="margin-top:18px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13.5px;font-weight:800">Next departures</span><span style="font-size:11px;font-weight:700;color:#5B6CFF">All</span></div>
+            <div class="row"><span class="t num">14:28</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div style="flex:1"><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">4 min</span></div>
+            <div class="row"><span class="t num">14:38</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div style="flex:1"><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">14 min</span></div>
+            <div class="row"><span class="t num">14:48</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div style="flex:1"><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">24 min</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone t-soft">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:4px"><div class="eyebrow2">Tracking</div><div class="disp" style="margin-top:6px">Putrajaya → KL</div><div class="sub" style="margin-top:6px">On time · 1 transfer · 21 min ride</div></div>
+          <div class="pad" style="margin-top:14px;display:flex;justify-content:space-between;align-items:flex-end">
+            <div><div class="eyebrow2">Time left</div><div class="num" style="font-size:30px;font-weight:800;letter-spacing:-.04em;line-height:1.1">32<span style="font-size:13px;color:#8B8794;font-weight:600"> min</span></div></div>
+            <div style="text-align:right"><div class="eyebrow2">Arrive</div><div class="num" style="font-size:14px;font-weight:800">14:58</div></div>
+          </div>
+          <div class="pad" style="margin-top:10px"><div style="height:6px;border-radius:3px;background:#EDE9E2;overflow:hidden"><div style="width:12%;height:100%;background:#5B6CFF"></div></div></div>
+          <div class="pad" style="margin-top:18px;flex:1">
+            <div style="display:flex;gap:0">
+              <div style="flex:1">
+                <div class="st"><div class="tr"><div class="dot"></div><div class="line"></div></div><div class="c"><div class="n">Putrajaya Sentral</div><div class="cde">PY41 · 14:44</div></div></div>
+                <div class="st"><div class="tr"><div class="dot o"></div><div class="line"></div></div><div class="c"><div class="n">Bandar Tasik Selatan</div><div class="cde">SP15 · 14:56</div></div></div>
+                <div class="st"><div class="tr"><div class="dot"></div></div><div class="c"><div class="n">KL Sentral</div><div class="cde">KJ15 · 15:03</div></div></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:6px"><div style="flex:1;height:42px;border-radius:13px;background:#EFEFEA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#6E6A75">End trip</div><div style="flex:1;height:42px;border-radius:13px;background:#5B6CFF;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">Report</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= D. EDITORIAL ================= -->
+  <div class="panel">
+    <div class="phead">
+      <div><div class="nm">D · Editorial</div><div class="ds">Cream paper, serif display, forest green. Calm, premium, less "app store".</div></div>
+      <div class="dots"><i style="background:#F7F3EC"></i><i style="background:#1F4D3A"></i><i style="background:#B8935A"></i><i style="background:#1C1A17"></i></div>
+    </div>
+    <div class="pair">
+
+      <div class="phone t-edit">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:6px"><div class="eyebrow2">Monday, 2 November</div><div class="serif" style="margin-top:8px">Where to<br>today?</div><div class="rule3" style="margin-top:14px"></div></div>
+          <div class="pad" style="margin-top:14px">
+            <div class="eyebrow2">Departures · Putrajaya Sentral</div>
+            <div class="row"><span class="t num">14:28</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">4 min</span></div>
+            <div class="row"><span class="t num">14:38</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">14 min</span></div>
+            <div class="row"><span class="t num">14:48</span><span class="bl" style="background:#F2C200;color:#3A2E00">PYL</span><div><div class="ln">MRT Putrajaya</div><div class="sub">Platform 2 · Kajang-bound</div></div><span class="m num">24 min</span></div>
+            <div style="margin-top:20px" class="eyebrow2">In progress</div>
+            <div class="eta num" style="margin-top:4px">32<span style="font-family:'Inter';font-size:12px;font-weight:600;color:#8A8378"> min</span></div>
+            <div style="font-size:12px;color:#8A8378;margin-top:4px">Putrajaya Sentral to KL Sentral</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone t-edit">
+        <div class="sb"><span class="num">9:41</span><span>●●●</span></div>
+        <div class="body">
+          <div class="pad" style="padding-top:6px"><div class="eyebrow2">Tracking</div><div class="serif" style="margin-top:8px">Putrajaya<br>to KL Sentral</div><div class="rule3" style="margin-top:14px"></div></div>
+          <div class="pad" style="margin-top:14px;display:flex;justify-content:space-between;align-items:flex-end">
+            <div><div class="eyebrow2">Time left</div><div class="eta num">32<span style="font-family:'Inter';font-size:12px;font-weight:600;color:#8A8378"> min</span></div></div>
+            <div style="text-align:right"><div class="eyebrow2">Arrive</div><div style="font-size:14px;font-weight:700">14:58</div></div>
+          </div>
+          <div class="pad" style="margin-top:10px"><div style="height:2px;background:#D9D1C3"><div style="width:12%;height:100%;background:#1F4D3A"></div></div></div>
+          <div class="pad" style="margin-top:20px;flex:1">
+            <div class="st"><div class="tr"><div class="dot"></div><div class="line"></div></div><div class="c"><div class="n">Putrajaya Sentral</div><div class="cde">PY41 · 14:44</div></div></div>
+            <div class="st"><div class="tr"><div class="dot o"></div><div class="line"></div></div><div class="c"><div class="n">Bandar Tasik Selatan</div><div class="cde">SP15 · 14:56</div></div></div>
+            <div class="st"><div class="tr"><div class="dot"></div></div><div class="c"><div class="n">KL Sentral</div><div class="cde">KJ15 · 15:03</div></div></div>
+            <div class="rule3"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px"><span class="eyebrow2">Fare</span><span style="font-size:13px;font-weight:700;color:#1F4D3A">RM 14.00</span></div>
+            <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:42px;border:1px solid #C9C0B0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">End</div><div style="flex:1;height:42px;background:#1F4D3A;color:#F7F3EC;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">Report</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
