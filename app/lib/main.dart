@@ -104,6 +104,7 @@ class SmartCommuterApp extends StatelessWidget {
 
     final lightTheme = ThemeData(
       useMaterial3: true,
+      fontFamily: 'Inter',
       colorScheme: lightScheme.copyWith(
         surface: Colors.white,
         onSurface: ink,
@@ -270,76 +271,175 @@ class SmartCommuterApp extends StatelessWidget {
 
     final darkTheme = ThemeData(
       useMaterial3: true,
-      colorScheme: darkScheme,
-      scaffoldBackgroundColor: darkScheme.surface,
-      appBarTheme: AppBarTheme(
+      fontFamily: 'Inter',
+      colorScheme: darkScheme.copyWith(
+        surface: const Color(0xFF0B1220),
+        onSurface: const Color(0xFFE8EDF6),
+        surfaceContainerHighest: const Color(0xFF161F31),
+        outlineVariant: const Color(0xFF1F2A3C),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0B1220),
+      canvasColor: const Color(0xFF0B1220),
+      cardColor: const Color(0xFF121A2A),
+      dividerColor: const Color(0xFF1F2A3C),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF1F2A3C),
+        thickness: 1,
+        space: 1,
+      ),
+      appBarTheme: const AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: darkScheme.onSurface,
+        foregroundColor: Color(0xFFE8EDF6),
         titleTextStyle: TextStyle(
-          color: darkScheme.onSurface,
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
+          color: Color(0xFFE8EDF6),
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.6,
         ),
       ),
       textTheme: const TextTheme(
-        headlineSmall:
-            TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-        titleLarge: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-        titleMedium: TextStyle(fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(height: 1.3),
+        displaySmall: TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1.4,
+          height: 1.0,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.8,
+          height: 1.15,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.6,
+          height: 1.15,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.4,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+        titleSmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        bodyLarge:
+            TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w500),
+        bodyMedium:
+            TextStyle(fontSize: 13.5, height: 1.35, fontWeight: FontWeight.w500),
+        bodySmall:
+            TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w500),
+        labelLarge: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+        labelMedium: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
       ),
-      cardTheme: CardThemeData(
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.32),
+      cardTheme: const CardThemeData(
+        elevation: 0,
+        shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        color: darkScheme.surface,
+        color: Color(0xFF121A2A),
         margin: EdgeInsets.zero,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(color: Color(0xFF1F2A3C)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          backgroundColor: darkScheme.primary,
-          foregroundColor: darkScheme.onPrimary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          backgroundColor: const Color(0xFF6E9BFF),
+          foregroundColor: const Color(0xFF07101F),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          side: BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          foregroundColor: const Color(0xFFE8EDF6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          side: const BorderSide(color: Color(0xFF1F2A3C)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFF9DBCFF),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkScheme.surface.withValues(alpha: 0.06),
+        fillColor: const Color(0xFF161F31),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
+          borderSide: const BorderSide(color: Color(0xFF1F2A3C)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: darkScheme.onSurface.withValues(alpha: 0.12)),
+          borderSide: const BorderSide(color: Color(0xFF1F2A3C)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: darkScheme.primary, width: 1.6),
+          borderSide: const BorderSide(color: Color(0xFF6E9BFF), width: 1.6),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        hintStyle: const TextStyle(
+          color: Color(0xFF7C8AA0),
+          fontWeight: FontWeight.w500,
+          fontSize: 13.5,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: const Color(0xFF161F31),
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 11.5,
+          color: Color(0xFFA7B4C8),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFFE8EDF6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentTextStyle: const TextStyle(
+          color: Color(0xFF0B1220),
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0xFF121A2A),
+        indicatorColor: const Color(0xFF1B2A47),
+        elevation: 0,
+        height: 70,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: states.contains(WidgetState.selected)
+                ? const Color(0xFF9DBCFF)
+                : const Color(0xFF7C8AA0),
+          ),
+        ),
       ),
     );
 

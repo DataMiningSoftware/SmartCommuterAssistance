@@ -915,47 +915,24 @@ class _StationsScreenState extends State<StationsScreen> {
 
   Future<DateTime?> _pickDepartureDateTime() async {
     final l10n = AppLocalizations.of(context);
-    final mode = await showModalBottomSheet<String>(
+    final mode = await showDialog<String>(
       context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.stationsWhenDepartTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.stationsChooseDepartSubtitle,
-                  style: const TextStyle(color: Color(0xFF667085)),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.of(context).pop('now'),
-                    icon: const Icon(Icons.access_time_rounded),
-                    label: Text(l10n.stationsLeaveNowButton),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.of(context).pop('pick'),
-                    icon: const Icon(Icons.event_rounded),
-                    label: Text(l10n.stationsChooseDateTimeButton),
-                  ),
-                ),
-              ],
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.stationsWhenDepartTitle),
+          content: Text(l10n.stationsChooseDepartSubtitle),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'pick'),
+              child: Text(l10n.stationsChooseDateTimeButton),
             ),
-          ),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, 'now'),
+              icon: const Icon(Icons.access_time_rounded, size: 18),
+              label: Text(l10n.stationsLeaveNowButton),
+            ),
+          ],
         );
       },
     );
@@ -1276,16 +1253,59 @@ class _StationsScreenState extends State<StationsScreen> {
               child: SizedBox(
                 width: 18,
                 height: 18,
-                child: Icon(Icons.route_rounded, size: 16),
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
         ],
       ),
-      body: FutureBuilder<void>(
-        future: _stationsFuture,
-        builder: (context, snapshot) {
-          return _buildStationsContent(snapshot);
-        },
+      body: Stack(
+        children: [
+          FutureBuilder<void>(
+            future: _stationsFuture,
+            builder: (context, snapshot) {
+              return _buildStationsContent(snapshot);
+            },
+          ),
+          if (_isPlanningRoute)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.10),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 18,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).dividerColor),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                          ),
+                          const SizedBox(width: 14),
+                          Text(
+                            AppLocalizations.of(context).mapFindingRoute,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -2495,141 +2515,220 @@ class _RoutePlanSheet extends StatelessWidget {  final String originName;
                             segment.fromStopId,
                             segment.toStopId,
                           );
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE3EAF7)),
-                      ),
+                    final lineColor = getRouteColor(segment.routeId);
+                    final isTransfer =
+                        segment.connectionType.toLowerCase().contains('transfer');
+                    final isFirst = index == 0;
+                    final isLast = index == segmentPlans.length - 1;
+                    return IntrinsicHeight(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: getRouteColor(segment.routeId),
-                            child: Text(
-                              normalizeRouteId(segment.routeId),
-                              style: TextStyle(
-                                color: getRouteOnColor(segment.routeId),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
+                          SizedBox(
+                            width: 16,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  _segmentText(
-                                    l10n: l10n,
-                                    routeId: segment.routeId,
-                                    connectionType: segment.connectionType,
-                                    fromName: fromName,
-                                    toName: toName,
-                                    baseMinutes: segment.minutes,
-                                    adjustedMinutes: plan.adjustedMinutes,
-                                  ),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.stationsSegmentTimeRange(
-                                    _formatTime(plan.departAt),
-                                    _formatTime(plan.arriveAt),
-                                    crowdUi.label,
-                                  ),
-                                  style: TextStyle(
-                                    color: crowdUi.color,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
                                 const SizedBox(height: 3),
-                                Text(
-                                  l10n.stationsForecastConfidence(
-                                    _formatPercent(confidence),
-                                  ),
-                                  style: const TextStyle(
-                                    color: Color(0xFF475467),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  _forecastReason(l10n, plan),
-                                  style: const TextStyle(
-                                    color: Color(0xFF667085),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                                Text(
-                                  l10n.stationsBoardingTip(
-                                    _boardingTipFor(
-                                      l10n,
-                                      index,
-                                      segmentPlans,
-                                      namesByStopId,
+                                Container(
+                                  width: 13,
+                                  height: 13,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isFirst ? lineColor : Colors.white,
+                                    border: Border.all(
+                                      color: lineColor,
+                                      width: 3,
                                     ),
                                   ),
-                                  style: const TextStyle(
-                                    color: Color(0xFF344054),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    width: 3,
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: lineColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
                                   ),
                                 ),
-                                if (disruptionNote != null)
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  EdgeInsets.only(bottom: isLast ? 0 : 22),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          toName,
+                                          style: const TextStyle(
+                                            fontSize: 14.5,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: -0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _formatDuration(
+                                            l10n, plan.adjustedMinutes),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF55627A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${segment.fromStopId} → ${segment.toStopId}',
+                                          style: const TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.3,
+                                            color: Color(0xFF8B97AB),
+                                          ),
+                                        ),
+                                      ),
+                                      if (fareLeg != null)
+                                        Text(
+                                          l10n.stationsSegmentFare(
+                                            fareLeg.fare.toStringAsFixed(2),
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: fareLeg.separateTicket
+                                                ? const Color(0xFF99168C)
+                                                : const Color(0xFF177E8E),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 9),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 7,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: lineColor,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          normalizeRouteId(segment.routeId),
+                                          style: TextStyle(
+                                            color: getRouteOnColor(
+                                                segment.routeId),
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 9.5,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _segmentText(
+                                            l10n: l10n,
+                                            routeId: segment.routeId,
+                                            connectionType:
+                                                segment.connectionType,
+                                            fromName: fromName,
+                                            toName: toName,
+                                            baseMinutes: segment.minutes,
+                                            adjustedMinutes:
+                                                plan.adjustedMinutes,
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            height: 1.35,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF55627A),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
                                   Text(
-                                    l10n.stationsServiceAlert(disruptionNote),
-                                    style: const TextStyle(
-                                      color: Color(0xFFD92D20),
+                                    l10n.stationsSegmentTimeRange(
+                                      _formatTime(plan.departAt),
+                                      _formatTime(plan.arriveAt),
+                                      crowdUi.label,
+                                    ),
+                                    style: TextStyle(
+                                      color: crowdUi.color,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                if (plan.waitMinutes > 0)
-                                  Text(
-                                    l10n.stationsIncludesWaitingTime(
-                                      plan.waitMinutes,
+                                  if (!isTransfer) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${l10n.stationsForecastConfidence(_formatPercent(confidence))} · ${_forecastReason(l10n, plan)}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF8B97AB),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                    style: const TextStyle(
-                                      color: Color(0xFF667085),
-                                      fontSize: 11,
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      l10n.stationsBoardingTip(
+                                        _boardingTipFor(
+                                          l10n,
+                                          index,
+                                          segmentPlans,
+                                          namesByStopId,
+                                        ),
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF344054),
+                                        fontSize: 10.5,
+                                        height: 1.35,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                _formatDuration(l10n, plan.adjustedMinutes),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF344054),
-                                ),
+                                  ],
+                                  if (disruptionNote != null)
+                                    Text(
+                                      l10n.stationsServiceAlert(disruptionNote),
+                                      style: const TextStyle(
+                                        color: Color(0xFFD92D20),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  if (plan.waitMinutes > 0)
+                                    Text(
+                                      l10n.stationsIncludesWaitingTime(
+                                        plan.waitMinutes,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF8B97AB),
+                                        fontSize: 10.5,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              if (fareLeg != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.stationsSegmentFare(
-                                    fareLeg.fare.toStringAsFixed(2),
-                                  ),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                    color: fareLeg.separateTicket
-                                        ? const Color(0xFF99168C)
-                                        : const Color(0xFF475467),
-                                  ),
-                                ),
-                              ],
-                            ],
+                            ),
                           ),
                         ],
                       ),
