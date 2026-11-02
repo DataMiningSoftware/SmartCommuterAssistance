@@ -14,6 +14,16 @@ void main() {
     graph = TransitGraph.fromJson(json);
   });
 
+  test('kwasa damansara to putrajaya sentral stays on the PY line', () {
+    final path = graph.findShortestPath('PY01', 'PY41')!;
+    // ignore: avoid_print
+    print('KWASA -> PUTRAJAYA lines=${path.lineJumps} '
+        'ride=${path.rideMinutes}m transfers=${path.transferCount}');
+
+    expect(path.lineJumps, ['PY']);
+    expect(path.transferCount, 0);
+  });
+
   test('graph integrity', () {
     final problems = <String>[];
 

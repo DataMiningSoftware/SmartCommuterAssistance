@@ -2536,14 +2536,14 @@
     {
       "from": "AG2",
       "to": "AG3",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG3",
       "to": "AG2",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
@@ -2564,28 +2564,28 @@
     {
       "from": "AG4",
       "to": "AG5",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG5",
       "to": "AG4",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG5",
       "to": "AG6",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG6",
       "to": "AG5",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
@@ -2620,14 +2620,14 @@
     {
       "from": "AG8",
       "to": "AG9",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG9",
       "to": "AG8",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
@@ -2725,21 +2725,21 @@
     {
       "from": "AG16",
       "to": "AG15",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG16",
       "to": "AG17",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
     {
       "from": "AG17",
       "to": "AG16",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "AG"
     },
@@ -2774,14 +2774,14 @@
     {
       "from": "SP2",
       "to": "SP3",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP3",
       "to": "SP2",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2802,28 +2802,28 @@
     {
       "from": "SP4",
       "to": "SP5",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP5",
       "to": "SP4",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP5",
       "to": "SP6",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP6",
       "to": "SP5",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2858,7 +2858,7 @@
     {
       "from": "SP8",
       "to": "SP9",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2879,7 +2879,7 @@
     {
       "from": "SP10",
       "to": "SP9",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2907,7 +2907,7 @@
     {
       "from": "SP12",
       "to": "SP11",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2942,14 +2942,14 @@
     {
       "from": "SP14",
       "to": "SP15",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP15",
       "to": "SP14",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -2970,14 +2970,14 @@
     {
       "from": "SP16",
       "to": "SP17",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP17",
       "to": "SP16",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -3040,42 +3040,42 @@
     {
       "from": "SP21",
       "to": "SP22",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP22",
       "to": "SP21",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP22",
       "to": "SP24",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP24",
       "to": "SP22",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP24",
       "to": "SP25",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP25",
       "to": "SP24",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "SP"
     },
@@ -3124,56 +3124,56 @@
     {
       "from": "SP28",
       "to": "SP29",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP29",
       "to": "SP28",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP29",
       "to": "SP31",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "SP31",
       "to": "SP29",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "SP"
     },
     {
       "from": "KJ1",
       "to": "KJ2",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ2",
       "to": "KJ1",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ2",
       "to": "KJ3",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ3",
       "to": "KJ2",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3194,14 +3194,14 @@
     {
       "from": "KJ4",
       "to": "KJ5",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ5",
       "to": "KJ4",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3250,14 +3250,14 @@
     {
       "from": "KJ8",
       "to": "KJ9",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ9",
       "to": "KJ8",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3306,42 +3306,42 @@
     {
       "from": "KJ12",
       "to": "KJ13",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ13",
       "to": "KJ12",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ13",
       "to": "KJ14",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ14",
       "to": "KJ13",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ14",
       "to": "KJ15",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ15",
       "to": "KJ14",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3355,21 +3355,21 @@
     {
       "from": "KJ16",
       "to": "KJ15",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ16",
       "to": "KJ17",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ17",
       "to": "KJ16",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3404,14 +3404,14 @@
     {
       "from": "KJ19",
       "to": "KJ20",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ20",
       "to": "KJ19",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3432,14 +3432,14 @@
     {
       "from": "KJ21",
       "to": "KJ22",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ22",
       "to": "KJ21",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3460,7 +3460,7 @@
     {
       "from": "KJ23",
       "to": "KJ24",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3474,14 +3474,14 @@
     {
       "from": "KJ24",
       "to": "KJ25",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ25",
       "to": "KJ24",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3502,42 +3502,42 @@
     {
       "from": "KJ26",
       "to": "KJ27",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ27",
       "to": "KJ26",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ27",
       "to": "KJ28",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ28",
       "to": "KJ27",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ28",
       "to": "KJ29",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ29",
       "to": "KJ28",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3558,14 +3558,14 @@
     {
       "from": "KJ30",
       "to": "KJ31",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ31",
       "to": "KJ30",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3586,70 +3586,70 @@
     {
       "from": "KJ32",
       "to": "KJ33",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ33",
       "to": "KJ32",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ33",
       "to": "KJ34",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ34",
       "to": "KJ33",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ34",
       "to": "KJ35",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ35",
       "to": "KJ34",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ35",
       "to": "KJ36",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ36",
       "to": "KJ35",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ36",
       "to": "KJ37",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
     {
       "from": "KJ37",
       "to": "KJ36",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KJ"
     },
@@ -3740,14 +3740,14 @@
     {
       "from": "KG05",
       "to": "KG06",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG06",
       "to": "KG05",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -3782,28 +3782,28 @@
     {
       "from": "KG08",
       "to": "KG09",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG09",
       "to": "KG08",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG09",
       "to": "KG10",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG10",
       "to": "KG09",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -3817,105 +3817,105 @@
     {
       "from": "KG12",
       "to": "KG10",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG12",
       "to": "KG13",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG13",
       "to": "KG12",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG13",
       "to": "KG14",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG14",
       "to": "KG13",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG14",
       "to": "KG15",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG15",
       "to": "KG14",
-      "minutes": 2,
+      "minutes": 5,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG15",
       "to": "KG16",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG16",
       "to": "KG15",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG16",
       "to": "KG17",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG17",
       "to": "KG16",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG17",
       "to": "KG18A",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG18A",
       "to": "KG17",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG18A",
       "to": "KG20",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG20",
       "to": "KG18A",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -3943,21 +3943,21 @@
     {
       "from": "KG22",
       "to": "KG21",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG22",
       "to": "KG23",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG23",
       "to": "KG22",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -3978,42 +3978,42 @@
     {
       "from": "KG24",
       "to": "KG25",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG25",
       "to": "KG24",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG25",
       "to": "KG26",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG26",
       "to": "KG25",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG26",
       "to": "KG27",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG27",
       "to": "KG26",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -4034,14 +4034,14 @@
     {
       "from": "KG28",
       "to": "KG29",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG29",
       "to": "KG28",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -4062,28 +4062,28 @@
     {
       "from": "KG30",
       "to": "KG31",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG31",
       "to": "KG30",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG31",
       "to": "KG33",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
     {
       "from": "KG33",
       "to": "KG31",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "KG"
     },
@@ -4118,14 +4118,14 @@
     {
       "from": "PY01",
       "to": "PY03",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY03",
       "to": "PY01",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4216,56 +4216,56 @@
     {
       "from": "PY09",
       "to": "PY10",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY10",
       "to": "PY09",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY10",
       "to": "PY11",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY11",
       "to": "PY10",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY11",
       "to": "PY12",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY12",
       "to": "PY11",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY12",
       "to": "PY13",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY13",
       "to": "PY12",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4286,14 +4286,14 @@
     {
       "from": "PY14",
       "to": "PY15",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY15",
       "to": "PY14",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4328,14 +4328,14 @@
     {
       "from": "PY17",
       "to": "PY18",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY18",
       "to": "PY17",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4370,42 +4370,42 @@
     {
       "from": "PY20",
       "to": "PY21",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY21",
       "to": "PY20",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY21",
       "to": "PY22",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY22",
       "to": "PY21",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY22",
       "to": "PY23",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY23",
       "to": "PY22",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4426,14 +4426,14 @@
     {
       "from": "PY24",
       "to": "PY27",
-      "minutes": 2,
+      "minutes": 6,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY27",
       "to": "PY24",
-      "minutes": 2,
+      "minutes": 6,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4468,14 +4468,14 @@
     {
       "from": "PY29",
       "to": "PY31",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY31",
       "to": "PY29",
-      "minutes": 2,
+      "minutes": 3,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4496,14 +4496,14 @@
     {
       "from": "PY32",
       "to": "PY33",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY33",
       "to": "PY32",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4524,14 +4524,14 @@
     {
       "from": "PY34",
       "to": "PY36",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY36",
       "to": "PY34",
-      "minutes": 2,
+      "minutes": 4,
       "type": "standard_stop",
       "route": "PY"
     },
@@ -4594,14 +4594,14 @@
     {
       "from": "PY40",
       "to": "PY41",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
     {
       "from": "PY41",
       "to": "PY40",
-      "minutes": 2,
+      "minutes": 1,
       "type": "standard_stop",
       "route": "PY"
     },
