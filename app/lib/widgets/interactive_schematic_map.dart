@@ -36,6 +36,7 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
     with SingleTickerProviderStateMixin {
   late final AnimationController _blink;
   final TransformationController _transform = TransformationController();
+  String? _isolatedLineId;
 
   static const double _minTapTargetRadius = 22.0;
   static const double _padding = 24.0;
@@ -195,6 +196,7 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                               blinkValue: _blink.value,
                               toPixel: _toPixel,
                               hiddenLineIds: widget.hiddenLineIds,
+                              isolatedLineId: _isolatedLineId,
                               backgroundColor: scheme.surface,
                               gridColor:
                                   scheme.onSurface.withValues(alpha: 0.05),
@@ -218,6 +220,10 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
             lines: widget.layout.lines.values
                 .where((l) => !widget.hiddenLineIds.contains(l.id))
                 .toList(),
+            isolatedLineId: _isolatedLineId,
+            onLineTap: (id) => setState(
+              () => _isolatedLineId = _isolatedLineId == id ? null : id,
+            ),
           ),
         ),
         Positioned(
@@ -237,6 +243,12 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                 label: l10n.mapZoomOut,
                 onTap: () => _zoomBy(0.75),
               ),
+              const SizedBox(height: 8),
+              _ZoomButton(
+                icon: Icons.center_focus_strong_rounded,
+                label: l10n.mapZoomIn,
+                onTap: () => setState(() => _transformInitialized = false),
+              ),
             ],
           ),
         ),
@@ -246,9 +258,15 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
 }
 
 class _LineLegend extends StatelessWidget {
-  const _LineLegend({required this.lines});
+  const _LineLegend({
+    required this.lines,
+    required this.isolatedLineId,
+    required this.onLineTap,
+  });
 
   final List<SchematicLayoutLine> lines;
+  final String? isolatedLineId;
+  final ValueChanged<String> onLineTap;
 
   String _shortLabel(String label) {
     var text = label
@@ -276,28 +294,51 @@ class _LineLegend extends StatelessWidget {
             children: [
               for (final line in lines)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: line.color,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => onLineTap(line.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 4,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _shortLabel(line.label),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurface.withValues(alpha: 0.8),
-                        ),
+                      decoration: BoxDecoration(
+                        color: isolatedLineId == line.id
+                            ? line.color.withValues(alpha: 0.14)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: line.color,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _shortLabel(line.label),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: isolatedLineId == line.id
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: scheme.onSurface.withValues(
+                                alpha: isolatedLineId == null ||
+                                        isolatedLineId == line.id
+                                    ? 0.8
+                                    : 0.35,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -357,6 +398,7 @@ class _SchematicPainter extends CustomPainter {
     required this.gridColor,
     this.stationHint = 'Station',
     this.hiddenLineIds = const {},
+    this.isolatedLineId,
   });
 
   final SchematicLayout layout;
@@ -371,6 +413,7 @@ class _SchematicPainter extends CustomPainter {
   final Color gridColor;
   final String stationHint;
   final Set<String> hiddenLineIds;
+  final String? isolatedLineId;
 
   @override
   SemanticsBuilderCallback get semanticsBuilder => (Size size) {
@@ -424,9 +467,13 @@ class _SchematicPainter extends CustomPainter {
       if (stationIds.length < 2) continue;
 
       final color = hasRoute ? kMapDisabledGrey : line.color;
+      final isolated = isolatedLineId;
+      final dimmed = isolated != null && line.id != isolated;
       final paint = Paint()
-        ..color = color.withValues(alpha: hasRoute ? 0.35 : 0.85)
-        ..strokeWidth = hasRoute ? 2.0 : 2.5
+        ..color = color.withValues(
+          alpha: hasRoute ? (dimmed ? 0.06 : 0.18) : (dimmed ? 0.08 : 0.85),
+        )
+        ..strokeWidth = hasRoute ? 2.0 : (dimmed ? 1.6 : 2.5)
         ..strokeCap = StrokeCap.round;
 
       for (int i = 0; i < stationIds.length - 1; i++) {
@@ -437,19 +484,32 @@ class _SchematicPainter extends CustomPainter {
       }
     }
 
-    // Route overlay: each hop drawn in its own line colour, so the colour
-    // switches at interchanges and follows the actual physical path.
+    // Route overlay: white casing first, then the coloured stroke, so the
+    // selected path reads like a line on a printed transit map.
     if (hasRoute) {
+      final casing = Paint()
+        ..color = Colors.white.withValues(alpha: 0.95)
+        ..strokeWidth = 10.0
+        ..strokeCap = StrokeCap.round;
+
+      for (final segment in segments) {
+        if (segment.isTransfer) continue;
+        final a = layout.stations[segment.fromStationId];
+        final b = layout.stations[segment.toStationId];
+        if (a == null || b == null) continue;
+        canvas.drawLine(toPixel(a.x, a.y), toPixel(b.x, b.y), casing);
+      }
+
       for (final segment in segments) {
         if (segment.isTransfer) continue;
         final a = layout.stations[segment.fromStationId];
         final b = layout.stations[segment.toStationId];
         if (a == null || b == null) continue;
 
-        final alpha = 0.65 + 0.35 * blinkValue;
+        final alpha = 0.8 + 0.2 * blinkValue;
         final paint = Paint()
           ..color = getRouteColor(segment.line).withValues(alpha: alpha)
-          ..strokeWidth = 6.0
+          ..strokeWidth = 6.5
           ..strokeCap = StrokeCap.round;
         canvas.drawLine(toPixel(a.x, a.y), toPixel(b.x, b.y), paint);
       }
