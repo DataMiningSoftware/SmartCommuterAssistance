@@ -40,30 +40,15 @@ class AppPageTitle extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 42,
-          height: 42,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                highlight.withValues(alpha: 0.18),
-                highlight.withValues(alpha: 0.06),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: highlight.withValues(alpha: 0.18)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12101828),
-                blurRadius: 14,
-                offset: Offset(0, 8),
-              ),
-            ],
+            color: highlight.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: highlight, size: 20),
+          child: Icon(icon, color: highlight, size: 18),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -77,22 +62,26 @@ class AppPageTitle extends StatelessWidget {
                     TextSpan(
                       text: '$leadingText ',
                       style: titleStyle.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
                         color: theme.colorScheme.onSurface,
                       ),
                     ),
                     TextSpan(
                       text: accentText,
                       style: titleStyle.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
                         color: highlight,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
-              if (badge != null || badgeText != null || subtitle != null)
+              if (badge != null || badgeText != null || subtitle != null) ...[
+                const SizedBox(height: 3),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
@@ -102,19 +91,21 @@ class AppPageTitle extends StatelessWidget {
                       badge!
                     else if (badgeText != null)
                       Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: highlight,
-                          borderRadius: BorderRadius.circular(999),
+                          color: highlight.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           badgeText!,
                           style: TextStyle(
-                            color: theme.colorScheme.onPrimary,
-                            fontSize: 10,
+                            color: highlight,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.6,
                           ),
                         ),
                       ),
@@ -125,13 +116,14 @@ class AppPageTitle extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.62),
+                              .withValues(alpha: 0.55),
                           fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                   ],
                 ),
+              ],
             ],
           ),
         ),

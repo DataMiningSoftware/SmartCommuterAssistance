@@ -772,6 +772,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreeting => 'Where to today?';
 
   @override
+  String get homeNextDepartures => 'Next departures';
+
+  @override
+  String homeDeparturesFrom(String station) {
+    return 'From $station';
+  }
+
+  @override
+  String get homeDeparturesEmpty => 'No scheduled trains in the next hour.';
+
+  @override
   String get homeFastRouteTitle => '⚡ Fast route';
 
   @override

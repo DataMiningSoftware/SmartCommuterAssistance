@@ -336,6 +336,14 @@
   "homeYouAreHere": "You are here",
   "homeMinutesShort": "min",
   "homeGreeting": "Where to today?",
+  "homeNextDepartures": "Next departures",
+  "homeDeparturesFrom": "From {station}",
+  "homeDeparturesEmpty": "No scheduled trains in the next hour.",
+  "@homeDeparturesFrom": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
   "homeFastRouteTitle": "⚡ Fast route",
   "homeLessCrowdedTitle": "🌿 Less crowded",
   "homeKeepFastRoute": "Keep with fast route",

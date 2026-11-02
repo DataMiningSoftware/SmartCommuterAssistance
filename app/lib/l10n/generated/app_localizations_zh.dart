@@ -772,6 +772,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeGreeting => '今天去哪儿？';
 
   @override
+  String get homeNextDepartures => 'Next departures';
+
+  @override
+  String homeDeparturesFrom(String station) {
+    return 'From $station';
+  }
+
+  @override
+  String get homeDeparturesEmpty => 'No scheduled trains in the next hour.';
+
+  @override
   String get homeFastRouteTitle => '⚡ 快速路线';
 
   @override

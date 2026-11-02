@@ -12,8 +12,10 @@ import '../constants/route_colors.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
+import '../services/gtfs_local_service.dart';
 import '../services/location_privacy_service.dart';
 import '../services/navigation_state.dart';
+import '../services/train_arrival_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/app_page_title.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
@@ -45,6 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<_HomeRouteConnection> _routeConnections = <_HomeRouteConnection>[];
   DateTime _departureTime = DateTime.now();
   _HomeRouteMode _routeMode = _HomeRouteMode.auto;
+  String? _departuresStopId;
+  Future<StationArrivalResult>? _departuresFuture;
+
+  void _refreshDepartures() {
+    final nearest = _nearestMapStops(limit: 1);
+    if (nearest.isEmpty) return;
+    final stopId = nearest.first.stopId;
+    if (stopId == _departuresStopId && _departuresFuture != null) return;
+    setState(() {
+      _departuresStopId = stopId;
+      _departuresFuture = GtfsLocalService.getArrivals(stopId, limit: 3);
+    });
+  }
 
   @override
   void initState() {
@@ -479,6 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
           limit: 5,
         );
       });
+      _refreshDepartures();
       debugPrint(
         'Home location: ${position.latitude}, ${position.longitude}',
       );
@@ -639,6 +655,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!mounted) return;
       setState(() => _isLoadingMap = false);
+      _refreshDepartures();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -1155,6 +1172,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         isPreparingTrip: _isPreparingTrip,
                       );
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  _NextDepartures(
+                    future: _departuresFuture,
+                    stationName: _departuresStopId == null
+                        ? null
+                        : _mapStopsById[_departuresStopId]?.stopName,
+                    onOpenStations: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const StationsScreen(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (_mapError != null) ...[
@@ -3360,6 +3390,222 @@ class _HomeStopIdParts {
       prefix: match.group(1) ?? '',
       number: number,
       suffix: match.group(3) ?? '',
+    );
+  }
+}
+
+class _NextDepartures extends StatelessWidget {
+  final Future<StationArrivalResult>? future;
+  final String? stationName;
+  final VoidCallback onOpenStations;
+
+  const _NextDepartures({
+    required this.future,
+    required this.stationName,
+    required this.onOpenStations,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE6E9EF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.homeNextDepartures,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onOpenStations,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(l10n.homeAllStations),
+              ),
+            ],
+          ),
+          if (stationName != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                l10n.homeDeparturesFrom(stationName!),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B97AB),
+                ),
+              ),
+            ),
+          FutureBuilder<StationArrivalResult>(
+            future: future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: LinearProgressIndicator(minHeight: 3),
+                );
+              }
+              final arrivals =
+                  snapshot.data?.arrivals ?? const <ScheduledTrainArrival>[];
+              if (arrivals.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Text(
+                    l10n.homeDeparturesEmpty,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF8B97AB),
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                children: [
+                  for (var i = 0; i < arrivals.length && i < 3; i++)
+                    _DepartureRow(arrival: arrivals[i], showDivider: i > 0, stationName: stationName),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DepartureRow extends StatelessWidget {
+  final ScheduledTrainArrival arrival;
+  final bool showDivider;
+  final String? stationName;
+
+  const _DepartureRow({
+    required this.arrival,
+    required this.showDivider,
+    required this.stationName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final localizations = MaterialLocalizations.of(context);
+    final color = getRouteColor(arrival.routeId);
+    final time = localizations.formatTimeOfDay(
+      TimeOfDay.fromDateTime(arrival.arrivalTime),
+      alwaysUse24HourFormat: true,
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? const Border(top: BorderSide(color: Color(0xFFE6E9EF)))
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 54,
+            child: Text(
+              time,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        normalizeRouteId(arrival.routeId),
+                        style: TextStyle(
+                          color: getRouteOnColor(arrival.routeId),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        getRouteDisplayName(arrival.routeId),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                if (arrival.destination.toUpperCase() !=
+                    (stationName ?? '').toUpperCase())
+                  Text(
+                    l10n.arrivalsToDestination(arrival.destination),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF8B97AB),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F5F9),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${arrival.minutesUntil} ${l10n.homeMinutesShort}',
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF55627A),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

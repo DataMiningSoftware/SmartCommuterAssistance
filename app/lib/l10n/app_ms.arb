@@ -233,6 +233,14 @@
   "homeYouAreHere": "Anda di sini",
   "homeMinutesShort": "minit",
   "homeGreeting": "Ke mana hari ini?",
+  "homeNextDepartures": "Ketibaan seterusnya",
+  "homeDeparturesFrom": "Dari {station}",
+  "homeDeparturesEmpty": "Tiada tren berjadual dalam sejam akan datang.",
+  "@homeDeparturesFrom": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
   "homeFastRouteTitle": "⚡ Laluan pantas",
   "homeLessCrowdedTitle": "🌿 Kurang sesak",
   "homeKeepFastRoute": "Kekal dengan laluan pantas",

@@ -772,6 +772,17 @@ class AppLocalizationsTa extends AppLocalizations {
   String get homeGreeting => 'இன்று எங்கே செல்கிறீர்கள்?';
 
   @override
+  String get homeNextDepartures => 'Next departures';
+
+  @override
+  String homeDeparturesFrom(String station) {
+    return 'From $station';
+  }
+
+  @override
+  String get homeDeparturesEmpty => 'No scheduled trains in the next hour.';
+
+  @override
   String get homeFastRouteTitle => '⚡ வேகமான வழி';
 
   @override

@@ -1441,6 +1441,24 @@ abstract class AppLocalizations {
   /// **'Where to today?'**
   String get homeGreeting;
 
+  /// No description provided for @homeNextDepartures.
+  ///
+  /// In en, this message translates to:
+  /// **'Next departures'**
+  String get homeNextDepartures;
+
+  /// No description provided for @homeDeparturesFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From {station}'**
+  String homeDeparturesFrom(String station);
+
+  /// No description provided for @homeDeparturesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled trains in the next hour.'**
+  String get homeDeparturesEmpty;
+
   /// No description provided for @homeFastRouteTitle.
   ///
   /// In en, this message translates to:

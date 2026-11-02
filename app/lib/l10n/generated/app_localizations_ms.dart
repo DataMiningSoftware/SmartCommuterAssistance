@@ -780,6 +780,18 @@ class AppLocalizationsMs extends AppLocalizations {
   String get homeGreeting => 'Ke mana hari ini?';
 
   @override
+  String get homeNextDepartures => 'Ketibaan seterusnya';
+
+  @override
+  String homeDeparturesFrom(String station) {
+    return 'Dari $station';
+  }
+
+  @override
+  String get homeDeparturesEmpty =>
+      'Tiada tren berjadual dalam sejam akan datang.';
+
+  @override
   String get homeFastRouteTitle => '⚡ Laluan pantas';
 
   @override
