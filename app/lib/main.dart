@@ -8,6 +8,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'constants/app_features.dart';
+import 'constants/routing_weights.dart';
 import 'constants/app_shadows.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'screens/home_screen.dart';
@@ -173,6 +174,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
     await Future.wait<void>([
       _runStep(ThemeController.initialize, label: 'theme'),
       _runStep(ThemePresetController.initialize, label: 'theme preset'),
+      _runStep(RoutingWeightsStore.instance.initialize, label: 'routing weights'),
       _runStep(LocaleController.initialize, label: 'locale'),
       _runStep(AuthService().initialize, label: 'auth'),
       _runStep(ActiveTripService.instance.initialize, label: 'active trip'),

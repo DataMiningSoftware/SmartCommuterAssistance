@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
+import '../constants/routing_weights.dart';
 import '../constants/route_colors.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
@@ -542,7 +543,8 @@ class _HomeScreenState extends State<HomeScreen> {
       stop.longitude,
     );
     if (distance <= 100) return 0;
-    return (distance / 80).round().clamp(1, 30);
+    final pace = RoutingWeightsStore.instance.value.walkMetersPerMinute;
+    return (distance / pace).round().clamp(1, 30);
   }
 
   void _startActiveTripProgressRefresh() {
@@ -922,18 +924,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _crowdPenaltyForStop(Map<String, int> crowdByStopId, String stopId) {
-    switch (crowdByStopId[stopId] ?? 0) {
-      case 2:
-        return 1;
-      case 3:
-        return 2;
-      case 4:
-        return 4;
-      case 5:
-        return 6;
-      default:
-        return 0;
-    }
+    return RoutingWeightsStore.instance.value
+        .crowdPenaltyForLevel(crowdByStopId[stopId] ?? 0);
   }
 
   _HomeRoutePreview _buildRoutePreview({

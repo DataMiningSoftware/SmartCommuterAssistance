@@ -1,0 +1,13 @@
+{
+  "transfer_penalty_fastest": 5,
+  "transfer_penalty_balanced": 10,
+  "transfer_penalty_comfort": 20,
+  "walk_meters_per_minute": 87.0,
+  "crowd_penalty_light": 1,
+  "crowd_penalty_moderate": 1,
+  "crowd_penalty_heavy": 1,
+  "crowd_penalty_crowded": 1,
+  "source": "synthetic",
+  "sample_size": 400,
+  "mae_minutes": 1.61
+}

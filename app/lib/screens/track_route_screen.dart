@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../constants/routing_weights.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
@@ -1913,7 +1914,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     );
 
     if (distance > 100) {
-      final walkMinutes = (distance / 80).round().clamp(1, 30);
+      final pace = RoutingWeightsStore.instance.value.walkMetersPerMinute;
+      final walkMinutes = (distance / pace).round().clamp(1, 30);
       if (walkMinutes != _walkMinutesToOrigin) {
         setState(() => _walkMinutesToOrigin = walkMinutes);
       }
