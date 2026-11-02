@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Smart Commuter Assistant+ — Design 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F8; --surface:#FFFFFF; --line:#E6E9EF;
+    --ink:#0E1521; --ink2:#55627A; --ink3:#8B97AB;
+    --accent:#10367D; --accent-soft:#EDF2FB;
+    --teal:#3EA4B4; --yellow:#F2C200; --red:#E34262; --maroon:#8A1538;
+    --purple:#99168C; --green:#1B6B3A; --amber:#B4791A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#DFE3EA;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;color:var(--ink);padding:36px 40px 48px;-webkit-font-smoothing:antialiased}
+  .head{max-width:1560px;margin:0 auto 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:32px}
+  .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:6px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  h1 span{color:var(--ink3);font-weight:600}
+  .head p{font-size:12px;color:var(--ink2);max-width:420px;text-align:right;line-height:1.55}
+  .grid{display:grid;grid-template-columns:repeat(4,390px);gap:26px 26px;justify-content:center}
+  .col{width:390px}
+  .cap{display:flex;align-items:baseline;justify-content:space-between;margin:0 4px 10px}
+  .cap b{font-size:12.5px;font-weight:700}
+  .cap em{font-style:normal;font-size:10.5px;color:var(--ink3);font-weight:600}
+  .phone{width:390px;height:800px;background:var(--bg);border-radius:34px;overflow:hidden;border:1px solid #D3D9E2;display:flex;flex-direction:column;box-shadow:0 20px 48px -28px rgba(16,32,64,.42)}
+  .sb{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11.5px;font-weight:600;flex:0 0 auto}
+  .sb .d{display:flex;gap:4px}
+  .sb .d i{width:4px;height:4px;border-radius:50%;background:var(--ink);display:block}
+  .body{flex:1 1 auto;overflow:hidden;display:flex;flex-direction:column}
+  .pad{padding:0 22px}
+  .nav{flex:0 0 auto;height:66px;border-top:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:space-around;padding:0 10px}
+  .nav .it{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:var(--ink3);width:64px}
+  .nav .it .ic{width:38px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .nav .it.on{color:var(--accent)}
+  .nav .it.on .ic{background:var(--accent-soft)}
+  .nav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+  .h1{font-size:28px;font-weight:800;letter-spacing:-.04em;line-height:1.08}
+  .h2{font-size:15px;font-weight:800;letter-spacing:-.02em}
+  .sub{font-size:12.5px;color:var(--ink2);line-height:1.4}
+  .tiny{font-size:10.5px;color:var(--ink3);font-weight:600}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .bl{display:inline-flex;align-items:center;justify-content:center;height:20px;min-width:32px;padding:0 7px;border-radius:6px;font-size:9.5px;font-weight:800;letter-spacing:.03em;color:#fff}
+  .bl.teal{background:var(--teal);color:#08333A}
+  .bl.yel{background:var(--yellow);color:#3A2E00}
+  .bl.red{background:var(--red)}
+  .bl.mar{background:var(--maroon)}
+  .bl.pur{background:var(--purple)}
+  .sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 6px}
+  .sec b{font-size:14px;font-weight:800;letter-spacing:-.02em}
+  .sec a{font-size:11.5px;font-weight:700;color:var(--accent);text-decoration:none}
+  .hr{height:1px;background:var(--line)}
+  .row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .time{width:52px;font-size:14.5px;font-weight:800;letter-spacing:-.02em}
+  .min{margin-left:auto;font-size:11px;font-weight:800;color:var(--ink2);background:#EEF1F6;border-radius:7px;padding:4px 8px}
+  .search{display:flex;align-items:center;gap:10px;height:46px;border-radius:13px;background:var(--surface);border:1px solid var(--line);padding:0 14px}
+  .search .mag{width:14px;height:14px;border:2px solid var(--ink3);border-radius:50%;position:relative;flex:0 0 auto}
+  .search .mag::after{content:"";position:absolute;width:2px;height:5px;background:var(--ink3);transform:rotate(45deg);right:-3px;bottom:-3px;border-radius:1px}
+  .search span{font-size:13px;color:var(--ink3);font-weight:500}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:11.5px;font-weight:700;color:var(--ink2)}
+  .chip.on{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:7px}
+  .tag.live{background:#E9F9EF;color:#127A45}
+  .tag.live i{width:5px;height:5px;border-radius:50%;background:#22B573;display:block}
+  .tag.heavy{background:#FEF0EA;color:#C2410C}
+
+  /* home hero */
+  .hero{background:var(--accent);border-radius:22px;padding:20px 20px 18px;color:#fff;margin-top:14px}
+  .hero .top{display:flex;align-items:center;justify-content:space-between}
+  .hero .lab{font-size:10px;letter-spacing:.14em;font-weight:700;color:rgba(255,255,255,.6)}
+  .hero .eta{display:flex;align-items:flex-end;gap:8px;margin-top:14px}
+  .hero .eta b{font-size:48px;line-height:.9;font-weight:800;letter-spacing:-.05em}
+  .hero .eta span{font-size:13px;font-weight:600;color:rgba(255,255,255,.65);padding-bottom:5px}
+  .hero .dest{font-size:12px;color:rgba(255,255,255,.72);margin-top:8px;font-weight:500}
+  .rail{display:flex;align-items:flex-start;margin-top:18px}
+  .rail .nd{width:80px;text-align:center;flex:0 0 80px}
+  .rail .dw{height:16px;display:flex;align-items:center;justify-content:center}
+  .rail .dt{width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.5)}
+  .rail .nd.now .dt{width:17px;height:17px;background:var(--teal);border:3px solid #fff}
+  .rail .nd .nm{font-size:9px;line-height:1.2;margin-top:6px;color:rgba(255,255,255,.65);font-weight:600}
+  .rail .nd.now .nm{color:#fff;font-weight:800}
+  .rail .lk{flex:1;height:2px;background:rgba(255,255,255,.25);margin-top:7px;border-radius:2px}
+  .rail .lk.s{background:rgba(255,255,255,.8)}
+  .hero .btns{display:flex;gap:8px;margin-top:16px}
+  .hero .btns .b{flex:1;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700}
+  .hero .btns .p{background:#fff;color:var(--accent)}
+  .hero .btns .g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+
+  /* spine */
+  .spine{flex:1;overflow:hidden}
+  .leg{display:flex;gap:13px}
+  .leg .tr{width:15px;flex:0 0 15px;display:flex;flex-direction:column;align-items:center}
+  .leg .ring{width:12px;height:12px;border-radius:50%;border:3px solid var(--teal);background:#fff;margin-top:4px;flex:0 0 auto}
+  .leg .ring.f{background:var(--teal);box-shadow:0 0 0 4px rgba(62,164,180,.16)}
+  .leg .ln{width:3px;flex:1;background:var(--teal);border-radius:2px;margin:4px 0}
+  .leg .ct{flex:1;padding-bottom:20px;min-width:0}
+  .leg .r1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .leg .sn{font-size:14px;font-weight:800;letter-spacing:-.02em}
+  .leg .tm{font-size:11.5px;font-weight:800;color:var(--ink2)}
+  .leg .cd{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:.04em;margin-top:2px}
+  .leg .ride{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .leg .ride span{font-size:11px;color:var(--ink2);font-weight:600}
+  .leg .fare{margin-left:auto;font-size:11px;font-weight:800;color:#0F7C8C}
+
+  .ticket{border:1px dashed #CBD4E2;border-radius:13px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;background:#FBFCFE}
+  .ticket b{font-size:11.5px;font-weight:800;display:block}
+  .ticket span{font-size:10.5px;color:var(--ink3);font-weight:600}
+  .ticket .amt{font-size:17px;font-weight:800;letter-spacing:-.02em}
+
+  .btn{height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+  .btn.pri{background:var(--accent);color:#fff}
+  .btn.gho{background:#EFF2F7;color:var(--ink2)}
+
+  /* map */
+  .map{position:relative;flex:1;background:#E8EDF4;overflow:hidden}
+  .map svg{position:absolute;inset:0}
+  .float{position:absolute;left:16px;right:16px;top:12px;display:flex;gap:8px}
+  .float .s{flex:1;display:flex;align-items:center;gap:9px;height:44px;border-radius:13px;background:#fff;padding:0 13px;box-shadow:0 6px 18px -8px rgba(16,32,64,.28)}
+  .float .s span{font-size:12.5px;color:var(--ink3);font-weight:500}
+  .float .f{width:44px;height:44px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px -8px rgba(16,32,64,.28)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 18px;box-shadow:0 -8px 30px -18px rgba(16,32,64,.35)}
+  .grab{width:36px;height:4px;border-radius:2px;background:#D7DCE5;margin:0 auto 14px}
+
+  .pf-head{display:flex;align-items:center;gap:14px;padding:6px 0 18px}
+  .pf-av{width:54px;height:54px;border-radius:18px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:var(--accent)}
+  .list{background:transparent}
+  .li{display:flex;align-items:center;gap:13px;padding:15px 0;border-bottom:1px solid var(--line)}
+  .li .ic{width:32px;height:32px;border-radius:9px;background:#EFF2F7;display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+  .li .tx{flex:1;min-width:0}
+  .li .tx b{display:block;font-size:13px;font-weight:700}
+  .li .tx span{font-size:11px;color:var(--ink3);font-weight:500}
+  .li .ar{color:#B6C0CF;font-size:16px}
+  .sw{width:38px;height:22px;border-radius:11px;background:#DDE3EC;position:relative;flex:0 0 auto}
+  .sw.on{background:var(--accent)}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .sw.on::after{left:19px}
+
+  .auth{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 26px}
+  .mark{width:56px;height:56px;border-radius:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:22px}
+  .field{height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;padding:0 14px;font-size:12.5px;color:var(--ink3);font-weight:500;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div>
+    <div class="eyebrow">Design 02 · current generation</div>
+    <h1>Smart Commuter Assistant+ <span>— every page</span></h1>
+  </div>
+  <p>Exaggerated minimalism: fewer boxes, bigger type, transparent headers, bottom navigation. Colour only in the transit data. Train cues stay quiet — line bullets, tabular times, platform copy.</p>
+</div>
+
+<div class="grid">
+
+  <!-- 1. HOME — no trip -->
+  <div class="col">
+    <div class="cap"><b>Home</b><em>no active trip</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="pad" style="padding-top:6px">
+          <div class="tiny" style="letter-spacing:.12em">MON, 2 NOV</div>
+          <div class="h1" style="margin-top:6px">Where to<br>today?</div>
+          <div class="search" style="margin-top:16px"><div class="mag"></div><span>Where are you going?</span></div>
+        </div>
+        <div class="pad">
+          <div class="sec"><b>Next departures</b><a>All stations</a></div>
+          <div class="tiny" style="margin-bottom:2px">From Putrajaya Sentral</div>
+          <div class="row"><div class="time num">14:28</div><div><div style="display:flex;align-items:center;gap:8px"><span class="bl yel">PYL</span><b style="font-size:12.5px">MRT Putrajaya</b></div><div class="tiny" style="margin-top:3px">Platform 2 · Kajang-bound</div></div><div class="min num">4 min</div></div>
+          <div class="row"><div class="time num">14:38</div><div><div style="display:flex;align-items:center;gap:8px"><span class="bl yel">PYL</span><b style="font-size:12.5px">MRT Putrajaya</b></div><div class="tiny" style="margin-top:3px">Platform 2 · Kajang-bound</div></div><div class="min num">14 min</div></div>
+          <div class="row"><div class="time num">14:48</div><div><div style="display:flex;align-items:center;gap:8px"><span class="bl yel">PYL</span><b style="font-size:12.5px">MRT Putrajaya</b></div><div class="tiny" style="margin-top:3px">Platform 2 · Kajang-bound</div></div><div class="min num">24 min</div></div>
+
+          <div class="sec"><b>Near you</b><a>Crowd</a></div>
+          <div class="row"><div><span class="bl yel">PYL</span></div><div style="flex:1"><b style="font-size:12.5px">Cyberjaya City Centre</b><div class="tiny" style="margin-top:2px">PY40 · 4.9 km</div></div><span class="tag heavy">Heavy</span></div>
+          <div class="row"><div><span class="bl teal">ER7</span></div><div style="flex:1"><b style="font-size:12.5px">Putrajaya Sentral</b><div class="tiny" style="margin-top:2px">PY41 · 1.0 km</div></div><span class="tag live"><i></i>Light</span></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HOME — active trip -->
+  <div class="col">
+    <div class="cap"><b>Home</b><em>active trip</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="pad" style="padding-top:4px">
+          <div class="tiny" style="letter-spacing:.12em">MON, 2 NOV</div>
+          <div class="h1" style="margin-top:6px">On the move.</div>
+        </div>
+        <div class="pad">
+          <div class="hero">
+            <div class="top"><span class="lab">LIVE TRIP</span><span class="tag heavy">Heavy</span></div>
+            <div class="eta"><b class="num">32</b><span>min</span></div>
+            <div class="dest">KL Sentral · arrive 2:58 PM</div>
+            <div class="rail">
+              <div class="nd now"><div class="dw"><div class="dt"></div></div><div class="nm">Putrajaya Sentral</div></div>
+              <div class="lk s"></div>
+              <div class="nd"><div class="dw"><div class="dt"></div></div><div class="nm">Bandar Tasik Selatan</div></div>
+              <div class="lk"></div>
+              <div class="nd"><div class="dw"><div class="dt"></div></div><div class="nm">KL Sentral</div></div>
+            </div>
+            <div class="btns"><div class="b p">Open tracking</div><div class="b g">Map</div></div>
+          </div>
+        </div>
+        <div class="pad">
+          <div class="sec"><b>Next departures</b><a>All</a></div>
+          <div class="row"><div class="time num">14:31</div><div><div style="display:flex;align-items:center;gap:8px"><span class="bl teal">ER7</span><b style="font-size:12.5px">KLIA Transit</b></div><div class="tiny" style="margin-top:3px">Platform 1 · KL Sentral</div></div><div class="min num">3 min</div></div>
+          <div class="row"><div class="time num">14:46</div><div><div style="display:flex;align-items:center;gap:8px"><span class="bl teal">ER7</span><b style="font-size:12.5px">KLIA Transit</b></div><div class="tiny" style="margin-top:3px">Platform 1 · KL Sentral</div></div><div class="min num">18 min</div></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. TRACK — browse -->
+  <div class="col">
+    <div class="cap"><b>Track</b><em>no trip · browse</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="pad" style="padding-top:6px">
+          <div class="h1">Track</div>
+          <div class="sub" style="margin-top:6px">Pick a destination to start.</div>
+          <div class="search" style="margin-top:14px"><div class="mag"></div><span>Search station or line</span></div>
+          <div style="display:flex;gap:7px;margin-top:12px"><span class="chip on">All</span><span class="chip">PYL</span><span class="chip">ER7</span><span class="chip">KJ</span></div>
+        </div>
+        <div class="pad" style="margin-top:6px">
+          <div class="sec"><b>Near you</b><a>Locate</a></div>
+          <div class="row"><div style="display:flex;gap:6px"><span class="bl yel">PYL</span></div><div style="flex:1"><b style="font-size:13px">Putrajaya Sentral</b><div class="tiny" style="margin-top:2px">PY41 · 1.0 km · 13 min walk</div></div><span class="min num">2 min</span></div>
+          <div class="row"><div style="display:flex;gap:6px"><span class="bl yel">PYL</span></div><div style="flex:1"><b style="font-size:13px">Cyberjaya City Centre</b><div class="tiny" style="margin-top:2px">PY40 · 4.9 km</div></div><span class="min num">4 min</span></div>
+          <div class="sec"><b>All stations</b><a>234</a></div>
+          <div class="row"><div><span class="bl red">KJ</span></div><div style="flex:1"><b style="font-size:13px">KL Sentral</b><div class="tiny" style="margin-top:2px">KJ15 · MR1 · ER6 · ER7</div></div><span class="tag heavy">Heavy</span></div>
+          <div class="row"><div><span class="bl mar">PH</span></div><div style="flex:1"><b style="font-size:13px">Bukit Jalil</b><div class="tiny" style="margin-top:2px">SP17</div></div><span class="tag live"><i></i>Light</span></div>
+          <div class="row"><div><span class="bl pur">ER6</span></div><div style="flex:1"><b style="font-size:13px">KLIA T1</b><div class="tiny" style="margin-top:2px">KE2 · KT5</div></div><span class="tiny">48 min</span></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. TRACK — live -->
+  <div class="col">
+    <div class="cap"><b>Track</b><em>active · live timeline</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="pad" style="padding-top:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="h1">Putrajaya → KL Sentral</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <span class="tag live"><i></i>On time</span>
+            <span class="tiny">1 transfer · 21 min ride</span>
+          </div>
+          <div style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div><div class="tiny" style="letter-spacing:.1em">TIME LEFT</div><div class="num" style="font-size:30px;font-weight:800;letter-spacing:-.04em;line-height:1.1">32<span style="font-size:13px;font-weight:600;color:var(--ink3)"> min</span></div></div>
+              <div style="text-align:right"><div class="tiny" style="letter-spacing:.1em">ARRIVE</div><div class="num" style="font-size:15px;font-weight:800">2:58 PM</div></div>
+            </div>
+            <div style="height:5px;border-radius:3px;background:#E3E9F2;margin-top:10px;overflow:hidden"><div style="width:12%;height:100%;background:var(--accent)"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px"><span class="tiny">0%</span><a style="font-size:11px;font-weight:700;color:var(--accent);text-decoration:none">Change destination</a></div>
+          </div>
+        </div>
+        <div class="pad" style="margin-top:10px;flex:1">
+          <div class="spine">
+            <div class="leg"><div class="tr"><div class="ring f"></div><div class="ln"></div></div><div class="ct"><div class="r1"><span class="sn">Putrajaya Sentral</span><span class="tm num">14:44</span></div><div class="cd">START · PY41</div><div class="ride"><span class="bl teal">ER7</span><span>Board KLIA Transit · all stops</span></div></div></div>
+            <div class="leg"><div class="tr"><div class="ring"></div><div class="ln"></div></div><div class="ct"><div class="r1"><span class="sn">Bandar Tasik Selatan</span><span class="tm num">14:56</span></div><div class="cd">SP15 · STAY ON BOARD</div></div></div>
+            <div class="leg"><div class="tr"><div class="ring f"></div></div><div class="ct"><div class="r1"><span class="sn">KL Sentral</span><span class="tm num">15:03</span></div><div class="cd">ARRIVE · KJ15</div></div></div>
+          </div>
+          <div class="hr"></div>
+          <div style="display:flex;gap:10px;margin-top:14px"><div class="btn gho" style="flex:1">End trip</div><div class="btn pri" style="flex:1">Report</div></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. ROUTE DETAIL -->
+  <div class="col">
+    <div class="cap"><b>Route detail</b><em>sheet · spine + fare</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body" style="position:relative">
+        <div style="position:absolute;inset:0;background:#E8EDF4"></div>
+        <svg viewBox="0 0 390 220" style="position:absolute;top:0;left:0;width:390px;height:220px">
+          <g fill="none" stroke-width="5" stroke-linecap="round" opacity=".9">
+            <path d="M-20 150 C 80 120, 150 190, 410 140" stroke="#F2C200"/>
+            <path d="M250 -20 C 210 70, 160 140, 120 220" stroke="#3EA4B4"/>
+          </g>
+          <g fill="#fff" stroke="#8C99AE" stroke-width="2.5"><circle cx="168" cy="120" r="7"/><circle cx="232" cy="118" r="7"/></g>
+        </svg>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 18px">
+          <div class="grab"></div>
+          <div class="h2" style="font-size:17px">Putrajaya Sentral → KL Sentral</div>
+          <div class="tiny" style="margin-top:4px;font-weight:600">Depart now · 3 stations · no transfer</div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <div style="flex:1;background:#F4F6FA;border-radius:10px;padding:9px 11px"><div class="tiny" style="font-size:9px;letter-spacing:.1em">TIME</div><div class="num" style="font-size:14px;font-weight:800">19 min</div></div>
+            <div style="flex:1;background:#F4F6FA;border-radius:10px;padding:9px 11px"><div class="tiny" style="font-size:9px;letter-spacing:.1em">FARE</div><div class="num" style="font-size:14px;font-weight:800">RM 14.00</div></div>
+            <div style="flex:1;background:#F4F6FA;border-radius:10px;padding:9px 11px"><div class="tiny" style="font-size:9px;letter-spacing:.1em">TICKETS</div><div class="num" style="font-size:14px;font-weight:800">1</div></div>
+          </div>
+          <div class="spine" style="margin-top:16px">
+            <div class="leg"><div class="tr"><div class="ring f"></div><div class="ln"></div></div><div class="ct"><div class="r1"><span class="sn">Putrajaya Sentral</span><span class="tm num">12:44</span></div><div class="cd">START · PY41</div><div class="ride"><span class="bl teal">ER7</span><span>KLIA Transit · all stops</span><span class="fare">RM 14.00</span></div></div></div>
+            <div class="leg"><div class="tr"><div class="ring"></div><div class="ln"></div></div><div class="ct"><div class="r1"><span class="sn">Bandar Tasik Selatan</span><span class="tm num">12:56</span></div><div class="cd">SP15 · STAY ON BOARD</div></div></div>
+            <div class="leg"><div class="tr"><div class="ring f"></div></div><div class="ct"><div class="r1"><span class="sn">KL Sentral</span><span class="tm num">13:03</span></div><div class="cd">ARRIVE · KJ15</div></div></div>
+          </div>
+          <div class="ticket"><div><b>1 ticket</b><span>ERL · separate from Rapid KL</span></div><div class="amt num">RM 14.00</div></div>
+          <div style="display:flex;gap:9px;margin-top:12px"><div class="btn gho" style="flex:0 0 96px">Save</div><div class="btn pri" style="flex:1">Start trip</div></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MAP -->
+  <div class="col">
+    <div class="cap"><b>Map</b><em>floating search + sheet</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="map">
+          <svg viewBox="0 0 390 740" preserveAspectRatio="none">
+            <g fill="none" stroke-width="6" stroke-linecap="round" opacity=".85">
+              <path d="M-30 210 C 90 170, 170 260, 430 210" stroke="#F2C200"/>
+              <path d="M300 -20 C 250 120, 180 260, 140 400" stroke="#3EA4B4"/>
+              <path d="M-20 430 C 120 380, 260 470, 420 400" stroke="#E34262"/>
+              <path d="M60 -20 C 90 160, 120 400, 60 760" stroke="#8A1538"/>
+            </g>
+            <g fill="#fff" stroke="#8C99AE" stroke-width="3">
+              <circle cx="150" cy="235" r="8"/><circle cx="232" cy="248" r="8"/><circle cx="196" cy="330" r="8"/><circle cx="120" cy="430" r="8"/>
+            </g>
+            <g fill="#55627A" font-family="Inter,sans-serif" font-size="9" font-weight="700">
+              <text x="163" y="239">KL Sentral</text><text x="244" y="252">Masjid Jamek</text>
+            </g>
+          </svg>
+          <div class="float"><div class="s"><div class="mag"></div><span>Search the network</span></div><div class="f"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#55627A" stroke-width="1.9"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div></div>
+          <div style="position:absolute;left:16px;top:68px;display:flex;gap:7px"><span class="chip on">Transit</span><span class="chip">Geographic</span></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between">
+              <div><div class="h2" style="font-size:17px">KL Sentral</div><div class="tiny" style="margin-top:3px">KJ15 · MR1 · ER6 · ER7</div></div>
+              <span class="tag heavy">Heavy</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px"><span class="bl red">KJ</span><span class="bl mar">MR</span><span class="bl pur">ER6</span><span class="bl teal">ER7</span></div>
+            <div class="hr" style="margin:13px 0"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div class="tiny" style="letter-spacing:.1em">NEXT TRAIN</div><div style="font-size:12.5px;font-weight:700;margin-top:2px">Kelana Jaya · Platform 2</div></div><div class="num" style="font-size:17px;font-weight:800">3 min</div></div>
+            <div style="display:flex;gap:9px;margin-top:13px"><div class="btn gho" style="flex:0 0 96px">Info</div><div class="btn pri" style="flex:1">Plan from here</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. PROFILE -->
+  <div class="col">
+    <div class="cap"><b>Profile</b><em>settings</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="pad" style="padding-top:6px">
+          <div class="h1">Profile</div>
+          <div class="pf-head">
+            <div class="pf-av">N</div>
+            <div><div style="font-size:15px;font-weight:800">Nawfal</div><div class="tiny" style="margin-top:2px">Guest · not synced</div></div>
+          </div>
+          <div class="sec" style="margin-top:0"><b>Preferences</b></div>
+          <div class="list">
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18"/></svg></div><div class="tx"><b>Language</b><span>English · Bahasa · 中文 · தமிழ்</span></div><span class="ar">›</span></div>
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 14.5A8 8 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></div><div class="tx"><b>Dark mode</b><span>Follow the system</span></div><div class="sw"></div></div>
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><circle cx="12" cy="12" r="3.2"/></svg></div><div class="tx"><b>Larger text</b><span>Higher contrast and scale</span></div><div class="sw"></div></div>
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></div><div class="tx"><b>Notifications</b><span>Departures and delays</span></div><div class="sw on"></div></div>
+          </div>
+          <div class="sec"><b>Data</b></div>
+          <div class="list">
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 7h16v12H4z"/><path d="M4 7l2-3h12l2 3"/></svg></div><div class="tx"><b>Offline mode</b><span>Cache schedules on device</span></div><div class="sw on"></div></div>
+            <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l7 4v5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V7Z"/></svg></div><div class="tx"><b>Privacy</b><span>Location, ML training, data</span></div><span class="ar">›</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></div>Home</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg></div>Map</div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a4 4 0 0 0 0 8h5.6"/></svg></div>Track</div>
+        <div class="it on"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></div>Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. AUTH -->
+  <div class="col">
+    <div class="cap"><b>Sign in</b><em>first run</em></div>
+    <div class="phone">
+      <div class="sb"><span class="num">9:41</span><span class="d"><i></i><i></i><i></i></span></div>
+      <div class="body">
+        <div class="auth">
+          <div class="mark"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M8 20.5l2-4M16 20.5l-2-4M5 10h14"/></svg></div>
+          <div class="h1" style="font-size:26px">Your commute,<br>without the guess.</div>
+          <div class="sub" style="margin-top:8px">Live crowds, real fares, and an ETA that doesn’t drift.</div>
+          <div style="margin-top:22px">
+            <div class="field">Email address</div>
+            <div class="field">Password</div>
+            <div class="btn pri" style="margin-top:14px">Sign in</div>
+            <div style="text-align:center;margin-top:14px"><span class="tiny">Continue as guest</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
