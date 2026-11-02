@@ -27,15 +27,12 @@ class AppPageTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final highlight = accentColor ?? theme.colorScheme.primary;
-    final titleStyle = theme.appBarTheme.titleTextStyle ??
-        theme.textTheme.titleLarge?.copyWith(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
+    final titleStyle = theme.textTheme.headlineSmall?.copyWith(
+          fontSize: 20,
+          color: theme.colorScheme.onSurface,
         ) ??
-        const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
-        );
+        theme.appBarTheme.titleTextStyle ??
+        const TextStyle(fontSize: 20, fontWeight: FontWeight.w800);
 
     return Row(
       children: [
@@ -62,20 +59,12 @@ class AppPageTitle extends StatelessWidget {
                     TextSpan(
                       text: '$leadingText ',
                       style: titleStyle.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
                         color: theme.colorScheme.onSurface,
                       ),
                     ),
                     TextSpan(
                       text: accentText,
-                      style: titleStyle.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                        color: highlight,
-                      ),
+                      style: titleStyle.copyWith(color: highlight),
                     ),
                   ],
                 ),
