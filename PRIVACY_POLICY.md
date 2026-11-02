@@ -1,6 +1,6 @@
 # Privacy Policy — Smart Commuter Assistant+
 
-**Last updated:** 29 September 2026
+**Last updated:** 30 September 2026
 
 Smart Commuter Assistant+ ("the app") is a Klang Valley rail transit companion
 that provides route planning, crowd forecasts, and journey tracking. This policy
@@ -47,22 +47,27 @@ We do **not** sell your data.
 ## 4. Data retention
 
 - Account data is retained until you delete your account.
-- Crowd reports are retained to power crowd forecasting (location rounded to ~1 km).
+- Crowd reports are retained in unlinked, anonymised form to power community crowd forecasting (location rounded to ~1 km).
 - Trip feedback is retained only while you have granted model-training consent;
   withdrawing consent excludes your data from all future training runs.
 
 ## 5. Your rights & account deletion
 
-You can delete your data at any time from **Profile → Delete my data** in the app.
-This permanently removes your anonymous device profile, contributed reports and
-trip feedback. There is no account to delete unless you voluntarily created one.
+You can delete your data at any time from **Profile → Delete my data** (or
+**Delete Account** if you created one) in the app. This removes your anonymous
+device profile, your account and login credentials, and your trip feedback.
+Your contributed crowd and delay reports are unlinked from your identity and
+retained in anonymised form so community crowd forecasts stay accurate for
+other riders.
 
 You can withdraw model-training consent at any time in **Profile → Improve
 predictions with my trip data**; your data is then excluded from all future
 training runs.
 
-If you are unable to open the app, you may request deletion at:
-**https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues**.
+If you are unable to open the app, you may request deletion at
+**https://dataminingsoftware.github.io/SmartCommuterAssistance/delete-account.html**
+or by emailing **mnawfalbn@gmail.com**. We process deletion requests within
+30 days.
 
 ## 6. Children's privacy
 
@@ -71,7 +76,10 @@ from children under 13.
 
 ## 7. Contact
 
-Questions about this policy: **https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues**
+Questions about this policy: **mnawfalbn@gmail.com**
+
+You can also reach us via the issue tracker:
+**https://github.com/DataMiningSoftware/SmartCommuterAssistance/issues**
 
 > **Disclaimer:** Smart Commuter Assistant+ is an independent, unofficial app and
 > is not affiliated with, endorsed by, or sponsored by Rapid KL or Prasarana Malaysia.

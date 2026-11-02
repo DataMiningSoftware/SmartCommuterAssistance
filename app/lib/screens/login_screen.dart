@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
 import 'phone_signin_screen.dart';
@@ -61,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -75,25 +77,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const AppLogo(),
                     const SizedBox(height: 28),
-                    const Text(
-                      'Welcome back',
+                    Text(
+                      l10n.loginWelcome,
                       style:
-                          TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                          const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Login to view forecasts, routes, and your travel history.',
-                      style: TextStyle(color: Color(0xFF667085)),
+                    Text(
+                      l10n.loginSubtitle,
+                      style: const TextStyle(color: Color(0xFF667085)),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration:
+                          InputDecoration(labelText: l10n.emailLabel),
                       validator: (value) {
                         final v = value?.trim() ?? '';
-                        if (v.isEmpty) return 'Email is required';
-                        if (!v.contains('@')) return 'Enter a valid email';
+                        if (v.isEmpty) return l10n.emailRequired;
+                        if (!v.contains('@')) return l10n.emailInvalid;
                         return null;
                       },
                     ),
@@ -101,10 +104,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration:
+                          InputDecoration(labelText: l10n.passwordLabel),
                       validator: (value) {
                         if ((value ?? '').isEmpty) {
-                          return 'Password is required';
+                          return l10n.passwordRequired;
                         }
                         return null;
                       },
@@ -112,13 +116,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _loading ? null : _login,
-                      child: Text(_loading ? 'Signing in…' : 'Login'),
+                      child: Text(
+                          _loading ? l10n.signingIn : l10n.loginButton),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: _loading ? null : _googleSignIn,
                       icon: const Icon(Icons.g_mobiledata, size: 26),
-                      label: const Text('Sign in with Google'),
+                      label: Text(l10n.signInWithGoogleButton),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
@@ -130,19 +135,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 await _authService.enterGuestMode();
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Guest mode enabled. You can continue without an account.',
-                                    ),
+                                  SnackBar(
+                                    content: Text(l10n.guestModeEnabled),
                                   ),
                                 );
                               } catch (_) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Unable to enter guest mode right now. Please try again.',
-                                    ),
+                                  SnackBar(
+                                    content: Text(l10n.guestModeFailed),
                                   ),
                                 );
                               } finally {
@@ -151,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               }
                             },
-                      child: const Text('Continue as guest'),
+                      child: Text(l10n.continueAsGuestButton),
                     ),
                     const SizedBox(height: 8),
                     TextButton(
@@ -162,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 MaterialPageRoute(
                                     builder: (_) => const SignUpScreen()),
                               ),
-                      child: const Text('Create account'),
+                      child: Text(l10n.createAccountButton),
                     ),
                     TextButton(
                       onPressed: _loading
@@ -172,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 MaterialPageRoute(
                                     builder: (_) => const PhoneSignInScreen()),
                               ),
-                      child: const Text('Sign in with phone'),
+                      child: Text(l10n.signInWithPhoneButton),
                     ),
                   ],
                 ),

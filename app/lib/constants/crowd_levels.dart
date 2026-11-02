@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 class CrowdLevelStyle {
   final String label;
   final Color color;
@@ -101,5 +103,22 @@ CrowdLevelStyle crowdLevelStyleFromLabel(String? label) {
 }
 
 String crowdLevelLabel(int level) => crowdLevelStyleFromIndex(level).label;
+
+String localizedCrowdLevelLabel(AppLocalizations l10n, int level) {
+  switch (level) {
+    case 1:
+      return l10n.crowdLevelEmpty;
+    case 2:
+      return l10n.crowdLevelLight;
+    case 3:
+      return l10n.crowdLevelModerate;
+    case 4:
+      return l10n.crowdLevelHeavy;
+    case 5:
+      return l10n.crowdLevelCrowded;
+    default:
+      return l10n.crowdLevelUnknown;
+  }
+}
 
 Color crowdLevelColor(int level) => crowdLevelStyleFromIndex(level).color;

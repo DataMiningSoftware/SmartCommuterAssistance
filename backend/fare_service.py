@@ -56,8 +56,8 @@ def _erl_lookup(line: str, from_stop: str, to_stop: str) -> float | None:
     return table.get(f"{to_stop}|{from_stop}")
 
 
-def _estimate(distance_km: float, transfer_count: int) -> float:
-    fare = ESTIMATE_BASE + distance_km * ESTIMATE_PER_KM + transfer_count * ESTIMATE_PER_TRANSFER
+def _estimate(distance_km: float) -> float:
+    fare = ESTIMATE_BASE + distance_km * ESTIMATE_PER_KM
     return round(min(max(fare, ESTIMATE_MIN), ESTIMATE_MAX), 2)
 
 
@@ -66,7 +66,6 @@ def compute_fare(edges: Iterable, stops_by_id: Dict) -> float:
     if not edge_list:
         return 0.0
 
-    transfer_count = sum(1 for edge in edge_list if edge.is_transfer)
     erl_total = 0.0
     other_distance = 0.0
     index = 0
@@ -104,6 +103,6 @@ def compute_fare(edges: Iterable, stops_by_id: Dict) -> float:
     if erl_total > 0:
         estimate = 0.0
         if other_distance > 0:
-            estimate = _estimate(other_distance, transfer_count)
+            estimate = _estimate(other_distance)
         return round(erl_total + estimate, 2)
-    return _estimate(other_distance, transfer_count)
+    return _estimate(other_distance)

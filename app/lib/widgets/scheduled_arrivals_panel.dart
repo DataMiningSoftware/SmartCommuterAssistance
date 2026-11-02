@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/gtfs_local_service.dart';
 import '../services/train_arrival_service.dart';
 
@@ -222,6 +223,7 @@ class _ScheduledArrivalsPanelState extends State<ScheduledArrivalsPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final title = widget.stationName?.trim().isNotEmpty == true
         ? widget.stationName!.trim()
         : _result?.stopName ?? widget.stopId;
@@ -234,7 +236,7 @@ class _ScheduledArrivalsPanelState extends State<ScheduledArrivalsPanel> {
         children: [
           Row(
             children: [
-              const CRTText('NEXT TRAIN', fontSize: 11, dim: true),
+              CRTText(l10n.arrivalsNextTrain, fontSize: 11, dim: true),
               const Spacer(),
               if (!widget.compact)
                 CRTText(
@@ -265,34 +267,47 @@ class _ScheduledArrivalsPanelState extends State<ScheduledArrivalsPanel> {
             Expanded(
               child: GestureDetector(
                 onTap: _refresh,
-                child: const Center(child: CRTText('SIGNAL LOST — TAP TO RETRY', dim: true, fontSize: 11)),
+                child: Center(
+                  child: CRTText(
+                    l10n.arrivalsSignalLost,
+                    dim: true,
+                    fontSize: 11,
+                  ),
+                ),
               ),
             )
           else if (_arrivals == null || _arrivals!.isEmpty)
-            const Expanded(
+            Expanded(
               child: Center(
-                child: CRTText('NO SCHEDULED TRAINS', dim: true, fontSize: 11),
+                child: CRTText(
+                  l10n.arrivalsNoScheduledTrains,
+                  dim: true,
+                  fontSize: 11,
+                ),
               ),
             )
           else
             Expanded(
-              child: _buildGroupedArrivals(_arrivals!),
+              child: _buildGroupedArrivals(l10n, _arrivals!),
             ),
           const SizedBox(height: 4),
           if (_errorMessage != null)
-            const CRTText('OFFLINE — STATIC SCHEDULE', fontSize: 8, dim: true)
+            CRTText(l10n.arrivalsOfflineStaticSchedule, fontSize: 8, dim: true)
           else
-            const CRTText('GTFS STATIC SCHEDULE', fontSize: 8, dim: true),
+            CRTText(l10n.arrivalsGtfsStaticSchedule, fontSize: 8, dim: true),
         ],
       ),
     );
   }
 
-  Widget _buildGroupedArrivals(List<ScheduledTrainArrival> arrivals) {
+  Widget _buildGroupedArrivals(
+    AppLocalizations l10n,
+    List<ScheduledTrainArrival> arrivals,
+  ) {
     final groups = _groupByDirection(arrivals);
     if (groups.isEmpty) {
-      return const Center(
-        child: CRTText('NO SCHEDULED TRAINS', dim: true, fontSize: 11),
+      return Center(
+        child: CRTText(l10n.arrivalsNoScheduledTrains, dim: true, fontSize: 11),
       );
     }
     return ListView.separated(
@@ -393,6 +408,7 @@ class _CRTDirectionBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final first = trains.first;
     final routeColor = getRouteColor(first.routeId);
     final routeName = normalizeRouteId(first.routeShortName);
@@ -420,7 +436,7 @@ class _CRTDirectionBlock extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'TO $label',
+                l10n.arrivalsToDestination(label),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -459,7 +475,7 @@ class _CRTDirectionBlock extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                 ],
-                _countdownChip(trains[i], highlight: i == 0),
+                _countdownChip(l10n, trains[i], highlight: i == 0),
               ],
             ],
           ),
@@ -468,13 +484,18 @@ class _CRTDirectionBlock extends StatelessWidget {
     );
   }
 
-  Widget _countdownChip(ScheduledTrainArrival a, {required bool highlight}) {
+  Widget _countdownChip(
+    AppLocalizations l10n,
+    ScheduledTrainArrival a, {
+    required bool highlight,
+  }) {
     final blink = blinks[_arrivalKeyOf(a)];
     final secondsPassed = a.arrivalTime.difference(DateTime.now()).inSeconds;
     final minutesLeft = a.arrivalTime.difference(DateTime.now()).inMinutes;
     final departed = secondsPassed < -60;
     final arriving = secondsPassed >= 0 && secondsPassed < 60;
-    final text = arriving ? 'ARRIVING' : '$minutesLeft min';
+    final text =
+        arriving ? l10n.arrivalsArriving : l10n.arrivalsMinutesShort(minutesLeft);
 
     var opacity = 1.0;
     if (blink != null) opacity = blink % 2 == 1 ? 0.12 : 1.0;

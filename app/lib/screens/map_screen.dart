@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/map_station.dart';
 import '../models/schematic_layout.dart';
 import '../models/transit_graph.dart';
@@ -192,7 +193,7 @@ class _MapScreenState extends State<MapScreen>
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorText = 'Failed to load map data: $e';
+        _errorText = e.toString();
       });
     }
   }
@@ -268,51 +269,53 @@ class _MapScreenState extends State<MapScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 78,
-        title: const AppPageTitle(
+        title: AppPageTitle(
           icon: Icons.map_rounded,
           leadingText: 'Rail',
           accentText: 'Map',
-          subtitle: 'Geographic and schematic views',
+          subtitle: l10n.mapSubtitle,
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(58),
-          child: _buildModeSwitch(),
+          child: _buildModeSwitch(l10n),
         ),
       ),
       body: _errorText != null
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(_errorText!, textAlign: TextAlign.center),
+                    child: Text(l10n.mapLoadFailed(_errorText!),
+                        textAlign: TextAlign.center),
                   ),
                 )
               : _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _mode == _MapMode.schematic
                       ? _buildSchematicView()
-                      : _buildGeographicView(),
+                      : _buildGeographicView(l10n),
     );
   }
 
-  Widget _buildModeSwitch() {
+  Widget _buildModeSwitch(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: Align(
         alignment: Alignment.centerLeft,
         child: SegmentedButton<_MapMode>(
-          segments: const [
+          segments: [
             ButtonSegment<_MapMode>(
               value: _MapMode.geographic,
-              icon: Icon(Icons.public_rounded),
-              label: Text('Geographic'),
+              icon: const Icon(Icons.public_rounded),
+              label: Text(l10n.mapGeographic),
             ),
             ButtonSegment<_MapMode>(
               value: _MapMode.schematic,
-              icon: Icon(Icons.schema_rounded),
-              label: Text('Transit map'),
+              icon: const Icon(Icons.schema_rounded),
+              label: Text(l10n.mapTransitMap),
             ),
           ],
           selected: {_mode},
@@ -345,7 +348,7 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  Widget _buildGeographicView() {
+  Widget _buildGeographicView(AppLocalizations l10n) {
     if (_controller == null) return const SizedBox.shrink();
     final segments = _routeSegments();
     final hasRoute = _controller!.isRouteActive;
@@ -396,7 +399,7 @@ class _MapScreenState extends State<MapScreen>
                 animation: _pulse,
                 builder: (context, _) => MarkerLayer(
                   markers: _buildStationMarkers(
-                      routeStationIds, hasRoute, _pulse.value),
+                      l10n, routeStationIds, hasRoute, _pulse.value),
                 ),
               ),
             ],
@@ -477,7 +480,7 @@ class _MapScreenState extends State<MapScreen>
     return polylines;
   }
 
-  List<Marker> _buildStationMarkers(
+  List<Marker> _buildStationMarkers(AppLocalizations l10n,
       Set<String> routeStationIds, bool hasRoute, double blink) {
     final showLabels = _geoZoom >= _labelZoomThreshold;
     final markers = <Marker>[];
@@ -522,7 +525,7 @@ class _MapScreenState extends State<MapScreen>
         alignment: Alignment.center,
         child: Semantics(
           label: StationNameMatcher.instance.displayName(station.name),
-          hint: 'Station',
+          hint: l10n.mapStationHint,
           button: true,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,

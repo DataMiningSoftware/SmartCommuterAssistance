@@ -9,8 +9,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/database_service.dart';
+import '../services/fare_service.dart';
 import '../services/station_service.dart';
 import '../services/transit_network_service.dart';
 import '../widgets/scheduled_arrivals_panel.dart';
@@ -233,11 +235,12 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   Future<void> _findNearestStations() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isFindingNearest = true);
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _showMessage('Location services are disabled.');
+        _showMessage(l10n.stationsLocationServicesDisabled);
         return;
       }
 
@@ -246,12 +249,11 @@ class _StationsScreenState extends State<StationsScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied) {
-        _showMessage('Location permission denied.');
+        _showMessage(l10n.stationsLocationPermissionDenied);
         return;
       }
       if (permission == LocationPermission.deniedForever) {
-        _showMessage(
-            'Location permission denied forever. Enable it in settings.');
+        _showMessage(l10n.stationsLocationPermissionDeniedForever);
         return;
       }
 
@@ -263,17 +265,21 @@ class _StationsScreenState extends State<StationsScreen> {
       setState(() => _userPosition = position);
       final nearest = _sortByDistance(position);
       if (nearest == null) {
-        _showMessage('No valid stop_lat/stop_lon found to calculate distance.');
+        _showMessage(l10n.stationsNoValidCoordinates);
         return;
       }
       final nearestName = _stationName(nearest);
       final nearestDistance = _distanceMeters(nearest, position)!;
       _showMessage(
-        'Nearest: $nearestName (${_StationCard._formatDistance(nearestDistance)}) '
-        'at ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
+        l10n.stationsNearestMessage(
+          nearestName,
+          _StationCard._formatDistance(nearestDistance),
+          position.latitude.toStringAsFixed(5),
+          position.longitude.toStringAsFixed(5),
+        ),
       );
     } catch (e) {
-      _showMessage('Failed to get location: $e');
+      _showMessage(l10n.stationsLocationFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _isFindingNearest = false);
     }
@@ -282,9 +288,10 @@ class _StationsScreenState extends State<StationsScreen> {
   Future<Position?> _ensureCurrentPosition() async {
     if (_userPosition != null) return _userPosition;
 
+    final l10n = AppLocalizations.of(context);
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      _showMessage('Location services are disabled.');
+      _showMessage(l10n.stationsLocationServicesDisabled);
       return null;
     }
 
@@ -293,12 +300,11 @@ class _StationsScreenState extends State<StationsScreen> {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.denied) {
-      _showMessage('Location permission denied.');
+      _showMessage(l10n.stationsLocationPermissionDenied);
       return null;
     }
     if (permission == LocationPermission.deniedForever) {
-      _showMessage(
-          'Location permission denied forever. Enable it in settings.');
+      _showMessage(l10n.stationsLocationPermissionDeniedForever);
       return null;
     }
 
@@ -337,10 +343,49 @@ class _StationsScreenState extends State<StationsScreen> {
           .toList();
       if (maps.isEmpty) return;
       await _databaseService.cacheRouteConnections(maps);
-      _routeEdgesCache = _mapRowsToEdges(maps);
+      final synced = _mapRowsToEdges(maps);
+      final merged = <String, _RouteEdge>{};
+      for (final edge in synced) {
+        merged[_routeEdgeKey(edge)] = edge;
+      }
+      for (final edge in _routeEdgesCache ?? const <_RouteEdge>[]) {
+        merged.putIfAbsent(_routeEdgeKey(edge), () => edge);
+      }
+      _routeEdgesCache = merged.values.toList();
     } catch (_) {
       // Keep silent. Offline fallback reads existing local cache.
     }
+  }
+
+  String _routeEdgeKey(_RouteEdge edge) {
+    return '${edge.fromStopId.trim().toUpperCase()}|'
+        '${edge.toStopId.trim().toUpperCase()}|'
+        '${normalizeRouteId(edge.routeId)}';
+  }
+
+  Future<List<_RouteEdge>> _mergeWithBundledNetwork(
+    List<_RouteEdge> edges,
+  ) async {
+    final merged = <String, _RouteEdge>{};
+    for (final edge in edges) {
+      merged[_routeEdgeKey(edge)] = edge;
+    }
+    try {
+      final network = await _transitNetworkService.loadNetwork();
+      for (final connection in network.connections) {
+        final edge = _RouteEdge(
+          fromStopId: connection.fromStopId,
+          toStopId: connection.toStopId,
+          routeId: connection.routeId,
+          travelMinutes: connection.travelMinutes,
+          connectionType: connection.connectionType,
+        );
+        merged.putIfAbsent(_routeEdgeKey(edge), () => edge);
+      }
+    } catch (_) {
+      return edges;
+    }
+    return merged.values.toList();
   }
 
   List<_RouteEdge> _mapRowsToEdges(List<Map<String, dynamic>> rows) {
@@ -372,12 +417,13 @@ class _StationsScreenState extends State<StationsScreen> {
   Future<void> _planRouteToStation(
       Map<String, dynamic> destinationStation) async {
     if (_isPlanningRoute) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isPlanningRoute = true);
     try {
       final destinationStopIds =
           _destinationStopIdsForStation(destinationStation);
       if (destinationStopIds.isEmpty) {
-        _showMessage('Selected station is missing stop_id.');
+        _showMessage(l10n.stationsMissingStopId);
         return;
       }
 
@@ -386,13 +432,13 @@ class _StationsScreenState extends State<StationsScreen> {
 
       final originStation = _nearestStationFromPosition(position);
       if (originStation == null) {
-        _showMessage('Could not determine nearest origin station.');
+        _showMessage(l10n.stationsNearestOriginFailed);
         return;
       }
 
       final originStopId = _stationStopId(originStation);
       if (destinationStopIds.contains(originStopId)) {
-        _showMessage('You are already nearest to this station.');
+        _showMessage(l10n.stationsAlreadyAtStation);
         return;
       }
 
@@ -404,7 +450,9 @@ class _StationsScreenState extends State<StationsScreen> {
 
       // Keep local cache fresh when online. Failures are ignored.
       await _syncRouteConnectionsCache();
-      final cachedEdges = await _loadRouteConnections();
+      final cachedEdges = await _mergeWithBundledNetwork(
+        await _loadRouteConnections(),
+      );
 
       final rpcResult = await _tryBestRpcRoute(
         originStopId: originStopId,
@@ -439,8 +487,7 @@ class _StationsScreenState extends State<StationsScreen> {
             _planDisruptionImpact(rpcResult.plan.edges, activeDisruptions);
         final localImpact = _planDisruptionImpact(
             bestLocalPlan?.edges ?? const <_RouteEdge>[], activeDisruptions);
-        if (activeDisruptions.isNotEmpty &&
-            bestLocalPlan != null &&
+        if (bestLocalPlan != null &&
             (localImpact < rpcImpact ||
                 (localImpact == rpcImpact &&
                     bestLocalPlan.totalMinutes <
@@ -448,20 +495,18 @@ class _StationsScreenState extends State<StationsScreen> {
           plan = bestLocalPlan;
           resolvedDestinationStopId =
               bestLocalDestination ?? destinationStopIds.first;
-          routeSource = 'Disruption-aware reroute (local)';
+          routeSource = l10n.stationsRouteSourceDisruptionLocal;
           usedDisruptionReroute = true;
         } else {
           plan = rpcResult.plan;
           resolvedDestinationStopId = rpcResult.destinationStopId;
           routeSource = activeDisruptions.isNotEmpty
-              ? 'Supabase RPC (service alerts active)'
-              : 'Supabase RPC';
+              ? l10n.stationsRouteSourceRpcAlerts
+              : l10n.stationsRouteSourceRpc;
         }
       } else {
         if (cachedEdges.isEmpty) {
-          _showMessage(
-            'No offline route cache available. Go online once to sync route_connections.',
-          );
+          _showMessage(l10n.stationsNoOfflineRouteCache);
           return;
         }
         plan = bestLocalPlan;
@@ -469,26 +514,28 @@ class _StationsScreenState extends State<StationsScreen> {
             bestLocalDestination ?? destinationStopIds.first;
         usedDisruptionReroute = activeDisruptions.isNotEmpty;
         routeSource = activeDisruptions.isNotEmpty
-            ? 'Disruption-aware route graph'
-            : 'Supabase route graph cache (RPC unavailable)';
+            ? l10n.stationsRouteSourceDisruptionGraph
+            : l10n.stationsRouteSourceGraphCache;
       }
       final resolvedPlan = plan;
       if (resolvedPlan == null) {
         _showMessage(
-            'No route found from $originStopId to ${destinationStopIds.first}.');
+            l10n.stationsNoRouteFoundFromTo(originStopId, destinationStopIds.first));
         return;
       }
 
       final walkMeters = _distanceMeters(originStation, position);
       final namesByStopId = _stationNamesByStopId();
       final groupedSegments = _buildRouteSegments(resolvedPlan.edges);
+      final fareBreakdown = _fareBreakdownForSegments(
+        groupedSegments,
+        _stopCoordinatesById(),
+      );
       final baseRouteMinutes =
           groupedSegments.fold<int>(0, (sum, segment) => sum + segment.minutes);
       final normalizedWalkMeters = _normalizeWalkMeters(walkMeters);
       if (walkMeters != null && normalizedWalkMeters == null) {
-        _showMessage(
-          'Current location is far from supported stations. Walk distance is hidden from ETA.',
-        );
+        _showMessage(l10n.stationsWalkHiddenFarFromStations);
       }
       final timeline = await _buildRouteTimeline(
         originStopId: originStopId,
@@ -515,6 +562,7 @@ class _StationsScreenState extends State<StationsScreen> {
             totalStops: resolvedPlan.edges.length,
             segmentPlans: timeline.segmentPlans,
             namesByStopId: namesByStopId,
+            fare: fareBreakdown,
             routeSource: routeSource,
             activeDisruptions: activeDisruptions,
             usedDisruptionReroute: usedDisruptionReroute,
@@ -522,7 +570,7 @@ class _StationsScreenState extends State<StationsScreen> {
         },
       );
     } catch (e) {
-      _showMessage('Failed to plan route: $e');
+      _showMessage(l10n.stationsPlanRouteFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _isPlanningRoute = false);
     }
@@ -748,6 +796,7 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   List<_ServiceDisruption> _activeDisruptionsFor(DateTime departureTime) {
+    final l10n = AppLocalizations.of(context);
     final disruptions = <_ServiceDisruption>[];
     final hour = departureTime.hour;
     final isWeekend = departureTime.weekday == DateTime.saturday ||
@@ -756,10 +805,10 @@ class _StationsScreenState extends State<StationsScreen> {
     if (!isWeekend &&
         ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) {
       disruptions.add(
-        const _ServiceDisruption(
+        _ServiceDisruption(
           routeId: 'KJ',
-          title: 'Peak crowd control on Kelana Jaya Line',
-          detail: 'Expect longer dwell times during rush-hour boarding.',
+          title: l10n.stationsDisruptionKjTitle,
+          detail: l10n.stationsDisruptionKjDetail,
           penaltyMinutes: 8,
         ),
       );
@@ -767,10 +816,10 @@ class _StationsScreenState extends State<StationsScreen> {
 
     if (!isWeekend && hour >= 12 && hour <= 14) {
       disruptions.add(
-        const _ServiceDisruption(
+        _ServiceDisruption(
           routeId: 'AG',
-          title: 'Platform congestion on Ampang Line',
-          detail: 'Midday crowding may slow boarding and transfers.',
+          title: l10n.stationsDisruptionAgTitle,
+          detail: l10n.stationsDisruptionAgDetail,
           penaltyMinutes: 5,
         ),
       );
@@ -778,10 +827,10 @@ class _StationsScreenState extends State<StationsScreen> {
 
     if (hour >= 21 || hour <= 5) {
       disruptions.add(
-        const _ServiceDisruption(
+        _ServiceDisruption(
           routeId: 'MR',
-          title: 'Reduced Monorail frequency',
-          detail: 'Late-evening headways are wider than usual.',
+          title: l10n.stationsDisruptionMrTitle,
+          detail: l10n.stationsDisruptionMrDetail,
           penaltyMinutes: 6,
         ),
       );
@@ -866,6 +915,7 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   Future<DateTime?> _pickDepartureDateTime() async {
+    final l10n = AppLocalizations.of(context);
     final mode = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -878,13 +928,13 @@ class _StationsScreenState extends State<StationsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'When do you want to depart?',
+                  l10n.stationsWhenDepartTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Choose now or pick a specific date and time.',
-                  style: TextStyle(color: Color(0xFF667085)),
+                Text(
+                  l10n.stationsChooseDepartSubtitle,
+                  style: const TextStyle(color: Color(0xFF667085)),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -892,7 +942,7 @@ class _StationsScreenState extends State<StationsScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pop('now'),
                     icon: const Icon(Icons.access_time_rounded),
-                    label: const Text('Leave Now'),
+                    label: Text(l10n.stationsLeaveNowButton),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -901,7 +951,7 @@ class _StationsScreenState extends State<StationsScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop('pick'),
                     icon: const Icon(Icons.event_rounded),
-                    label: const Text('Choose Date & Time'),
+                    label: Text(l10n.stationsChooseDateTimeButton),
                   ),
                 ),
               ],
@@ -943,7 +993,7 @@ class _StationsScreenState extends State<StationsScreen> {
       pickedTime.minute,
     );
     if (selected.isBefore(now)) {
-      _showMessage('Selected time is in the past. Using current time instead.');
+      _showMessage(l10n.stationsSelectedTimeInPast);
       return now;
     }
     return selected;
@@ -1158,6 +1208,50 @@ class _StationsScreenState extends State<StationsScreen> {
     );
   }
 
+  Map<String, ({double lat, double lon})> _stopCoordinatesById() {
+    final coordinates = <String, ({double lat, double lon})>{};
+    for (final row in _allStopsRaw) {
+      final id = _stationStopId(row);
+      if (id.isEmpty || id == 'N/A') continue;
+      final lat = _toDouble(row['stop_lat']);
+      final lon = _toDouble(row['stop_lon']);
+      if (lat == null || lon == null) continue;
+      coordinates[id] = (lat: lat, lon: lon);
+    }
+    return coordinates;
+  }
+
+  FareBreakdown _fareBreakdownForSegments(
+    List<_RouteSegment> segments,
+    Map<String, ({double lat, double lon})> coordinates,
+  ) {
+    final inputs = <FareSegmentInput>[];
+    for (final segment in segments) {
+      if (segment.connectionType.toLowerCase().contains('transfer')) continue;
+      final from = coordinates[segment.fromStopId];
+      final to = coordinates[segment.toStopId];
+      var distanceKm = 0.0;
+      if (from != null && to != null) {
+        distanceKm = Geolocator.distanceBetween(
+              from.lat,
+              from.lon,
+              to.lat,
+              to.lon,
+            ) /
+            1000;
+      }
+      inputs.add(
+        FareSegmentInput(
+          line: segment.routeId,
+          fromStopId: segment.fromStopId,
+          toStopId: segment.toStopId,
+          distanceKm: distanceKm,
+        ),
+      );
+    }
+    return FareService.forSegments(inputs);
+  }
+
   static double? _toDouble(dynamic value) {
     if (value == null) return null;
     if (value is num) return value.toDouble();
@@ -1166,14 +1260,15 @@ class _StationsScreenState extends State<StationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Station Atlas'),
+        title: Text(l10n.stationsTitle),
         actions: [
           IconButton(
             onPressed: _isFindingNearest ? null : _findNearestStations,
             icon: const Icon(Icons.my_location_rounded),
-            tooltip: 'Nearest',
+            tooltip: l10n.stationsNearestTooltip,
           ),
 
           if (_isPlanningRoute)
@@ -1197,6 +1292,7 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   Widget _buildStationsContent(AsyncSnapshot<void> snapshot) {
+    final l10n = AppLocalizations.of(context);
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const _StationsSkeleton();
     }
@@ -1208,7 +1304,7 @@ class _StationsScreenState extends State<StationsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search by station, line, or code',
+              hintText: l10n.stationsSearchHint,
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _searchController.text.isEmpty
                   ? null
@@ -1218,7 +1314,7 @@ class _StationsScreenState extends State<StationsScreen> {
                         FocusScope.of(context).unfocus();
                       },
                       icon: const Icon(Icons.close_rounded),
-                      tooltip: 'Clear search',
+                      tooltip: l10n.stationsClearSearch,
                     ),
             ),
           ),
@@ -1237,6 +1333,7 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   Widget _buildStationsErrorState(String errorText) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -1249,9 +1346,9 @@ class _StationsScreenState extends State<StationsScreen> {
               size: 30,
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Failed to load stations from Supabase',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            Text(
+              l10n.stationsLoadFailed,
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
             Text(
@@ -1262,7 +1359,7 @@ class _StationsScreenState extends State<StationsScreen> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _refreshStations,
-              child: const Text('Try Again'),
+              child: Text(l10n.tryAgain),
             ),
 
           ],
@@ -1272,14 +1369,15 @@ class _StationsScreenState extends State<StationsScreen> {
   }
 
   Widget _buildLoadedBody() {
+    final l10n = AppLocalizations.of(context);
     if (_allStations.isEmpty) {
-      return const Center(
-        child: Text('Connected, but table train_stops_kl has 0 rows.'),
+      return Center(
+        child: Text(l10n.stationsEmptyTable),
       );
     }
 
     if (_filteredStations.isEmpty) {
-      return const Center(child: Text('No stations match your search.'));
+      return Center(child: Text(l10n.stationsNoMatch));
     }
 
     return ClipRect(
@@ -1316,7 +1414,7 @@ class _StationsScreenState extends State<StationsScreen> {
     final stopIds = _destinationStopIdsForStation(station);
     final stopId = stopIds.isEmpty ? _stationStopId(station) : stopIds.first;
     if (stopId.isEmpty || stopId == 'N/A') {
-      _showMessage('Selected station is missing a GTFS stop id.');
+      _showMessage(AppLocalizations.of(context).stationsMissingGtfsStopId);
       return;
     }
     await showModalBottomSheet<void>(
@@ -1349,10 +1447,10 @@ class _StationsScreenState extends State<StationsScreen> {
     return fallback;
   }
 
-  static String _stationName(Map<String, dynamic> row) => _pickValue(
+  String _stationName(Map<String, dynamic> row) => _pickValue(
         row,
         const <String>['stop_name', 'station_name', 'name', 'station'],
-        fallback: 'Unnamed Station',
+        fallback: AppLocalizations.of(context).stationsUnnamedStation,
       );
 
   static String _stationLine(Map<String, dynamic> row) => _pickValue(
@@ -1475,20 +1573,23 @@ class _StationsScreenState extends State<StationsScreen> {
     });
 
     final level = reports.first.occupancyLevel;
-    final crowd = crowdLevelStyleFromIndex(level);
-    if (crowd.label == 'Unknown') {
-      return const _CrowdLevelUi(
-        label: 'Unknown crowd level',
-        color: Color(0xFF64748B),
+    final l10n = AppLocalizations.of(context);
+    final label = localizedCrowdLevelLabel(l10n, level);
+    if (level < 1 || level > 5) {
+      return _CrowdLevelUi(
+        label: l10n.stationsUnknownCrowdLevel,
+        color: const Color(0xFF64748B),
       );
     }
-    return _CrowdLevelUi(label: crowd.label, color: crowd.color);
+    return _CrowdLevelUi(
+        label: label, color: crowdLevelStyleFromIndex(level).color);
   }
 
   Future<void> _reportCrowdLevel(Map<String, dynamic> station) async {
+    final l10n = AppLocalizations.of(context);
     final codes = _stationCodeList(station);
     if (codes.isEmpty) {
-      _showMessage('No station code found for reporting.');
+      _showMessage(l10n.stationsNoCodeForReport);
       return;
     }
 
@@ -1500,11 +1601,9 @@ class _StationsScreenState extends State<StationsScreen> {
         ? null
         : _distanceMeters(station, _userPosition!);
     if (distance != null && distance > 500) {
-      geoWarning =
-          'You are ${distance.round()}m from this station. Please move within 500m for accurate reporting.';
+      geoWarning = l10n.stationsTooFarFromStation(distance.round());
     } else if (distance == null) {
-      geoWarning =
-          'Enable location to verify proximity before reporting crowd levels.';
+      geoWarning = l10n.stationsEnableLocationToReport;
     }
 
     final submitted = await showModalBottomSheet<bool>(
@@ -1523,7 +1622,7 @@ class _StationsScreenState extends State<StationsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Report Crowd Level',
+                      l10n.stationsReportCrowdLevel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
@@ -1579,9 +1678,9 @@ class _StationsScreenState extends State<StationsScreen> {
                     DropdownButtonFormField<String>(
                       key: ValueKey(selectedCode),
                       initialValue: selectedCode,
-                      decoration: const InputDecoration(
-                        labelText: 'Station Code',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.stationsStationCodeLabel,
+                        border: const OutlineInputBorder(),
                       ),
                       items: codes
                           .map(
@@ -1597,7 +1696,7 @@ class _StationsScreenState extends State<StationsScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    const Text('How crowded is it now?'),
+                    Text(l10n.stationsHowCrowdedNow),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
@@ -1606,7 +1705,9 @@ class _StationsScreenState extends State<StationsScreen> {
                         final level = offset + 1;
                         final ui = _crowdUiByLevel(level);
                         return ChoiceChip(
-                          label: Text('L$level ${ui.label}'),
+                          label: Text(
+                            l10n.stationsCrowdLevelOption(level, ui.label),
+                          ),
                           selected: selectedLevel == level,
                           selectedColor: ui.color.withValues(alpha: 0.18),
                           onSelected: (_) =>
@@ -1619,7 +1720,11 @@ class _StationsScreenState extends State<StationsScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: tooFar ? null : () => Navigator.of(context).pop(true),
-                        child: Text(tooFar ? 'Move Closer to Submit' : 'Submit Report'),
+                        child: Text(
+                          tooFar
+                              ? l10n.stationsMoveCloser
+                              : l10n.stationsSubmitReport,
+                        ),
                       ),
                     ),
                   ],
@@ -1642,18 +1747,23 @@ class _StationsScreenState extends State<StationsScreen> {
       );
       unawaited(HapticFeedback.mediumImpact());
       await _loadLatestCrowdReports();
-      _showMessage('Thanks. Crowd report submitted for $selectedCode.');
+      _showMessage(l10n.stationsReportSubmitted(selectedCode));
     } catch (e) {
-      _showMessage('Failed to submit report: $e');
+      _showMessage(l10n.stationsReportSubmitFailed(e.toString()));
     }
   }
 
-  static _CrowdLevelUi _crowdUiByLevel(int level) {
-    final crowd = crowdLevelStyleFromIndex(level);
-    if (crowd.label == 'Unknown') {
-      return const _CrowdLevelUi(label: 'Unknown', color: Color(0xFF64748B));
+  _CrowdLevelUi _crowdUiByLevel(int level) {
+    final l10n = AppLocalizations.of(context);
+    if (level < 1 || level > 5) {
+      return _CrowdLevelUi(
+        label: l10n.stationsUnknown,
+        color: const Color(0xFF64748B),
+      );
     }
-    return _CrowdLevelUi(label: crowd.label, color: crowd.color);
+    return _CrowdLevelUi(
+        label: localizedCrowdLevelLabel(l10n, level),
+        color: crowdLevelStyleFromIndex(level).color);
   }
 }
 
@@ -1738,6 +1848,7 @@ class _StationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -1824,9 +1935,9 @@ class _StationCard extends StatelessWidget {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   icon: const Icon(Icons.schedule_rounded, size: 14),
-                  label: const Text(
-                    'Arrivals',
-                    style: TextStyle(fontSize: 11),
+                  label: Text(
+                    l10n.stationsArrivalsButton,
+                    style: const TextStyle(fontSize: 11),
                   ),
                 ),
                 TextButton.icon(
@@ -1838,9 +1949,9 @@ class _StationCard extends StatelessWidget {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   icon: const Icon(Icons.campaign_rounded, size: 14),
-                  label: const Text(
-                    'Report',
-                    style: TextStyle(fontSize: 11),
+                  label: Text(
+                    l10n.trackReport,
+                    style: const TextStyle(fontSize: 11),
                   ),
                 ),
               ],
@@ -1973,9 +2084,9 @@ class _RouteLegend extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Line Colors',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          Text(
+            AppLocalizations.of(context).stationsLineColors,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -2169,6 +2280,7 @@ class _RoutePlanSheet extends StatelessWidget {
   final int totalStops;
   final List<_RouteSegmentPlan> segmentPlans;
   final Map<String, String> namesByStopId;
+  final FareBreakdown fare;
   final String routeSource;
   final List<_ServiceDisruption> activeDisruptions;
   final bool usedDisruptionReroute;
@@ -2187,6 +2299,7 @@ class _RoutePlanSheet extends StatelessWidget {
     required this.totalStops,
     required this.segmentPlans,
     required this.namesByStopId,
+    required this.fare,
     required this.routeSource,
     required this.activeDisruptions,
     required this.usedDisruptionReroute,
@@ -2194,6 +2307,7 @@ class _RoutePlanSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final estimatedWalk =
         walkMeters == null ? null : (walkMeters! / 75).round();
     final baseEta =
@@ -2201,7 +2315,7 @@ class _RoutePlanSheet extends StatelessWidget {
     final crowdEta = estimatedWalk == null
         ? crowdAdjustedMinutes
         : crowdAdjustedMinutes + estimatedWalk;
-    final tripCrowdUi = _crowdUiByLevel(highestCrowdLevel);
+    final tripCrowdUi = _crowdUiByLevel(l10n, highestCrowdLevel);
     final overallConfidence = _overallForecastConfidence(segmentPlans);
 
     return SafeArea(
@@ -2211,22 +2325,27 @@ class _RoutePlanSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Suggested Route',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            Text(
+              l10n.stationsSuggestedRoute,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(
-              '$originName ($originStopId) -> $destinationName ($destinationStopId)',
+              l10n.stationsRouteSummary(
+                originName,
+                originStopId,
+                destinationName,
+                destinationStopId,
+              ),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Text(
-              'Depart: ${_formatDateTime(departureTime)}',
+              l10n.stationsDepartAt(_formatDateTime(departureTime)),
               style: const TextStyle(color: Color(0xFF667085)),
             ),
             Text(
-              'Arrive: ${_formatDateTime(arrivalTime)}',
+              l10n.stationsArriveAt(_formatDateTime(arrivalTime)),
               style: const TextStyle(color: Color(0xFF667085)),
             ),
             const SizedBox(height: 8),
@@ -2234,34 +2353,55 @@ class _RoutePlanSheet extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _InfoChip(label: 'Base ETA ~ ${_formatDuration(baseEta)}'),
-                _InfoChip(label: 'Crowd ETA ~ ${_formatDuration(crowdEta)}'),
                 _InfoChip(
-                  label:
-                      'Forecast confidence ${_formatPercent(overallConfidence)}',
+                  label: l10n.stationsBaseEta(_formatDuration(l10n, baseEta)),
                 ),
                 _InfoChip(
-                  label: 'Trip Crowd: ${tripCrowdUi.label}',
+                  label: l10n.stationsCrowdEta(_formatDuration(l10n, crowdEta)),
+                ),
+                _InfoChip(
+                  label: l10n.stationsForecastConfidenceChip(
+                    _formatPercent(overallConfidence),
+                  ),
+                ),
+                _InfoChip(
+                  label: l10n.stationsTripCrowd(tripCrowdUi.label),
                   textColor: tripCrowdUi.color,
                   borderColor: tripCrowdUi.color.withValues(alpha: 0.45),
                 ),
-                _InfoChip(label: '$totalStops stops'),
+                _InfoChip(label: l10n.stationsStopCount(totalStops)),
+                if (fare.legs.isNotEmpty)
+                  _InfoChip(
+                    label: l10n.stationsFareTotal(
+                      fare.total.toStringAsFixed(2),
+                    ),
+                    textColor: const Color(0xFF0B5FFF),
+                    borderColor: const Color(0xFFB9D0FF),
+                  ),
+                if (fare.hasSeparateTickets)
+                  _InfoChip(
+                    label: l10n.stationsFareTicketCount(fare.ticketCount),
+                    textColor: const Color(0xFF99168C),
+                    borderColor: const Color(0xFFE7BEE2),
+                  ),
                 if (usedDisruptionReroute)
-                  const _InfoChip(
-                    label: 'Rerouted around disruption',
-                    textColor: Color(0xFFD92D20),
-                    borderColor: Color(0xFFFDB0AC),
+                  _InfoChip(
+                    label: l10n.stationsReroutedAroundDisruption,
+                    textColor: const Color(0xFFD92D20),
+                    borderColor: const Color(0xFFFDB0AC),
                   ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              'Source: $routeSource',
+              l10n.stationsRouteSource(routeSource),
               style: const TextStyle(color: Color(0xFF667085)),
             ),
             if (activeDisruptions.isNotEmpty)
               Text(
-                'Service alerts: ${_disruptionSummary(activeDisruptions)}',
+                l10n.stationsServiceAlerts(
+                  _disruptionSummary(activeDisruptions),
+                ),
                 style: const TextStyle(
                   color: Color(0xFFB42318),
                   fontWeight: FontWeight.w600,
@@ -2269,16 +2409,16 @@ class _RoutePlanSheet extends StatelessWidget {
               ),
             if (walkMeters != null)
               Text(
-                'Walk to origin: ${_formatWalk(walkMeters!)}',
+                l10n.stationsWalkToOrigin(_formatWalk(walkMeters!)),
                 style: const TextStyle(color: Color(0xFF667085)),
               ),
             const SizedBox(height: 12),
             if (segmentPlans.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'No route segments available.',
-                  style: TextStyle(color: Color(0xFF667085)),
+                  l10n.stationsNoRouteSegments,
+                  style: const TextStyle(color: Color(0xFF667085)),
                 ),
               )
             else
@@ -2294,10 +2434,19 @@ class _RoutePlanSheet extends StatelessWidget {
                         namesByStopId[segment.fromStopId] ?? segment.fromStopId;
                     final toName =
                         namesByStopId[segment.toStopId] ?? segment.toStopId;
-                    final crowdUi = _crowdUiByLevel(plan.occupancyLevel);
+                    final crowdUi = _crowdUiByLevel(l10n, plan.occupancyLevel);
                     final confidence = _segmentForecastConfidence(plan);
                     final disruptionNote =
                         _disruptionNoteFor(segment, activeDisruptions);
+                    final fareLeg = segment.connectionType
+                            .toLowerCase()
+                            .contains('transfer')
+                        ? null
+                        : fare.legFor(
+                            segment.routeId,
+                            segment.fromStopId,
+                            segment.toStopId,
+                          );
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -2327,6 +2476,7 @@ class _RoutePlanSheet extends StatelessWidget {
                               children: [
                                 Text(
                                   _segmentText(
+                                    l10n: l10n,
                                     routeId: segment.routeId,
                                     connectionType: segment.connectionType,
                                     fromName: fromName,
@@ -2339,7 +2489,11 @@ class _RoutePlanSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${_formatTime(plan.departAt)} to ${_formatTime(plan.arriveAt)} - ${crowdUi.label}',
+                                  l10n.stationsSegmentTimeRange(
+                                    _formatTime(plan.departAt),
+                                    _formatTime(plan.arriveAt),
+                                    crowdUi.label,
+                                  ),
                                   style: TextStyle(
                                     color: crowdUi.color,
                                     fontSize: 12,
@@ -2348,7 +2502,9 @@ class _RoutePlanSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'Forecast confidence: ${_formatPercent(confidence)}',
+                                  l10n.stationsForecastConfidence(
+                                    _formatPercent(confidence),
+                                  ),
                                   style: const TextStyle(
                                     color: Color(0xFF475467),
                                     fontSize: 11,
@@ -2356,14 +2512,21 @@ class _RoutePlanSheet extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  _forecastReason(plan),
+                                  _forecastReason(l10n, plan),
                                   style: const TextStyle(
                                     color: Color(0xFF667085),
                                     fontSize: 11,
                                   ),
                                 ),
                                 Text(
-                                  'Coach/platform tip: ${_boardingTipFor(index, segmentPlans, namesByStopId)}',
+                                  l10n.stationsBoardingTip(
+                                    _boardingTipFor(
+                                      l10n,
+                                      index,
+                                      segmentPlans,
+                                      namesByStopId,
+                                    ),
+                                  ),
                                   style: const TextStyle(
                                     color: Color(0xFF344054),
                                     fontSize: 11,
@@ -2372,7 +2535,7 @@ class _RoutePlanSheet extends StatelessWidget {
                                 ),
                                 if (disruptionNote != null)
                                   Text(
-                                    'Service alert: $disruptionNote',
+                                    l10n.stationsServiceAlert(disruptionNote),
                                     style: const TextStyle(
                                       color: Color(0xFFD92D20),
                                       fontSize: 11,
@@ -2381,7 +2544,9 @@ class _RoutePlanSheet extends StatelessWidget {
                                   ),
                                 if (plan.waitMinutes > 0)
                                   Text(
-                                    'Includes approx. ${plan.waitMinutes} min waiting time',
+                                    l10n.stationsIncludesWaitingTime(
+                                      plan.waitMinutes,
+                                    ),
                                     style: const TextStyle(
                                       color: Color(0xFF667085),
                                       fontSize: 11,
@@ -2391,12 +2556,32 @@ class _RoutePlanSheet extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            _formatDuration(plan.adjustedMinutes),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF344054),
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                _formatDuration(l10n, plan.adjustedMinutes),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF344054),
+                                ),
+                              ),
+                              if (fareLeg != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.stationsSegmentFare(
+                                    fareLeg.fare.toStringAsFixed(2),
+                                  ),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    color: fareLeg.separateTicket
+                                        ? const Color(0xFF99168C)
+                                        : const Color(0xFF475467),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -2410,15 +2595,20 @@ class _RoutePlanSheet extends StatelessWidget {
     );
   }
 
-  static _RouteCrowdUi _crowdUiByLevel(int level) {
-    final crowd = crowdLevelStyleFromIndex(level);
-    if (crowd.label == 'Unknown') {
-      return const _RouteCrowdUi(label: 'Unknown', color: Color(0xFF64748B));
+  static _RouteCrowdUi _crowdUiByLevel(AppLocalizations l10n, int level) {
+    if (level < 1 || level > 5) {
+      return _RouteCrowdUi(
+        label: l10n.stationsUnknown,
+        color: const Color(0xFF64748B),
+      );
     }
-    return _RouteCrowdUi(label: crowd.label, color: crowd.color);
+    return _RouteCrowdUi(
+        label: localizedCrowdLevelLabel(l10n, level),
+        color: crowdLevelStyleFromIndex(level).color);
   }
 
   static String _segmentText({
+    required AppLocalizations l10n,
     required String routeId,
     required String connectionType,
     required String fromName,
@@ -2426,10 +2616,18 @@ class _RoutePlanSheet extends StatelessWidget {
     required int baseMinutes,
     required int adjustedMinutes,
   }) {
+    final base = _formatDuration(l10n, baseMinutes);
+    final forecast = _formatDuration(l10n, adjustedMinutes);
     if (connectionType.toLowerCase().contains('transfer')) {
-      return 'Transfer from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} forecast)';
+      return l10n.stationsSegmentTransfer(fromName, toName, base, forecast);
     }
-    return 'Take ${normalizeRouteId(routeId)} from $fromName to $toName (${_formatDuration(baseMinutes)} base, ~${_formatDuration(adjustedMinutes)} forecast)';
+    return l10n.stationsSegmentRide(
+      getRouteDisplayName(routeId),
+      fromName,
+      toName,
+      base,
+      forecast,
+    );
   }
 
   static double _overallForecastConfidence(List<_RouteSegmentPlan> plans) {
@@ -2465,33 +2663,37 @@ class _RoutePlanSheet extends StatelessWidget {
     return base.clamp(0.50, 0.97);
   }
 
-  static String _forecastReason(_RouteSegmentPlan plan) {
+  static String _forecastReason(
+    AppLocalizations l10n,
+    _RouteSegmentPlan plan,
+  ) {
     final source = plan.sourceType.toLowerCase();
     if (CrowdReportsService.isClosedHoursSource(source)) {
-      return 'Train service is currently outside operating hours.';
+      return l10n.stationsForecastReasonClosed;
     }
     final reasons = <String>[];
     if (source.contains('user')) {
-      reasons.add('recent rider reports');
+      reasons.add(l10n.stationsForecastReasonRecentReports);
     } else if (source.contains('trend') || source.contains('forecast')) {
-      reasons.add('hourly ridership forecast');
+      reasons.add(l10n.stationsForecastReasonHourlyForecast);
     } else if (source.contains('simulated')) {
-      reasons.add('10-minute simulation fallback');
+      reasons.add(l10n.stationsForecastReasonSimulation);
     } else {
-      reasons.add('offline fallback estimate');
+      reasons.add(l10n.stationsForecastReasonOfflineFallback);
     }
     if (plan.waitMinutes > 0) {
-      reasons.add('transfer wait included');
+      reasons.add(l10n.stationsForecastReasonTransferWait);
     }
     if (plan.occupancyLevel >= 3) {
-      reasons.add('peak-load conditions likely');
+      reasons.add(l10n.stationsForecastReasonPeakLoad);
     } else if (plan.occupancyLevel == 2) {
-      reasons.add('standing demand likely');
+      reasons.add(l10n.stationsForecastReasonStandingDemand);
     }
     return reasons.join(' • ');
   }
 
   static String _boardingTipFor(
+    AppLocalizations l10n,
     int index,
     List<_RouteSegmentPlan> plans,
     Map<String, String> namesByStopId,
@@ -2500,17 +2702,17 @@ class _RoutePlanSheet extends StatelessWidget {
     final segment = plan.segment;
     final toName = namesByStopId[segment.toStopId] ?? segment.toStopId;
     if (segment.connectionType.toLowerCase().contains('transfer')) {
-      return 'Follow interchange signs promptly at $toName.';
+      return l10n.stationsBoardingTipTransfer(toName);
     }
     final nextPlan = index + 1 < plans.length ? plans[index + 1] : null;
     if (nextPlan != null &&
         nextPlan.segment.connectionType.toLowerCase().contains('transfer')) {
-      return 'Board middle-rear coach for a faster transfer at $toName.';
+      return l10n.stationsBoardingTipMiddleRear(toName);
     }
     if (index == plans.length - 1) {
-      return 'Board near the doors for a quicker exit at $toName.';
+      return l10n.stationsBoardingTipNearDoors(toName);
     }
-    return 'Follow platform signs toward $toName-bound service.';
+    return l10n.stationsBoardingTipPlatformSigns(toName);
   }
 
   static String? _disruptionNoteFor(
@@ -2552,13 +2754,13 @@ class _RoutePlanSheet extends StatelessWidget {
     return '${(meters / 1000).toStringAsFixed(2)} km';
   }
 
-  static String _formatDuration(int totalMinutes) {
+  static String _formatDuration(AppLocalizations l10n, int totalMinutes) {
     final safeMinutes = totalMinutes < 0 ? 0 : totalMinutes;
     final hours = safeMinutes ~/ 60;
     final minutes = safeMinutes % 60;
-    if (hours <= 0) return '${minutes}m';
-    if (minutes == 0) return '${hours}h';
-    return '${hours}h ${minutes}m';
+    if (hours <= 0) return l10n.homeDurationMinutesShort(minutes);
+    if (minutes == 0) return l10n.homeDurationHoursShort(hours);
+    return l10n.homeDurationHoursMinutesShort(hours, minutes);
   }
 
   static String _formatPercent(double value) {

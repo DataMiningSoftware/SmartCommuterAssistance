@@ -82,8 +82,8 @@ Color getRouteColor(String routeId) {
   if (id.startsWith('KT1') || id == 'SEREMBAN') return const Color(0xFF1B3A6B);
   if (id.startsWith('KT2') || id == 'PORT KLANG') return const Color(0xFFE4032E);
   if (id.startsWith('KS') || id == 'SKYPARK') return const Color(0xFF7A7A3D);
-  if (id.startsWith('ER6') || id == 'KLIA EKSPRES') return const Color(0xFF00A19A);
-  if (id.startsWith('ER7') || id == 'KLIA TRANSIT') return const Color(0xFF8DC63F);
+  if (id.startsWith('ER6') || id == 'KLIA EKSPRES') return const Color(0xFF99168C);
+  if (id.startsWith('ER7') || id == 'KLIA TRANSIT') return const Color(0xFF3EA4B4);
 
   return Colors.grey;
 }
@@ -91,7 +91,12 @@ Color getRouteColor(String routeId) {
 Color getRouteOnColor(String routeId) {
   final raw = resolveSchematicLineId(routeId);
   final id = _stripLineSuffix(raw);
-  if (id.startsWith('PYL') || id.startsWith('PY') || id == 'PUTRAJAYA') return const Color(0xFF1F2329);
+  if (id.startsWith('PYL') || id.startsWith('PY') || id == 'PUTRAJAYA') {
+    return const Color(0xFF1F2329);
+  }
+  if (id.startsWith('ER7') || id == 'KLIA TRANSIT') {
+    return const Color(0xFF1F2329);
+  }
   return Colors.white;
 }
 

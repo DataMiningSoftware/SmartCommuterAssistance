@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/database_health_service.dart';
 
 class AppPageTitle extends StatelessWidget {
@@ -147,8 +148,9 @@ class ConnectionStatusBadge extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: DatabaseHealthService.instance.isConnected,
       builder: (context, connected, _) {
+        final l10n = AppLocalizations.of(context);
         final color = connected ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
-        final label = connected ? 'LIVE' : 'OFFLINE';
+        final label = connected ? l10n.dataLive : l10n.dataOffline;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(

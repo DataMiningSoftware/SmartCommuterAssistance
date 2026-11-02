@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
 
@@ -64,8 +65,9 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in with phone')),
+      appBar: AppBar(title: Text(l10n.signInWithPhoneButton)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -80,9 +82,9 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                   TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone number',
-                      hintText: '+60 12-345 6789',
+                    decoration: InputDecoration(
+                      labelText: l10n.phoneNumberLabel,
+                      hintText: l10n.phoneNumberHint,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -90,8 +92,8 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                     TextField(
                       controller: _codeController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Verification code',
+                      decoration: InputDecoration(
+                        labelText: l10n.verificationCodeLabel,
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -101,16 +103,17 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                         : (_codeSent ? _verify : _sendCode),
                     child: Text(
                       _loading
-                          ? 'Please wait…'
-                          : (_codeSent ? 'Verify code' : 'Send code'),
+                          ? l10n.pleaseWait
+                          : (_codeSent
+                              ? l10n.verifyCodeButton
+                              : l10n.sendCodeButton),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'A one-time code will be sent by SMS. Requires the Phone '
-                    'provider to be enabled in Supabase.',
+                  Text(
+                    l10n.otpInfo,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),

@@ -1,0 +1,962 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Smart Commuter Assistant+",
+  "navHome": "Home",
+  "navMap": "Map",
+  "navTrack": "Track",
+  "navRace": "Race",
+  "navProfile": "Profile",
+
+  "closingIn": "Trains closing in {time}",
+  "@closingIn": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "dataLive": "LIVE",
+  "dataOffline": "OFFLINE",
+  "crowdLevelEmpty": "Empty",
+  "crowdLevelLight": "Light",
+  "crowdLevelModerate": "Moderate",
+  "crowdLevelHeavy": "Heavy",
+  "crowdLevelCrowded": "Crowded",
+  "crowdLevelUnknown": "Unknown",
+
+  "mapSubtitle": "Geographic and schematic views",
+  "mapGeographic": "Geographic",
+  "mapTransitMap": "Transit map",
+  "mapStationHint": "Station",
+  "mapLoadFailed": "Failed to load map data: {error}",
+  "@mapLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "mapTapAnotherStation": "Tap another station to plan a route from here.",
+  "mapFindingRoute": "Finding the best route...",
+  "mapRouteSummary": "{duration} · {transfers} · {crowd} crowd",
+  "@mapRouteSummary": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "transfers": { "type": "String" },
+      "crowd": { "type": "String" }
+    }
+  },
+  "mapChooseDifferent": "Choose different",
+  "mapStartJourney": "Start journey",
+  "mapJourneyStarted": "Journey started — tracking on the Track tab.",
+  "mapSchematicA11yLabel": "Transit map. Tap a station to select it.",
+  "mapZoomIn": "Zoom in",
+  "mapZoomOut": "Zoom out",
+  "dataSourceScheduled": "Scheduled",
+  "dataSourceRiderReport": "Rider report",
+  "dataSourceBlended": "Blended",
+  "dataSourceEstimated": "Estimated",
+  "dataSourceClosed": "Closed",
+  "dataSourceFallback": "Fallback",
+  "dataSourceUnknown": "Unknown",
+  "connectivityConnected": "You are connected",
+  "connectivityDisconnected": "Disconnected",
+
+  "offlineTitle": "You're offline",
+  "offlineBody": "Some features need a connection. Cached stations, saved routes and local crowd estimates still work.",
+  "tryAgain": "Try again",
+  "continueOffline": "Continue offline",
+
+  "configurationRequired": "Configuration Required",
+  "retry": "Retry",
+  "preparingData": "Preparing your commute data...",
+  "startupFailed": "Startup failed.\n\n{error}",
+  "@startupFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "languageTitle": "Language",
+  "languageSystemOption": "System default",
+  "languageEnglishOption": "English",
+  "languageMalayOption": "Bahasa Melayu",
+
+  "profileCommuter": "Commuter",
+  "profileUserFallback": "User",
+  "profileNoAccount": "No account needed — reports are anonymous",
+  "profileEditTooltip": "Edit profile",
+  "preferencesTitle": "Preferences",
+  "pushNotificationsTitle": "Push Notifications",
+  "pushNotificationsSubtitle": "Delay and route alerts",
+  "offlineModeTitle": "Offline Mode",
+  "offlineModeSubtitle": "Cache schedules for weak coverage",
+  "locationSharingTitle": "Location Sharing",
+  "locationSharingSubtitle": "Used for nearby stations; sent rounded to ~1 km",
+  "mlConsentTitle": "Improve predictions with my trip data",
+  "mlConsentSubtitle": "Optional. Uses your reports and trip times for model training",
+  "accessibilityTitle": "Accessibility",
+  "accessibilitySubtitle": "Larger labels and stronger contrast",
+  "darkModeTitle": "Dark Mode",
+  "darkModeSubtitle": "Enable dark theme for the app",
+  "dataAttributionsTitle": "Data Attributions",
+  "mapTilesTitle": "Map tiles",
+  "mapTilesSource": "© CartoDB",
+  "weatherTitle": "Weather",
+  "weatherSource": "Weather data by Open-Meteo.com",
+  "transitScheduleTitle": "Transit schedule",
+  "transitScheduleSource": "© Prasarana Malaysia via data.gov.my",
+  "quickActionsTitle": "Quick Actions",
+  "routeBuilderTitle": "Route Builder",
+  "friendsTitle": "Friends",
+  "learnTheRailsTitle": "Learn the Rails",
+  "favoriteRoutesTitle": "Favorite Routes",
+  "travelHistoryTitle": "Travel History",
+  "testNotificationTitle": "Test notification",
+  "testNotificationBody": "This is a test notification. 🚆",
+  "helpSupportTitle": "Help & Support",
+  "aboutTitle": "About",
+  "privacyPolicyTitle": "Privacy Policy",
+  "logoutButton": "Logout",
+  "deleteMyDataButton": "Delete my data",
+  "deleteAccountButton": "Delete Account",
+  "profileDeleteDataDialogTitle": "Delete my data?",
+  "profileDeleteAccountDialogTitle": "Delete account?",
+  "profileDeleteDataDialogBody": "This permanently removes your anonymous device profile, account and trip feedback. Your contributed reports are unlinked and anonymised. This cannot be undone.",
+  "profileDeleteAccountDialogBody": "This permanently deletes your account, profile, and travel history. Your contributed reports are unlinked and anonymised. This cannot be undone.",
+  "cancelButton": "Cancel",
+  "deleteButton": "Delete",
+  "accountDeleted": "Account deleted.",
+  "deleteAccountFailed": "Could not delete account automatically. Please use the account deletion link in the privacy policy.",
+  "editProfileTitle": "Edit Profile",
+  "handleLabel": "Handle",
+  "displayNameLabel": "Display name",
+  "bioLabel": "Bio",
+  "avatarColorLabel": "Avatar color (hex, optional)",
+  "homeStationLabel": "Home station ID (optional)",
+  "favoriteLineLabel": "Favorite line (optional)",
+  "allowFindByHandle": "Allow others to find me by handle",
+  "saveButton": "Save",
+  "aboutDialogTitle": "About Smart Commuter Assistant+",
+  "aboutDialogBody": "Smart Commuter Assistant+ v{version}\n\nDynamic Navigation & Occupancy Computations.\n\nAn intelligent companion for Malaysian public transport.\n\nAn independent, unofficial app — not affiliated with Rapid KL, Prasarana Malaysia, or KTMB.",
+  "@aboutDialogBody": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "okButton": "OK",
+  "railIndependenceTitle": "Your Rail Independence",
+  "railIndependenceBody": "You know {stations} {stations, plural, =1{station} other{stations}} and answer {accuracy}% of trivia correctly. Keep going — the goal is to not need us.",
+  "@railIndependenceBody": {
+    "placeholders": {
+      "stations": { "type": "int" },
+      "accuracy": { "type": "int" }
+    }
+  },
+  "locationServicesOff": "Turn on Location Services to use nearby stations.",
+  "locationPermissionDenied": "Location permission denied in system settings.",
+
+  "loginWelcome": "Welcome back",
+  "loginSubtitle": "Login to view forecasts, routes, and your travel history.",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "confirmPasswordLabel": "Confirm password",
+  "emailRequired": "Email is required",
+  "emailInvalid": "Enter a valid email",
+  "passwordRequired": "Password is required",
+  "passwordMinLength": "Use at least 6 characters",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "nameRequired": "Name is required",
+  "fullNameLabel": "Full name",
+  "signingIn": "Signing in…",
+  "loginButton": "Login",
+  "signInWithGoogleButton": "Sign in with Google",
+  "guestModeEnabled": "Guest mode enabled. You can continue without an account.",
+  "guestModeFailed": "Unable to enter guest mode right now. Please try again.",
+  "continueAsGuestButton": "Continue as guest",
+  "createAccountButton": "Create account",
+  "signInWithPhoneButton": "Sign in with phone",
+  "signUpTitle": "Create Your Pass",
+  "creatingAccount": "Creating…",
+  "accountCreatedVerify": "Account created! Check your email to verify it, then log in.",
+  "phoneNumberLabel": "Phone number",
+  "phoneNumberHint": "+60 12-345 6789",
+  "verificationCodeLabel": "Verification code",
+  "pleaseWait": "Please wait…",
+  "verifyCodeButton": "Verify code",
+  "sendCodeButton": "Send code",
+  "otpInfo": "A one-time code will be sent by SMS. Requires the Phone provider to be enabled in Supabase.",
+
+  "supportContactTitle": "Email the developer",
+  "supportContactBody": "Questions, bug reports, or feature ideas? We usually reply within a few days.",
+  "supportSendEmailButton": "Send email",
+  "supportCopyEmailButton": "Copy email address",
+  "supportEmailCopied": "Email address copied",
+  "supportNoMailApp": "No email app found — address copied instead",
+  "supportFaqTitle": "Frequently asked questions",
+  "supportFaqOfflineQuestion": "Why do some features stop working offline?",
+  "supportFaqOfflineAnswer": "Live arrivals, crowd forecasts and route planning need a connection. Stations, saved routes and the last cached forecasts keep working in offline mode.",
+  "supportFaqCrowdQuestion": "Where do crowd forecasts come from?",
+  "supportFaqCrowdAnswer": "Hourly forecasts are trained on rider reports and blended with recent community reports. Verified reports from different riders carry more weight.",
+  "supportFaqDelayQuestion": "How do delay reports work?",
+  "supportFaqDelayAnswer": "When at least 3 riders report a delay on the same line and direction within 20 minutes, other riders see a delay signal and their ETA is adjusted automatically.",
+  "supportFaqPrivacyQuestion": "What happens to my data?",
+  "supportFaqPrivacyAnswer": "The app works anonymously without an account. Location stays on your device except rounded (~1 km) crowd reports you choose to send. You can delete everything from Profile.",
+  "supportFaqEtaQuestion": "How accurate are the ETAs?",
+  "supportFaqEtaAnswer": "ETAs are pinned when you reach your origin station and count down steadily. They adjust for delay and crowd reports, and improve over time as trip feedback is collected.",
+  "supportLinksTitle": "More",
+  "supportDeleteDataLink": "Delete your data (web)",
+  "supportIssuesLink": "Report an issue on GitHub",
+  "supportEmailSubject": "[Smart Commuter Assistant+] Support — v{version}",
+  "@supportEmailSubject": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "supportEmailBody": "Describe your issue here.\n\n---\nApp: Smart Commuter Assistant+ {version} ({build})\nPlatform: {platform}\nLocale: {locale}\nConnection: {connection}\n---",
+  "@supportEmailBody": {
+    "placeholders": {
+      "version": { "type": "String" },
+      "build": { "type": "String" },
+      "platform": { "type": "String" },
+      "locale": { "type": "String" },
+      "connection": { "type": "String" }
+    }
+  },
+
+  "homeStationUnavailableClosingHours": "{station} is unavailable during closing hours for the selected departure time.",
+  "@homeStationUnavailableClosingHours": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "homeLocationRequired": "Location is required before starting a trip.",
+  "homeNearestStationUnavailable": "Could not determine your nearest station yet.",
+  "homeNoRouteFound": "No route found for {station}.",
+  "@homeNoRouteFound": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "homePrepareTripFailed": "Could not prepare trip: {error}",
+  "@homePrepareTripFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeRouteCrowdedTitle": "Looks like your route is crowded.",
+  "homeCalmerTripAvailable": "A calmer trip to {destination} is available, but it may take longer.",
+  "@homeCalmerTripAvailable": {
+    "placeholders": {
+      "destination": { "type": "String" }
+    }
+  },
+  "homeEfficientRoute": "Efficient route",
+  "homeFastestOptionNow": "Fastest option right now",
+  "homeKeepThisRoute": "Keep this route",
+  "homeRelaxedRoute": "Relaxed route",
+  "homeCalmerRideDetour": "Calmer ride with a small detour",
+  "homeTakeRelaxedRoute": "Take a more relaxed route",
+  "homeLocationPrivacyTitle": "Location Privacy",
+  "homeLocationPrivacyBody": "Your location is used to find nearby stations and provide arrival estimates. Coordinates are rounded to ~1 km precision before being sent to our servers. Your exact location is never stored or shared.\n\nYou can change this later in Profile settings.",
+  "homeSkip": "Skip",
+  "homeAllow": "Allow",
+  "homeCrowdLevelsLower": "{count, plural, =1{1 crowd level lower} other{{count} crowd levels lower}}",
+  "@homeCrowdLevelsLower": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeCrowdLevelsHigher": "{count, plural, =1{1 crowd level higher} other{{count} crowd levels higher}}",
+  "@homeCrowdLevelsHigher": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeFastest": "Fastest",
+  "homeNoTimePenalty": "No time penalty",
+  "homePlusMinutes": "+{minutes} min",
+  "@homePlusMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "homeDirectRide": "Direct ride",
+  "homeTransferCount": "{count, plural, =1{1 transfer} other{{count} transfers}}",
+  "@homeTransferCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeSubtitle": "Home base",
+  "homeHeroTitle": "Ride smart, skip the squeeze.",
+  "homeHeroSubtitle": "Live crowd-aware routing, trip tracking, and route glow in one place.",
+  "homeAllStations": "All Stations",
+  "homeAllStationsSubtitle": "Browse lines and interchanges",
+  "homeTrackRoute": "Track Route",
+  "homeResumeTrip": "Resume Trip",
+  "homeStartTripHint": "Start a trip to unlock tracking",
+  "homeTripDirection": "{origin} to {destination}",
+  "@homeTripDirection": {
+    "placeholders": {
+      "origin": { "type": "String" },
+      "destination": { "type": "String" }
+    }
+  },
+  "homeRouteModeAuto": "Auto",
+  "homeRouteModeEfficient": "Efficient",
+  "homeRouteModeRelaxed": "Relaxed",
+  "homeRouteModeAutoHelper": "Compare efficient and relaxed routes, then ask only when the calmer route is worth it.",
+  "homeRouteModeEfficientHelper": "Always keep the fastest route.",
+  "homeRouteModeComfortHelper": "Prefer lower crowd even if the trip takes a little longer.",
+  "homePickNextStop": "Pick Your Next Stop",
+  "homeSearchDestinationHint": "Search a destination, set your routing style, and preview crowd before you leave.",
+  "homeRouteStyle": "Route style",
+  "homeLoadingStations": "Loading stations…",
+  "homeLoadStationsFailed": "Failed to load stations: {error}",
+  "@homeLoadStationsFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeNoStationNames": "No station names available yet. Showing a local sample list instead.",
+  "homeSearchTrainStation": "Search train station",
+  "homeClosingHours": "Closing hours",
+  "homePlanAhead": "Plan Ahead",
+  "homeLiveMapUnavailable": "Live map unavailable",
+  "homeEtaSyncing": "ETA syncing",
+  "homeArrivingNow": "Arriving now",
+  "homeArriveBy": "Arrive by {time}",
+  "@homeArriveBy": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "homeLiveTrip": "Live Trip",
+  "homeViewMap": "View map",
+  "homeRelaxedRoutingActive": "Relaxed routing is active.",
+  "homeLiveTrackingReady": "Live tracking is ready.",
+  "homeYouAreHere": "You are here",
+  "homeTripEtaTo": "{minutes} min to {destination}",
+  "@homeTripEtaTo": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "destination": { "type": "String" }
+    }
+  },
+  "homeCrowdLevelPrefix": "Crowd level: ",
+  "homeOpenTracking": "Open tracking",
+  "homeStationCrowdBoard": "Station Crowd Board",
+  "homeNearestStationSubtitle": "Showing the nearest station to your current location.",
+  "homeViewAll": "View all",
+  "homeRefreshNearbyStations": "Refresh nearby stations",
+  "homeLoadCrowdBoardFailed": "Failed to load crowd board: {error}",
+  "@homeLoadCrowdBoardFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeLocationSyncing": "Location is still syncing. Pull to refresh or try again in a moment.",
+  "homeMetersAway": "{distance} m away",
+  "@homeMetersAway": {
+    "placeholders": {
+      "distance": { "type": "String" }
+    }
+  },
+  "homeReportCrowded": "Report crowded",
+  "homeEtaLabel": "ETA {duration}",
+  "@homeEtaLabel": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "homeDurationMinutesShort": "{minutes}m",
+  "@homeDurationMinutesShort": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "homeDurationHoursShort": "{hours}h",
+  "@homeDurationHoursShort": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "homeDurationHoursMinutesShort": "{hours}h {minutes}m",
+  "@homeDurationHoursMinutesShort": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "homeRoutePending": "Route pending",
+
+  "trackKeepCrowdedRoute": "Keep with crowded route",
+  "trackPlanYourTrip": "Plan Your Trip",
+  "trackSelectOriginDestination": "Select origin and destination stations.",
+  "trackFromLabel": "From",
+  "trackToLabel": "To",
+  "trackSetArrivalTime": "Set arrival time",
+  "trackWhenArrive": "When do you want to arrive?",
+  "trackTargetArrivalHint": "Set your target arrival time and we'll calculate when to leave.",
+  "trackCalculate": "Calculate",
+  "trackCalculatingSchedule": "Calculating schedule...",
+  "trackNoRouteFoundTo": "No route found to {station}.",
+  "@trackNoRouteFoundTo": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackPlanAheadFailed": "Could not plan ahead: {error}",
+  "@trackPlanAheadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "trackTripPlan": "Trip Plan",
+  "trackLeaveBy": "Leave by",
+  "trackWalkTo": "Walk to {station}",
+  "@trackWalkTo": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackDurationMinutes": "{minutes} min",
+  "@trackDurationMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "trackVia": "Via {routes}",
+  "@trackVia": {
+    "placeholders": {
+      "routes": { "type": "String" }
+    }
+  },
+  "trackArriveAt": "Arrive at {station}",
+  "@trackArriveAt": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackEstimatedTotal": "Estimated total: {minutes} min",
+  "@trackEstimatedTotal": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "trackStartThisTripNow": "Start this trip now",
+  "trackStationUnavailableClosingHours": "{station} is unavailable during closing hours.",
+  "@trackStationUnavailableClosingHours": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackEnableLocationServices": "Enable location services before starting a trip.",
+  "trackLocationPermissionRequired": "Location permission is required to start a trip.",
+  "trackChooseDestinationBeyond": "Choose a destination beyond {station}.",
+  "@trackChooseDestinationBeyond": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackStartTripFailed": "Could not start trip: {error}",
+  "@trackStartTripFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "trackSwitchDestinationFrom": "Switch destination from {station}",
+  "@trackSwitchDestinationFrom": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackSwitchDestinationHint": "Pick a new target station and the route will restart from where you are now.",
+  "trackSearchStationOrCode": "Search station or code",
+  "trackAreYouOkay": "Are you okay?",
+  "trackInactivityBody": "You haven't moved in a while. Is everything alright?",
+  "trackImFine": "I'm fine",
+  "trackCallEmergencyContact": "Call emergency contact",
+  "trackCancelTrip": "Cancel trip",
+  "trackEmergencyDialer": "Emergency contact dialer would open here.",
+  "trackRouteRecalculated": "Route recalculated",
+  "trackDeviatedFromRoute": "You've deviated from your route a few times.",
+  "trackPickNewDestination": "Would you like to pick a new destination instead?",
+  "trackContinueToDestination": "Continue to current destination",
+  "trackChooseNewDestination": "Choose a new destination",
+  "trackLocatingTrain": "Locating train",
+  "trackChangeLineAt": "Change line at {station}",
+  "@trackChangeLineAt": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "trackSwitchToLine": "Switch to the {routeId} line after this station.",
+  "@trackSwitchToLine": {
+    "placeholders": {
+      "routeId": { "type": "String" }
+    }
+  },
+  "trackReachedDestination": "You have reached {destination}",
+  "@trackReachedDestination": {
+    "placeholders": {
+      "destination": { "type": "String" }
+    }
+  },
+  "trackTripEnded": "Your trip has ended.",
+  "trackRidersReportDelays": "{count} riders report delays on {route} · +{minutes} min",
+  "@trackRidersReportDelays": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "route": { "type": "String" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "trackDelayReportFailed": "Could not submit the delay report. Please try again.",
+  "trackCrowdedReported": "Crowded train reported for {stopId}.",
+  "@trackCrowdedReported": {
+    "placeholders": {
+      "stopId": { "type": "String" }
+    }
+  },
+  "trackDelayReported": "Delay reported for {stopId}.",
+  "@trackDelayReported": {
+    "placeholders": {
+      "stopId": { "type": "String" }
+    }
+  },
+  "trackReportSubmitFailed": "Could not submit report: {error}",
+  "@trackReportSubmitFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "trackCancelActiveTripTitle": "Cancel active trip?",
+  "trackCancelActiveTripBody": "This will stop live tracking and clear the saved route.",
+  "trackKeepTrip": "Keep Trip",
+  "trackTitleLeading": "Trip",
+  "trackTitleAccent": "Motion",
+  "trackTitleSubtitle": "Tracking",
+  "trackPickStationFromResults": "Pick a station from the search results.",
+  "trackPreparingTimeline": "Preparing route timeline...",
+  "trackSending": "Sending...",
+  "trackReport": "Report",
+  "trackSyncing": "syncing",
+  "trackArrived": "Arrived",
+  "trackStopsRemaining": "{count, plural, =1{1 stop} other{{count} stops}}",
+  "@trackStopsRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "trackTimeLeft": "Time left",
+  "trackArriveBy": "Arrive by",
+  "trackPercent": "{percent}%",
+  "@trackPercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "trackPercentCompleted": "{percent}% completed",
+  "@trackPercentCompleted": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "trackChangeDestination": "Change destination",
+  "trackChangeTo": "Change to {routeId}",
+  "@trackChangeTo": {
+    "placeholders": {
+      "routeId": { "type": "String" }
+    }
+  },
+  "trackStartStation": "Start station",
+  "trackEndStation": "End station",
+  "trackForecast": "Forecast: {label}",
+  "@trackForecast": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "trackCrowdedTrain": "Crowded train",
+  "trackDelay": "Delay",
+  "trackNoActiveTrip": "No active trip yet.",
+  "trackNoActiveTripBody": "Search for a destination here and start tracking straight from the track page.",
+  "trackStartingTrip": "Starting trip...",
+  "trackSearch": "Search",
+  "trackPlanAhead": "Plan ahead",
+  "trackComfortRoute": "Comfort route",
+  "trackEfficiencyRoute": "Efficiency route",
+  "trackCrowdShort": "Crowd: {label}",
+  "@trackCrowdShort": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "trackLocatingTrainPath": "Locating train path",
+  "trackRemaining": "Remaining: {distance}",
+  "@trackRemaining": {
+    "placeholders": {
+      "distance": { "type": "String" }
+    }
+  },
+  "trackCalculatingEta": "Calculating ETA",
+  "trackJourney": "Journey: {duration}",
+  "@trackJourney": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "trackOriginDestination": "{origin} -> {destination}",
+  "@trackOriginDestination": {
+    "placeholders": {
+      "origin": { "type": "String" },
+      "destination": { "type": "String" }
+    }
+  },
+
+  "stationsTitle": "Station Atlas",
+  "stationsNearestTooltip": "Nearest",
+  "stationsSearchHint": "Search by station, line, or code",
+  "stationsClearSearch": "Clear search",
+  "stationsLoadFailed": "Failed to load stations from Supabase",
+  "stationsEmptyTable": "Connected, but table train_stops_kl has 0 rows.",
+  "stationsNoMatch": "No stations match your search.",
+  "stationsLineColors": "Line Colors",
+  "stationsArrivalsButton": "Arrivals",
+  "stationsUnnamedStation": "Unnamed Station",
+  "stationsUnknownCrowdLevel": "Unknown crowd level",
+  "stationsUnknown": "Unknown",
+  "stationsLocationServicesDisabled": "Location services are disabled.",
+  "stationsLocationPermissionDenied": "Location permission denied.",
+  "stationsLocationPermissionDeniedForever": "Location permission denied forever. Enable it in settings.",
+  "stationsNoValidCoordinates": "No valid stop_lat/stop_lon found to calculate distance.",
+  "stationsNearestMessage": "Nearest: {station} ({distance}) at {lat}, {lon}",
+  "@stationsNearestMessage": {
+    "placeholders": {
+      "station": { "type": "String" },
+      "distance": { "type": "String" },
+      "lat": { "type": "String" },
+      "lon": { "type": "String" }
+    }
+  },
+  "stationsLocationFailed": "Failed to get location: {error}",
+  "@stationsLocationFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "stationsMissingStopId": "Selected station is missing stop_id.",
+  "stationsNearestOriginFailed": "Could not determine nearest origin station.",
+  "stationsAlreadyAtStation": "You are already nearest to this station.",
+  "stationsNoRouteFoundFromTo": "No route found from {origin} to {destination}.",
+  "@stationsNoRouteFoundFromTo": {
+    "placeholders": {
+      "origin": { "type": "String" },
+      "destination": { "type": "String" }
+    }
+  },
+  "stationsNoOfflineRouteCache": "No offline route cache available. Go online once to sync route_connections.",
+  "stationsWalkHiddenFarFromStations": "Current location is far from supported stations. Walk distance is hidden from ETA.",
+  "stationsPlanRouteFailed": "Failed to plan route: {error}",
+  "@stationsPlanRouteFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "stationsSelectedTimeInPast": "Selected time is in the past. Using current time instead.",
+  "stationsWhenDepartTitle": "When do you want to depart?",
+  "stationsChooseDepartSubtitle": "Choose now or pick a specific date and time.",
+  "stationsLeaveNowButton": "Leave Now",
+  "stationsChooseDateTimeButton": "Choose Date & Time",
+  "stationsRouteSourceDisruptionLocal": "Disruption-aware reroute (local)",
+  "stationsRouteSourceRpcAlerts": "Supabase RPC (service alerts active)",
+  "stationsRouteSourceRpc": "Supabase RPC",
+  "stationsRouteSourceDisruptionGraph": "Disruption-aware route graph",
+  "stationsRouteSourceGraphCache": "Supabase route graph cache (RPC unavailable)",
+  "stationsDisruptionKjTitle": "Peak crowd control on Kelana Jaya Line",
+  "stationsDisruptionKjDetail": "Expect longer dwell times during rush-hour boarding.",
+  "stationsDisruptionAgTitle": "Platform congestion on Ampang Line",
+  "stationsDisruptionAgDetail": "Midday crowding may slow boarding and transfers.",
+  "stationsDisruptionMrTitle": "Reduced Monorail frequency",
+  "stationsDisruptionMrDetail": "Late-evening headways are wider than usual.",
+  "stationsMissingGtfsStopId": "Selected station is missing a GTFS stop id.",
+  "stationsNoCodeForReport": "No station code found for reporting.",
+  "stationsTooFarFromStation": "You are {distance}m from this station. Please move within 500m for accurate reporting.",
+  "@stationsTooFarFromStation": {
+    "placeholders": {
+      "distance": { "type": "int" }
+    }
+  },
+  "stationsEnableLocationToReport": "Enable location to verify proximity before reporting crowd levels.",
+  "stationsReportCrowdLevel": "Report Crowd Level",
+  "stationsStationCodeLabel": "Station Code",
+  "stationsHowCrowdedNow": "How crowded is it now?",
+  "stationsCrowdLevelOption": "L{level} {label}",
+  "@stationsCrowdLevelOption": {
+    "placeholders": {
+      "level": { "type": "int" },
+      "label": { "type": "String" }
+    }
+  },
+  "stationsMoveCloser": "Move Closer to Submit",
+  "stationsSubmitReport": "Submit Report",
+  "stationsReportSubmitted": "Thanks. Crowd report submitted for {stopId}.",
+  "@stationsReportSubmitted": {
+    "placeholders": {
+      "stopId": { "type": "String" }
+    }
+  },
+  "stationsReportSubmitFailed": "Failed to submit report: {error}",
+  "@stationsReportSubmitFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "stationsSuggestedRoute": "Suggested Route",
+  "stationsRouteSummary": "{originName} ({originStopId}) -> {destinationName} ({destinationStopId})",
+  "@stationsRouteSummary": {
+    "placeholders": {
+      "originName": { "type": "String" },
+      "originStopId": { "type": "String" },
+      "destinationName": { "type": "String" },
+      "destinationStopId": { "type": "String" }
+    }
+  },
+  "stationsDepartAt": "Depart: {time}",
+  "@stationsDepartAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "stationsArriveAt": "Arrive: {time}",
+  "@stationsArriveAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "stationsBaseEta": "Base ETA ~ {duration}",
+  "@stationsBaseEta": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "stationsCrowdEta": "Crowd ETA ~ {duration}",
+  "@stationsCrowdEta": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "stationsForecastConfidenceChip": "Forecast confidence {percent}",
+  "@stationsForecastConfidenceChip": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "stationsTripCrowd": "Trip Crowd: {label}",
+  "@stationsTripCrowd": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "stationsStopCount": "{count, plural, =1{1 stop} other{{count} stops}}",
+  "@stationsStopCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "stationsReroutedAroundDisruption": "Rerouted around disruption",
+  "stationsRouteSource": "Source: {source}",
+  "@stationsRouteSource": {
+    "placeholders": {
+      "source": { "type": "String" }
+    }
+  },
+  "stationsServiceAlerts": "Service alerts: {alerts}",
+  "@stationsServiceAlerts": {
+    "placeholders": {
+      "alerts": { "type": "String" }
+    }
+  },
+  "stationsWalkToOrigin": "Walk to origin: {distance}",
+  "@stationsWalkToOrigin": {
+    "placeholders": {
+      "distance": { "type": "String" }
+    }
+  },
+  "stationsNoRouteSegments": "No route segments available.",
+  "stationsSegmentTimeRange": "{depart} to {arrive} - {label}",
+  "@stationsSegmentTimeRange": {
+    "placeholders": {
+      "depart": { "type": "String" },
+      "arrive": { "type": "String" },
+      "label": { "type": "String" }
+    }
+  },
+  "stationsForecastConfidence": "Forecast confidence: {percent}",
+  "@stationsForecastConfidence": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "stationsBoardingTip": "Coach/platform tip: {tip}",
+  "@stationsBoardingTip": {
+    "placeholders": {
+      "tip": { "type": "String" }
+    }
+  },
+  "stationsServiceAlert": "Service alert: {note}",
+  "@stationsServiceAlert": {
+    "placeholders": {
+      "note": { "type": "String" }
+    }
+  },
+  "stationsIncludesWaitingTime": "Includes approx. {minutes} min waiting time",
+  "@stationsIncludesWaitingTime": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "stationsForecastReasonClosed": "Train service is currently outside operating hours.",
+  "stationsForecastReasonRecentReports": "recent rider reports",
+  "stationsForecastReasonHourlyForecast": "hourly ridership forecast",
+  "stationsForecastReasonSimulation": "10-minute simulation fallback",
+  "stationsForecastReasonOfflineFallback": "offline fallback estimate",
+  "stationsForecastReasonTransferWait": "transfer wait included",
+  "stationsForecastReasonPeakLoad": "peak-load conditions likely",
+  "stationsForecastReasonStandingDemand": "standing demand likely",
+  "stationsBoardingTipTransfer": "Follow interchange signs promptly at {station}.",
+  "@stationsBoardingTipTransfer": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "stationsBoardingTipMiddleRear": "Board middle-rear coach for a faster transfer at {station}.",
+  "@stationsBoardingTipMiddleRear": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "stationsBoardingTipNearDoors": "Board near the doors for a quicker exit at {station}.",
+  "@stationsBoardingTipNearDoors": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "stationsBoardingTipPlatformSigns": "Follow platform signs toward {station}-bound service.",
+  "@stationsBoardingTipPlatformSigns": {
+    "placeholders": {
+      "station": { "type": "String" }
+    }
+  },
+  "stationsSegmentTransfer": "Transfer from {from} to {to} ({base} base, ~{forecast} forecast)",
+  "@stationsSegmentTransfer": {
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" },
+      "base": { "type": "String" },
+      "forecast": { "type": "String" }
+    }
+  },
+  "stationsSegmentRide": "Take {route} from {from} to {to} ({base} base, ~{forecast} forecast)",
+  "@stationsSegmentRide": {
+    "placeholders": {
+      "route": { "type": "String" },
+      "from": { "type": "String" },
+      "to": { "type": "String" },
+      "base": { "type": "String" },
+      "forecast": { "type": "String" }
+    }
+  },
+  "stationsFareTotal": "Fare RM {amount}",
+  "@stationsFareTotal": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "stationsFareTicketCount": "{count, plural, =1{1 ticket} other{{count} tickets}}",
+  "@stationsFareTicketCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "stationsSegmentFare": "RM {amount}",
+  "@stationsSegmentFare": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "arrivalsNextTrain": "NEXT TRAIN",
+  "arrivalsSignalLost": "SIGNAL LOST — TAP TO RETRY",
+  "arrivalsNoScheduledTrains": "NO SCHEDULED TRAINS",
+  "arrivalsOfflineStaticSchedule": "OFFLINE — STATIC SCHEDULE",
+  "arrivalsGtfsStaticSchedule": "GTFS STATIC SCHEDULE",
+  "arrivalsToDestination": "TO {destination}",
+  "@arrivalsToDestination": {
+    "placeholders": {
+      "destination": { "type": "String" }
+    }
+  },
+  "arrivalsArriving": "ARRIVING",
+  "arrivalsMinutesShort": "{minutes} min",
+  "@arrivalsMinutesShort": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "crowdBoardTitle": "Crowd Pulse",
+  "crowdBoardSearchHint": "Search station name",
+  "crowdBoardLoading": "Loading…",
+  "crowdBoardEmpty": "No station crowd data available yet.",
+  "crowdBoardFilterAll": "All",
+  "crowdBoardLevelClosed": "{label} · Closed",
+  "@crowdBoardLevelClosed": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "forecastTitle": "Crowd Outlook",
+  "forecastNoStations": "No stations found.",
+  "forecastStationLabel": "Station",
+  "forecastLoadFailed": "Failed to load crowd forecast: {error}",
+  "@forecastLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "forecastEmpty": "No forecast yet for this station.",
+  "forecastClosingHoursBody": "Train service is currently closed. Forecasts resume from 6:00 AM.",
+  "forecastLevel1Subtitle": "Almost empty with seats widely available",
+  "forecastLevel2Subtitle": "Comfortable ride with space to spare",
+  "forecastLevel3Subtitle": "Moderate traffic with routine standing demand",
+  "forecastLevel4Subtitle": "Heavy crowding with slower boarding likely",
+  "forecastLevel5Subtitle": "Crowded conditions across the platform and carriage",
+  "forecastUnknownLevelSubtitle": "No valid occupancy level",
+  "forecastExplanationClosed": "Train service is outside operating hours. Stations are shown as unavailable until 6:00 AM.",
+  "forecastExplanationRecentReports": "based on recent rider reports",
+  "forecastExplanationHourlyForecast": "based on hourly ridership forecasts",
+  "forecastExplanationSimulation": "using 10-minute simulation fallback",
+  "forecastExplanationOfflineFallback": "using offline fallback estimate",
+  "forecastReasonVeryLowOccupancy": "very low expected occupancy",
+  "forecastReasonComfortableSpace": "comfortable space still available",
+  "forecastReasonModerateStanding": "moderate standing demand likely",
+  "forecastLevelLabel": "Level {level}",
+  "@forecastLevelLabel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "forecastLevelClosed": "Level {level} · Closed",
+  "@forecastLevelClosed": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "forecastUpdated": "Updated: {time}",
+  "@forecastUpdated": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  }
+}

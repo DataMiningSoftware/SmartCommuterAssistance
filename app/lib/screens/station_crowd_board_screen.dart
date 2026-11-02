@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/crowd_reports_service.dart';
 
 class StationCrowdBoardScreen extends StatefulWidget {
@@ -38,9 +39,10 @@ class _StationCrowdBoardScreenState extends State<StationCrowdBoardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crowd Pulse'),
+        title: Text(l10n.crowdBoardTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -49,9 +51,9 @@ class _StationCrowdBoardScreenState extends State<StationCrowdBoardScreen> {
             TextField(
               controller: _searchController,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                hintText: 'Search station name',
-                prefixIcon: Icon(Icons.search_rounded),
+              decoration: InputDecoration(
+                hintText: l10n.crowdBoardSearchHint,
+                prefixIcon: const Icon(Icons.search_rounded),
               ),
             ),
             const SizedBox(height: 14),
@@ -60,12 +62,19 @@ class _StationCrowdBoardScreenState extends State<StationCrowdBoardScreen> {
                 future: _boardFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: Text('Loading…', style: TextStyle(color: Color(0xFF667085))));
+                    return Center(
+                      child: Text(
+                        l10n.crowdBoardLoading,
+                        style: const TextStyle(color: Color(0xFF667085)),
+                      ),
+                    );
                   }
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
-                        'Failed to load crowd board: ${snapshot.error}',
+                        l10n.homeLoadCrowdBoardFailed(
+                          snapshot.error.toString(),
+                        ),
                         style: const TextStyle(color: Color(0xFFB42318)),
                         textAlign: TextAlign.center,
                       ),
@@ -75,10 +84,10 @@ class _StationCrowdBoardScreenState extends State<StationCrowdBoardScreen> {
                   final items =
                       snapshot.data ?? const <StationCrowdBoardItem>[];
                   if (items.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        'No station crowd data available yet.',
-                        style: TextStyle(
+                        l10n.crowdBoardEmpty,
+                        style: const TextStyle(
                           color: Color(0xFF667085),
                           fontWeight: FontWeight.w600,
                         ),
@@ -120,7 +129,11 @@ class _StationCrowdBoardScreenState extends State<StationCrowdBoardScreen> {
                             final routeId = routeOptions[index];
                             final selected = routeId == _selectedRoute;
                             return ChoiceChip(
-                              label: Text(routeId),
+                              label: Text(
+                                routeId == 'All'
+                                    ? l10n.crowdBoardFilterAll
+                                    : routeId,
+                              ),
                               selected: selected,
                               onSelected: (_) {
                                 setState(() => _selectedRoute = routeId);
@@ -178,8 +191,9 @@ class _CrowdBoardStationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isClosed = item.isClosedHours;
-    final ui = _crowdUi(item.occupancyLevel, isClosedHours: isClosed);
+    final ui = _crowdUi(l10n, item.occupancyLevel, isClosedHours: isClosed);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' | ');
     final stopSummary = item.stopIds.join(', ');
@@ -298,9 +312,16 @@ class _CrowdBoardStationTile extends StatelessWidget {
     );
   }
 
-  _CrowdBadgeUi _crowdUi(int level, {bool isClosedHours = false}) {
+  _CrowdBadgeUi _crowdUi(
+    AppLocalizations l10n,
+    int level, {
+    bool isClosedHours = false,
+  }) {
     final crowd = crowdLevelStyleFromIndex(level);
-    final label = isClosedHours ? '${crowd.label} · Closed' : crowd.label;
+    final baseLabel = localizedCrowdLevelLabel(l10n, level);
+    final label = isClosedHours
+        ? l10n.crowdBoardLevelClosed(baseLabel)
+        : baseLabel;
     final color = isClosedHours ? const Color(0xFF98A2B3) : crowd.color;
     return _CrowdBadgeUi(label, color);
   }

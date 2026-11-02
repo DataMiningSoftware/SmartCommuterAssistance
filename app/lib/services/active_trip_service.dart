@@ -31,6 +31,44 @@ class ActiveTripStop {
   }
 }
 
+class TripProgressStop {
+  final String stopId;
+  final String stopName;
+  final String routeId;
+  final int stopIndex;
+
+  const TripProgressStop({
+    required this.stopId,
+    required this.stopName,
+    required this.routeId,
+    required this.stopIndex,
+  });
+}
+
+class TripProgressWindow {
+  final List<TripProgressStop> all;
+  final List<TripProgressStop> visible;
+  final int currentIndex;
+  final bool hasMore;
+
+  const TripProgressWindow({
+    required this.all,
+    required this.visible,
+    required this.currentIndex,
+    required this.hasMore,
+  });
+
+  static const empty = TripProgressWindow(
+    all: <TripProgressStop>[],
+    visible: <TripProgressStop>[],
+    currentIndex: 0,
+    hasMore: false,
+  );
+
+  TripProgressStop? get current =>
+      currentIndex >= 0 && currentIndex < all.length ? all[currentIndex] : null;
+}
+
 class ActiveTrip {
   final String originStopId;
   final String destinationStopId;
@@ -41,6 +79,7 @@ class ActiveTrip {
   final DateTime createdAt;
   final int? estimatedTotalMinutes;
   final List<ActiveTripStop> stops;
+  final int currentStopIndex;
 
   const ActiveTrip({
     required this.originStopId,
@@ -52,7 +91,23 @@ class ActiveTrip {
     required this.createdAt,
     required this.estimatedTotalMinutes,
     required this.stops,
+    this.currentStopIndex = 0,
   });
+
+  ActiveTrip withProgress(int index) {
+    return ActiveTrip(
+      originStopId: originStopId,
+      destinationStopId: destinationStopId,
+      originName: originName,
+      destinationName: destinationName,
+      routePreference: routePreference,
+      highestCrowdLevel: highestCrowdLevel,
+      createdAt: createdAt,
+      estimatedTotalMinutes: estimatedTotalMinutes,
+      stops: stops,
+      currentStopIndex: index,
+    );
+  }
 
   factory ActiveTrip.fromJson(Map<String, dynamic> json) {
     final rawStops = json['stops'];
@@ -80,6 +135,9 @@ class ActiveTrip {
           ? (json['estimatedTotalMinutes'] as num).toInt()
           : int.tryParse(json['estimatedTotalMinutes']?.toString() ?? ''),
       stops: stops,
+      currentStopIndex: json['currentStopIndex'] is num
+          ? (json['currentStopIndex'] as num).toInt()
+          : int.tryParse(json['currentStopIndex']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -94,6 +152,7 @@ class ActiveTrip {
       'createdAt': createdAt.toIso8601String(),
       'estimatedTotalMinutes': estimatedTotalMinutes,
       'stops': stops.map((stop) => stop.toJson()).toList(),
+      'currentStopIndex': currentStopIndex,
     };
   }
 
@@ -164,4 +223,73 @@ class ActiveTripService {
     await prefs.remove(_storageKey);
     activeTrip.value = null;
   }
+
+  Future<void> updateProgress(int index) async {
+    final trip = activeTrip.value;
+    if (trip == null || trip.stops.isEmpty) return;
+    final clamped = index.clamp(0, trip.stops.length - 1).toInt();
+    if (clamped <= trip.currentStopIndex) return;
+    await saveTrip(trip.withProgress(clamped));
+  }
+}
+
+String _progressNameKey(String value) {
+  return value.trim().toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
+}
+
+List<TripProgressStop> buildTripProgressStops(List<ActiveTripStop> stops) {
+  final merged = <TripProgressStop>[];
+  for (var i = 0; i < stops.length; i++) {
+    final stop = stops[i];
+    final name = stop.stopName.trim();
+    if (name.isEmpty) continue;
+    final key = _progressNameKey(name);
+    if (merged.isNotEmpty && _progressNameKey(merged.last.stopName) == key) {
+      merged[merged.length - 1] = TripProgressStop(
+        stopId: stop.stopId,
+        stopName: name,
+        routeId: stop.routeId,
+        stopIndex: i,
+      );
+      continue;
+    }
+    merged.add(
+      TripProgressStop(
+        stopId: stop.stopId,
+        stopName: name,
+        routeId: stop.routeId,
+        stopIndex: i,
+      ),
+    );
+  }
+  return merged;
+}
+
+TripProgressWindow buildTripProgressWindow(
+  ActiveTrip trip, {
+  int ahead = 2,
+}) {
+  final all = buildTripProgressStops(trip.stops);
+  if (all.isEmpty) return TripProgressWindow.empty;
+
+  var current = 0;
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].stopIndex <= trip.currentStopIndex) {
+      current = i;
+    } else {
+      break;
+    }
+  }
+
+  final visible = <TripProgressStop>[];
+  for (var i = current; i < all.length && visible.length <= ahead; i++) {
+    visible.add(all[i]);
+  }
+
+  return TripProgressWindow(
+    all: all,
+    visible: visible,
+    currentIndex: current,
+    hasMore: current + visible.length < all.length,
+  );
 }

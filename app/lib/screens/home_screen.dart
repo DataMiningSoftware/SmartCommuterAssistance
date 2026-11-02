@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/location_privacy_service.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<_HomeStationSearchOption>> _stationSearchFuture;
   late Future<Map<String, bool>> _stationClosedByStopFuture;
   Timer? _nearestAutoRefreshTimer;
+  Timer? _routeProgressTimer;
   bool _isLoadingMap = true;
   String? _mapError;
   final Map<String, _MapStop> _mapStopsById = <String, _MapStop>{};
@@ -55,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       (options) => _loadStationClosedByStop(options, _departureTime),
     );
     _startNearestCrowdAutoRefresh();
+    _startActiveTripProgressRefresh();
   }
 
   void _onLocationConsentChanged() {
@@ -76,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _prepareTrip(_HomeStationSearchOption option) async {
     if (_isPreparingTrip) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isPreparingTrip = true);
     try {
       final closedByStop =
@@ -88,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (isClosed) {
         _showHomeMessage(
-          '${option.stationName} is unavailable during closing hours for the selected departure time.',
+          l10n.homeStationUnavailableClosingHours(option.stationName),
         );
         return;
       }
@@ -99,13 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
         position = _position;
       }
       if (!mounted || position == null) {
-        _showHomeMessage('Location is required before starting a trip.');
+        _showHomeMessage(l10n.homeLocationRequired);
         return;
       }
 
       final nearestStops = _nearestMapStops(limit: 1);
       if (nearestStops.isEmpty) {
-        _showHomeMessage('Could not determine your nearest station yet.');
+        _showHomeMessage(l10n.homeNearestStationUnavailable);
         return;
       }
 
@@ -133,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crowdByStopId: crowdByStopId,
         );
         if (efficientResult == null) {
-          _showHomeMessage('No route found for ${option.stationName}.');
+          _showHomeMessage(l10n.homeNoRouteFound(option.stationName));
           return;
         }
 
@@ -223,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
       NavigationState.instance.goTo(2);
     } catch (e) {
       if (!mounted) return;
-      _showHomeMessage('Could not prepare trip: $e');
+      _showHomeMessage(l10n.homePrepareTripFailed(e.toString()));
     } finally {
       if (mounted) {
         setState(() => _isPreparingTrip = false);
@@ -236,21 +240,25 @@ class _HomeScreenState extends State<HomeScreen> {
     required _HomeRoutePreview efficientPreview,
     required _HomeRoutePreview relaxedPreview,
   }) {
+    final l10n = AppLocalizations.of(context);
     final efficientReasoning = _buildChoiceReasoningLabels(
       preview: efficientPreview,
       comparison: relaxedPreview,
       prioritizeCrowd: false,
+      l10n: l10n,
     );
     final relaxedReasoning = _buildChoiceReasoningLabels(
       preview: relaxedPreview,
       comparison: efficientPreview,
       prioritizeCrowd: true,
+      l10n: l10n,
     );
     return showModalBottomSheet<_HomeRoutePreview>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (context) {
+        final sheetL10n = AppLocalizations.of(context);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -258,17 +266,17 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.sentiment_dissatisfied_rounded,
                       color: Color(0xFFDC2626),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Looks like your route is crowded.',
-                        style: TextStyle(
+                        sheetL10n.homeRouteCrowdedTitle,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -278,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'A calmer trip to $destinationName is available, but it may take longer.',
+                  sheetL10n.homeCalmerTripAvailable(destinationName),
                   style: const TextStyle(
                     color: Color(0xFF667085),
                     fontWeight: FontWeight.w600,
@@ -286,21 +294,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 _HomeRouteChoiceCard(
-                  title: 'Efficient route',
-                  subtitle: 'Fastest option right now',
+                  title: sheetL10n.homeEfficientRoute,
+                  subtitle: sheetL10n.homeFastestOptionNow,
                   preview: efficientPreview,
                   reasoningLabels: efficientReasoning,
-                  actionLabel: 'Keep this route',
+                  actionLabel: sheetL10n.homeKeepThisRoute,
                   isPrimary: false,
                   onTap: () => Navigator.of(context).pop(efficientPreview),
                 ),
                 const SizedBox(height: 10),
                 _HomeRouteChoiceCard(
-                  title: 'Relaxed route',
-                  subtitle: 'Calmer ride with a small detour',
+                  title: sheetL10n.homeRelaxedRoute,
+                  subtitle: sheetL10n.homeCalmerRideDetour,
                   preview: relaxedPreview,
                   reasoningLabels: relaxedReasoning,
-                  actionLabel: 'Take a more relaxed route',
+                  actionLabel: sheetL10n.homeTakeRelaxedRoute,
                   isPrimary: true,
                   onTap: () => Navigator.of(context).pop(relaxedPreview),
                 ),
@@ -315,26 +323,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<bool> _showLocationConsentDialog() async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Location Privacy'),
-        content: const Text(
-          'Your location is used to find nearby stations and '
-          'provide arrival estimates. Coordinates are rounded '
-          'to ~1 km precision before being sent to our servers. '
-          'Your exact location is never stored or shared.\n\n'
-          'You can change this later in Profile settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Skip'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Allow'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        return AlertDialog(
+          title: Text(l10n.homeLocationPrivacyTitle),
+          content: Text(l10n.homeLocationPrivacyBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.homeSkip),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.homeAllow),
+            ),
+          ],
+        );
+      },
     );
     if (result == true) {
       await LocationPrivacyService.setConsent(true);
@@ -375,13 +380,15 @@ class _HomeScreenState extends State<HomeScreen> {
     required _HomeRoutePreview preview,
     required _HomeRoutePreview comparison,
     required bool prioritizeCrowd,
+    required AppLocalizations l10n,
   }) {
     final labels = <String>[];
     final crowdDelta = comparison.highestCrowdLevel - preview.highestCrowdLevel;
-    final crowdLabel = _formatCrowdDeltaLabel(crowdDelta);
+    final crowdLabel = _formatCrowdDeltaLabel(crowdDelta, l10n);
     final timeLabel = _formatTimeDeltaLabel(
       preview.totalMinutes - comparison.totalMinutes,
       preferNoPenalty: prioritizeCrowd,
+      l10n: l10n,
     );
 
     if (prioritizeCrowd && crowdLabel != null) {
@@ -393,36 +400,40 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!prioritizeCrowd && crowdLabel != null) {
       labels.add(crowdLabel);
     }
-    labels.add(_formatTransferCountLabel(preview.transferCount));
+    labels.add(_formatTransferCountLabel(preview.transferCount, l10n));
     return labels;
   }
 
-  String? _formatCrowdDeltaLabel(int delta) {
+  String? _formatCrowdDeltaLabel(int delta, AppLocalizations l10n) {
     if (delta == 0) return null;
     final magnitude = delta.abs();
-    final suffix = magnitude == 1 ? '' : 's';
-    final direction = delta > 0 ? 'lower' : 'higher';
-    return '$magnitude crowd level$suffix $direction';
+    return delta > 0
+        ? l10n.homeCrowdLevelsLower(magnitude)
+        : l10n.homeCrowdLevelsHigher(magnitude);
   }
 
   String? _formatTimeDeltaLabel(
     int delta, {
     required bool preferNoPenalty,
+    required AppLocalizations l10n,
   }) {
-    if (delta < 0) return 'Fastest';
-    if (delta == 0) return preferNoPenalty ? 'No time penalty' : 'Fastest';
-    return '+$delta min';
+    if (delta < 0) return l10n.homeFastest;
+    if (delta == 0) {
+      return preferNoPenalty ? l10n.homeNoTimePenalty : l10n.homeFastest;
+    }
+    return l10n.homePlusMinutes(delta);
   }
 
-  String _formatTransferCountLabel(int count) {
-    if (count <= 0) return 'Direct ride';
-    return count == 1 ? '1 transfer' : '$count transfers';
+  String _formatTransferCountLabel(int count, AppLocalizations l10n) {
+    if (count <= 0) return l10n.homeDirectRide;
+    return l10n.homeTransferCount(count);
   }
 
   @override
   void dispose() {
     LocationPrivacyService.consent.removeListener(_onLocationConsentChanged);
     _nearestAutoRefreshTimer?.cancel();
+    _routeProgressTimer?.cancel();
     _routeSearchController.dispose();
     super.dispose();
   }
@@ -509,6 +520,79 @@ class _HomeScreenState extends State<HomeScreen> {
         _refreshNearestCrowd();
       },
     );
+  }
+
+  void _startActiveTripProgressRefresh() {
+    _routeProgressTimer?.cancel();
+    _routeProgressTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) {
+        if (!mounted) return;
+        unawaited(_refreshActiveTripProgress());
+      },
+    );
+  }
+
+  Future<void> _refreshActiveTripProgress() async {
+    final trip = _activeTripService.activeTrip.value;
+    if (trip == null || trip.stops.length < 2) return;
+    if (trip.currentStopIndex >= trip.stops.length - 1) return;
+
+    final position = await _bestAvailablePosition();
+    int? candidate;
+    if (position != null) {
+      final nearest = _nearestTripStopIndex(trip, position);
+      if (nearest != null) candidate = nearest;
+    }
+    candidate ??= _estimatedTripStopIndex(trip);
+    if (candidate == null) return;
+
+    final capped = math.min(candidate, trip.currentStopIndex + 2);
+    await _activeTripService.updateProgress(capped);
+  }
+
+  Future<Position?> _bestAvailablePosition() async {
+    final cached = _position;
+    try {
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null &&
+          (cached == null || !lastKnown.timestamp.isBefore(cached.timestamp))) {
+        return lastKnown;
+      }
+    } catch (_) {}
+    return cached;
+  }
+
+  int? _nearestTripStopIndex(ActiveTrip trip, Position position) {
+    int? bestIndex;
+    var bestDistance = double.infinity;
+    for (var i = 0; i < trip.stops.length; i++) {
+      final stop = _mapStopsById[trip.stops[i].stopId];
+      if (stop == null) continue;
+      final distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        stop.latitude,
+        stop.longitude,
+      );
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
+      }
+    }
+    if (bestIndex == null || bestDistance > 900) return null;
+    return bestIndex;
+  }
+
+  int? _estimatedTripStopIndex(ActiveTrip trip) {
+    final total = trip.estimatedTotalMinutes;
+    if (total == null || total <= 0) return null;
+    final elapsed = DateTime.now().difference(trip.createdAt);
+    if (elapsed.isNegative) return trip.currentStopIndex;
+    if (elapsed > Duration(minutes: total * 2 + 30)) return null;
+    final fraction = (elapsed.inMinutes / total).clamp(0.0, 1.0);
+    final index = (fraction * (trip.stops.length - 1)).floor();
+    return index.clamp(0, trip.stops.length - 1).toInt();
   }
 
   Future<void> _loadMapStops() async {
@@ -993,16 +1077,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         toolbarHeight: 78,
-        title: const AppPageTitle(
+        title: AppPageTitle(
           icon: Icons.train_rounded,
           leadingText: 'Smart',
           accentText: 'Commuter',
           badgeText: 'ASSISTANT+',
-          subtitle: 'Home base',
+          subtitle: l10n.homeSubtitle,
         ),
         elevation: 0,
       ),
@@ -1024,9 +1109,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 delegate: SliverChildListDelegate([
                   _HeroCard(
                     theme: Theme.of(context),
-                    title: 'Ride smart, skip the squeeze.',
-                    subtitle:
-                        'Live crowd-aware routing, trip tracking, and route glow in one place.',
+                    title: l10n.homeHeroTitle,
+                    subtitle: l10n.homeHeroSubtitle,
                   ),
                   const SizedBox(height: 16),
                   ValueListenableBuilder<ActiveTrip?>(
@@ -1087,8 +1171,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: _ActionTile(
                           icon: Icons.train_rounded,
-                          label: 'All Stations',
-                          subtitle: 'Browse lines and interchanges',
+                          label: l10n.homeAllStations,
+                          subtitle: l10n.homeAllStationsSubtitle,
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -1104,11 +1188,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context, trip, _) {
                             return _ActionTile(
                               icon: Icons.route_rounded,
-                              label:
-                                  trip == null ? 'Track Route' : 'Resume Trip',
+                              label: trip == null
+                                  ? l10n.homeTrackRoute
+                                  : l10n.homeResumeTrip,
                               subtitle: trip == null
-                                  ? 'Start a trip to unlock tracking'
-                                  : '${trip.originName} to ${trip.destinationName}',
+                                  ? l10n.homeStartTripHint
+                                  : l10n.homeTripDirection(
+                                      trip.originName,
+                                      trip.destinationName,
+                                    ),
                               onTap: () => NavigationState.instance.goTo(2),
                             );
                           },
@@ -1133,25 +1221,25 @@ enum _HomeRouteMode {
 }
 
 extension _HomeRouteModeUi on _HomeRouteMode {
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case _HomeRouteMode.auto:
-        return 'Auto';
+        return l10n.homeRouteModeAuto;
       case _HomeRouteMode.efficiency:
-        return 'Efficient';
+        return l10n.homeRouteModeEfficient;
       case _HomeRouteMode.comfort:
-        return 'Relaxed';
+        return l10n.homeRouteModeRelaxed;
     }
   }
 
-  String get helperText {
+  String helperText(AppLocalizations l10n) {
     switch (this) {
       case _HomeRouteMode.auto:
-        return 'Compare efficient and relaxed routes, then ask only when the calmer route is worth it.';
+        return l10n.homeRouteModeAutoHelper;
       case _HomeRouteMode.efficiency:
-        return 'Always keep the fastest route.';
+        return l10n.homeRouteModeEfficientHelper;
       case _HomeRouteMode.comfort:
-        return 'Prefer lower crowd even if the trip takes a little longer.';
+        return l10n.homeRouteModeComfortHelper;
     }
   }
 }
@@ -1234,6 +1322,7 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 220),
@@ -1262,26 +1351,26 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Pick Your Next Stop',
-              style: TextStyle(
+            Text(
+              l10n.homePickNextStop,
+              style: const TextStyle(
                 fontSize: 30,
                 height: 1,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Search a destination, set your routing style, and preview crowd before you leave.',
-              style: TextStyle(
+            Text(
+              l10n.homeSearchDestinationHint,
+              style: const TextStyle(
                 color: Color(0xFF667085),
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Route style',
-              style: TextStyle(
+            Text(
+              l10n.homeRouteStyle,
+              style: const TextStyle(
                 color: Color(0xFF475467),
                 fontWeight: FontWeight.w800,
               ),
@@ -1301,7 +1390,7 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              widget.routeMode.helperText,
+              widget.routeMode.helperText(l10n),
               style: const TextStyle(
                 color: Color(0xFF667085),
                 fontWeight: FontWeight.w600,
@@ -1312,14 +1401,19 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
               future: widget.stationNamesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6),
-                    child: Text('Loading stations…', style: TextStyle(color: Color(0xFF667085), fontWeight: FontWeight.w600)),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      l10n.homeLoadingStations,
+                      style: const TextStyle(
+                          color: Color(0xFF667085),
+                          fontWeight: FontWeight.w600),
+                    ),
                   );
                 }
                 if (snapshot.hasError) {
                   return Text(
-                    'Failed to load stations: ${snapshot.error}',
+                    l10n.homeLoadStationsFailed(snapshot.error.toString()),
                     style: const TextStyle(color: Color(0xFFB42318)),
                   );
                 }
@@ -1327,11 +1421,11 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                 final stationOptions =
                     snapshot.data ?? const <_HomeStationSearchOption>[];
                 if (stationOptions.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 8),
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'No station names available yet. Showing a local sample list instead.',
-                      style: TextStyle(color: Color(0xFF667085)),
+                      l10n.homeNoStationNames,
+                      style: const TextStyle(color: Color(0xFF667085)),
                     ),
                   );
                 }
@@ -1357,7 +1451,9 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            '${option.stationName} is unavailable during closing hours for the selected departure time.',
+                            l10n.homeStationUnavailableClosingHours(
+                              option.stationName,
+                            ),
                           ),
                         ),
                       );
@@ -1412,7 +1508,7 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                             bottom: 260,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search train station',
+                            hintText: l10n.homeSearchTrainStation,
                             filled: true,
                             fillColor: Colors.white,
                             prefixIcon: const Icon(Icons.search_rounded),
@@ -1531,19 +1627,22 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
                                               false);
                                       final crowdUi = crowdForecast != null
                                           ? isClosed
-                                              ? const _HomeCrowdUi(
-                                                  label: 'Closing hours',
-                                                  color: Color(0xFF98A2B3),
+                                              ? _HomeCrowdUi(
+                                                  label: l10n.homeClosingHours,
+                                                  color: const Color(
+                                                      0xFF98A2B3),
                                                 )
                                               : _HomeCrowdUi.fromLevel(
+                                                  l10n,
                                                   crowdForecast.forecast
                                                           ?.occupancyLevel ??
                                                       1,
                                                 )
                                           : optionClosed
-                                              ? const _HomeCrowdUi(
-                                                  label: 'Closing hours',
-                                                  color: Color(0xFF98A2B3),
+                                              ? _HomeCrowdUi(
+                                                  label: l10n.homeClosingHours,
+                                                  color: const Color(
+                                                      0xFF98A2B3),
                                                 )
                                               : null;
 
@@ -1635,7 +1734,8 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
               child: OutlinedButton.icon(
                 onPressed: () => NavigationState.instance.goTo(2),
                 icon: const Icon(Icons.calendar_month_rounded, size: 16),
-                label: const Text('Plan Ahead', style: TextStyle(fontWeight: FontWeight.w700)),
+                label: Text(l10n.homePlanAhead,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -1658,6 +1758,7 @@ class _HomeRouteModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
@@ -1672,7 +1773,7 @@ class _HomeRouteModeChip extends StatelessWidget {
           ),
         ),
         child: Text(
-          mode.label,
+          mode.label(l10n),
           style: TextStyle(
             color: selected ? Colors.white : const Color(0xFF344054),
             fontWeight: FontWeight.w800,
@@ -1821,9 +1922,10 @@ class _HomeCrowdUi {
     required this.color,
   });
 
-  static _HomeCrowdUi fromLevel(int level) {
+  static _HomeCrowdUi fromLevel(AppLocalizations l10n, int level) {
     final crowd = crowdLevelStyleFromIndex(level);
-    return _HomeCrowdUi(label: crowd.label, color: crowd.color);
+    return _HomeCrowdUi(
+        label: localizedCrowdLevelLabel(l10n, level), color: crowd.color);
   }
 }
 
@@ -1890,6 +1992,7 @@ class _InlineHomeError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -1902,9 +2005,9 @@ class _InlineHomeError extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Live map unavailable',
-            style: TextStyle(
+          Text(
+            l10n.homeLiveMapUnavailable,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: Color(0xFFB42318),
@@ -1922,7 +2025,7 @@ class _InlineHomeError extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l10n.retry),
           ),
         ],
       ),
@@ -1943,17 +2046,24 @@ class _LiveTripSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localizations = MaterialLocalizations.of(context);
-    final originRouteId =
-        trip.stops.isEmpty ? 'N/A' : normalizeRouteId(trip.stops.first.routeId);
-    final destinationRouteId =
-        trip.stops.isEmpty ? 'N/A' : normalizeRouteId(trip.stops.last.routeId);
-    final crowdUi = _HomeCrowdUi.fromLevel(trip.highestCrowdLevel);
+    final l10n = AppLocalizations.of(context);
+    final progressWindow = buildTripProgressWindow(trip);
+    final crowdUi = _HomeCrowdUi.fromLevel(l10n, trip.highestCrowdLevel);
     final estimatedArrivalTime = trip.estimatedArrivalTime;
     final arrivalLabel = switch (estimatedArrivalTime) {
-      null => 'ETA syncing',
-      final value when value.isBefore(DateTime.now()) => 'Arriving now',
-      final value =>
-        'Arrive by ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))}',
+      null => l10n.homeEtaSyncing,
+      final value when value.isBefore(DateTime.now()) => l10n.homeArrivingNow,
+      final value => l10n.homeArriveBy(
+          localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))),
+    };
+    final minutesToDestination =
+        estimatedArrivalTime?.difference(DateTime.now()).inMinutes;
+    final progressLabel = switch (minutesToDestination) {
+      null => trip.routePreference == 'comfort'
+          ? l10n.homeRelaxedRoutingActive
+          : l10n.homeLiveTrackingReady,
+      final minutes when minutes <= 0 => l10n.homeArrivingNow,
+      final minutes => l10n.homeTripEtaTo(minutes, trip.destinationName),
     };
     return Container(
       width: double.infinity,
@@ -1976,7 +2086,7 @@ class _LiveTripSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Live Trip',
+                  l10n.homeLiveTrip,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1989,38 +2099,17 @@ class _LiveTripSummary extends StatelessWidget {
                 icon:
                     Icon(Icons.map_rounded, color: theme.colorScheme.onPrimary),
                 label: Text(
-                  'View map',
+                  l10n.homeViewMap,
                   style: TextStyle(color: theme.colorScheme.onPrimary),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _HomeLiveTripStationPill(
-                stationName: trip.originName,
-                routeId: originRouteId,
-              ),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              _HomeLiveTripStationPill(
-                stationName: trip.destinationName,
-                routeId: destinationRouteId,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          _HomeTripProgressRail(window: progressWindow),
+          const SizedBox(height: 10),
           Text(
-            trip.routePreference == 'comfort'
-                ? 'Relaxed routing is active.'
-                : 'Live tracking is ready.',
+            progressLabel,
             style: const TextStyle(
               color: Color(0xFFCFD8EA),
               fontWeight: FontWeight.w600,
@@ -2048,7 +2137,7 @@ class _LiveTripSummary extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                     children: [
-                      const TextSpan(text: 'Crowd level: '),
+                      TextSpan(text: l10n.homeCrowdLevelPrefix),
                       TextSpan(
                         text: crowdUi.label,
                         style: TextStyle(
@@ -2081,7 +2170,7 @@ class _LiveTripSummary extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () => NavigationState.instance.goTo(2),
                 icon: const Icon(Icons.track_changes_rounded),
-                label: const Text('Open tracking'),
+                label: Text(l10n.homeOpenTracking),
                 style: ElevatedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(
@@ -2093,6 +2182,196 @@ class _LiveTripSummary extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HomeTripProgressRail extends StatelessWidget {
+  final TripProgressWindow window;
+
+  const _HomeTripProgressRail({required this.window});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = window.visible;
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.0,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 10.0;
+          const moreWidth = 26.0;
+          final gaps = (entries.length - 1) + (window.hasMore ? 1 : 0);
+          final nodeWidth =
+              ((constraints.maxWidth - moreWidth - gaps * gap) / entries.length)
+                  .clamp(52.0, 104.0);
+          final fontSize = nodeWidth < 66 ? 9.0 : 10.0;
+
+          final children = <Widget>[];
+          for (var i = 0; i < entries.length; i++) {
+            if (i > 0) {
+              children.add(
+                _HomeTripRailConnector(
+                  width: gap,
+                  color: Colors.white.withValues(alpha: i == 1 ? 0.85 : 0.4),
+                ),
+              );
+            }
+            children.add(
+              _HomeTripRailNode(
+                name: entries[i].stopName,
+                routeId: entries[i].routeId,
+                isCurrent: i == 0,
+                width: nodeWidth,
+                fontSize: fontSize,
+              ),
+            );
+          }
+          if (window.hasMore) {
+            children.add(
+              _HomeTripRailConnector(
+                width: gap,
+                color: Colors.white.withValues(alpha: 0.28),
+              ),
+            );
+            children.add(const _HomeTripRailMore(width: moreWidth));
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HomeTripRailNode extends StatelessWidget {
+  final String name;
+  final String routeId;
+  final bool isCurrent;
+  final double width;
+  final double fontSize;
+
+  const _HomeTripRailNode({
+    required this.name,
+    required this.routeId,
+    required this.isCurrent,
+    required this.width,
+    required this.fontSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = getRouteColor(routeId);
+    final onColor = getRouteOnColor(routeId);
+    return SizedBox(
+      width: width,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 20,
+            child: Center(
+              child: Container(
+                width: isCurrent ? 20 : 12,
+                height: isCurrent ? 20 : 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isCurrent ? color : Colors.transparent,
+                  border: Border.all(
+                    color:
+                        isCurrent ? Colors.white : color.withValues(alpha: 0.9),
+                    width: isCurrent ? 3 : 2,
+                  ),
+                  boxShadow: isCurrent
+                      ? [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            blurRadius: 12,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: isCurrent
+                    ? Center(
+                        child: Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: onColor,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: fontSize,
+              height: 1.15,
+              fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w600,
+              color: Colors.white.withValues(alpha: isCurrent ? 1 : 0.72),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeTripRailConnector extends StatelessWidget {
+  final Color color;
+  final double width;
+
+  const _HomeTripRailConnector({
+    required this.color,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 9),
+      child: Container(
+        width: width,
+        height: 2,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeTripRailMore extends StatelessWidget {
+  final double width;
+
+  const _HomeTripRailMore({required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: SizedBox(
+        height: 20,
+        child: Center(
+          child: Icon(
+            Icons.more_horiz_rounded,
+            size: 20,
+            color: Colors.white.withValues(alpha: 0.45),
+          ),
+        ),
       ),
     );
   }
@@ -2142,6 +2421,7 @@ class _StationCrowdBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -2158,19 +2438,19 @@ class _StationCrowdBoard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Station Crowd Board',
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                      l10n.homeStationCrowdBoard,
+                      style: const TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.w900),
                     ),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Text(
-                      'Showing the nearest station to your current location.',
-                      style: TextStyle(
+                      l10n.homeNearestStationSubtitle,
+                      style: const TextStyle(
                         color: Color(0xFF667085),
                         fontWeight: FontWeight.w600,
                       ),
@@ -2180,12 +2460,12 @@ class _StationCrowdBoard extends StatelessWidget {
               ),
               TextButton(
                 onPressed: onOpenAllStations,
-                child: const Text('View all'),
+                child: Text(l10n.homeViewAll),
               ),
               IconButton(
                 onPressed: onRefresh,
                 icon: const Icon(Icons.refresh_rounded),
-                tooltip: 'Refresh nearby stations',
+                tooltip: l10n.homeRefreshNearbyStations,
               ),
             ],
           ),
@@ -2198,16 +2478,16 @@ class _StationCrowdBoard extends StatelessWidget {
               }
               if (snapshot.hasError) {
                 return Text(
-                  'Failed to load crowd board: ${snapshot.error}',
+                  l10n.homeLoadCrowdBoardFailed(snapshot.error.toString()),
                   style: const TextStyle(color: Color(0xFFB42318)),
                 );
               }
               final items =
                   snapshot.data ?? const <NearbyStationCrowdForecast>[];
               if (items.isEmpty) {
-                return const Text(
-                  'Location is still syncing. Pull to refresh or try again in a moment.',
-                  style: TextStyle(
+                return Text(
+                  l10n.homeLocationSyncing,
+                  style: const TextStyle(
                     color: Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                   ),
@@ -2231,8 +2511,9 @@ class _NearestStationCrowdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final occupancyLevel = item.forecast?.occupancyLevel ?? 0;
-    final ui = _HomeCrowdUi.fromLevel(occupancyLevel);
+    final ui = _HomeCrowdUi.fromLevel(l10n, occupancyLevel);
     final statusTags = CrowdReportsService.statusTagsFor(
       sourceType: item.forecast?.sourceType ?? 'fallback',
       fromCache: item.forecast?.fromCache == true || item.fromCache,
@@ -2286,7 +2567,7 @@ class _NearestStationCrowdCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${item.distanceMeters.toStringAsFixed(0)} m away',
+            l10n.homeMetersAway(item.distanceMeters.toStringAsFixed(0)),
             style: const TextStyle(
               color: Color(0xFF98A2B3),
               fontWeight: FontWeight.w600,
@@ -2322,13 +2603,14 @@ class _LegacyStationCrowdRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isClosed = item.isClosedHours;
     final ui = isClosed
-        ? const _HomeCrowdUi(
-            label: 'Closing hours',
-            color: Color(0xFF98A2B3),
+        ? _HomeCrowdUi(
+            label: l10n.homeClosingHours,
+            color: const Color(0xFF98A2B3),
           )
-        : _HomeCrowdUi.fromLevel(item.occupancyLevel);
+        : _HomeCrowdUi.fromLevel(l10n, item.occupancyLevel);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
@@ -2399,7 +2681,7 @@ class _LegacyStationCrowdRow extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: onReportPacked,
-            child: const Text('Report crowded'),
+            child: Text(l10n.homeReportCrowded),
           ),
         ],
       ),
@@ -2416,13 +2698,14 @@ class _StationCrowdRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isClosed = item.isClosedHours;
     final ui = isClosed
-        ? const _HomeCrowdUi(
-            label: 'Closing hours',
-            color: Color(0xFF98A2B3),
+        ? _HomeCrowdUi(
+            label: l10n.homeClosingHours,
+            color: const Color(0xFF98A2B3),
           )
-        : _HomeCrowdUi.fromLevel(item.occupancyLevel);
+        : _HomeCrowdUi.fromLevel(l10n, item.occupancyLevel);
     final routeSummary =
         item.routeIds.isEmpty ? 'N/A' : item.routeIds.join(' • ');
     final stopSummary = item.stopIds.join(', ');
@@ -2705,7 +2988,8 @@ class _HomeRouteChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crowdUi = _HomeCrowdUi.fromLevel(preview.highestCrowdLevel);
+    final l10n = AppLocalizations.of(context);
+    final crowdUi = _HomeCrowdUi.fromLevel(l10n, preview.highestCrowdLevel);
     final button = isPrimary
         ? ElevatedButton(
             onPressed: onTap,
@@ -2796,18 +3080,16 @@ class _HomeRouteChoiceCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               _HomeRouteMetricChip(
-                label: 'ETA ${_formatMinutes(preview.totalMinutes)}',
+                label: l10n.homeEtaLabel(_formatMinutes(l10n, preview.totalMinutes)),
               ),
               _HomeRouteMetricChip(
                 label: preview.transferCount == 0
-                    ? 'Direct ride'
-                    : preview.transferCount == 1
-                        ? '1 transfer'
-                        : '${preview.transferCount} transfers',
+                    ? l10n.homeDirectRide
+                    : l10n.homeTransferCount(preview.transferCount),
               ),
               _HomeRouteMetricChip(
                 label: preview.routeLines.isEmpty
-                    ? 'Route pending'
+                    ? l10n.homeRoutePending
                     : preview.routeLines.join(' | '),
               ),
             ],
@@ -2819,12 +3101,12 @@ class _HomeRouteChoiceCard extends StatelessWidget {
     );
   }
 
-  static String _formatMinutes(int minutes) {
-    if (minutes < 60) return '${minutes}m';
+  static String _formatMinutes(AppLocalizations l10n, int minutes) {
+    if (minutes < 60) return l10n.homeDurationMinutesShort(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
+    if (mins == 0) return l10n.homeDurationHoursShort(hours);
+    return l10n.homeDurationHoursMinutesShort(hours, mins);
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/map_station.dart';
 import '../models/route_info.dart';
 import '../services/map_selection_controller.dart';
@@ -86,6 +87,7 @@ class _StationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.all(12),
       child: Padding(
@@ -126,7 +128,7 @@ class _StationCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap another station to plan a route from here.',
+              l10n.mapTapAnotherStation,
               style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667085)),
             ),
           ],
@@ -140,20 +142,20 @@ class _LoadingCard extends StatelessWidget {
   const _LoadingCard();
   @override
   Widget build(BuildContext context) {
-    return const Card(
-      margin: EdgeInsets.all(12),
+    return Card(
+      margin: const EdgeInsets.all(12),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
-            SizedBox(width: 12),
-            Text('Finding the best route...'),
+            const SizedBox(width: 12),
+            Text(AppLocalizations.of(context).mapFindingRoute),
           ],
         ),
       ),
@@ -177,6 +179,7 @@ class _RouteSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final transferCount = route.steps.where((s) => s.type == RouteStepType.transfer).length;
     return Card(
       margin: const EdgeInsets.all(12),
@@ -207,7 +210,11 @@ class _RouteSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${route.formattedDuration} · $transferCount transfer(s) · ${route.crowdLevel} crowd',
+              l10n.mapRouteSummary(
+                route.formattedDuration,
+                l10n.homeTransferCount(transferCount),
+                route.crowdLevel,
+              ),
               style: theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF667085)),
             ),
             const SizedBox(height: 12),
@@ -217,14 +224,14 @@ class _RouteSummaryCard extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: onCancel,
-                      child: const Text('Choose different'),
+                      child: Text(l10n.mapChooseDifferent),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton(
                       onPressed: onConfirm,
-                      child: const Text('Start journey'),
+                      child: Text(l10n.mapStartJourney),
                     ),
                   ),
                 ],
@@ -235,7 +242,7 @@ class _RouteSummaryCard extends StatelessWidget {
                   const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Journey started — tracking on the Track tab.',
+                    l10n.mapJourneyStarted,
                     style: theme.textTheme.bodySmall?.copyWith(color: Colors.green),
                   ),
                 ],

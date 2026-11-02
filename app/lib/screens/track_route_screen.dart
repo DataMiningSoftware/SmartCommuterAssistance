@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../constants/crowd_levels.dart';
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/active_trip_service.dart';
 import '../services/crowd_reports_service.dart';
 import '../services/navigation_state.dart';
@@ -405,14 +406,23 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     final activeTripStops = <ActiveTripStop>[];
     final originStop = originOverride ?? _stopsById[baseTrip.originStopId];
     if (originStop != null) {
-      routeStops.add(originStop);
+      final originLine = result.path.isEmpty
+          ? originStop.routeId
+          : result.path.first.routeId;
+      routeStops.add(
+        _StopNode(
+          stopId: originStop.stopId,
+          stopName: originStop.stopName,
+          routeId: originLine,
+          latitude: originStop.latitude,
+          longitude: originStop.longitude,
+        ),
+      );
       activeTripStops.add(
         ActiveTripStop(
           stopId: originStop.stopId,
           stopName: originStop.stopName,
-          routeId: result.path.isEmpty
-              ? originStop.routeId
-              : result.path.first.routeId,
+          routeId: originLine,
         ),
       );
     }
@@ -420,7 +430,15 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     for (final edge in result.path) {
       final stop = _stopsById[edge.toStopId];
       if (stop == null) continue;
-      routeStops.add(stop);
+      routeStops.add(
+        _StopNode(
+          stopId: stop.stopId,
+          stopName: stop.stopName,
+          routeId: edge.routeId,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
+        ),
+      );
       activeTripStops.add(
         ActiveTripStop(
           stopId: stop.stopId,
@@ -808,6 +826,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       context: context,
       showDragHandle: true,
       builder: (context) {
+        final l10n = AppLocalizations.of(context);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -815,17 +834,17 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.sentiment_dissatisfied_rounded,
                       color: Color(0xFFDC2626),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Looks like your route is crowded.',
-                        style: TextStyle(
+                        l10n.homeRouteCrowdedTitle,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -835,7 +854,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'A calmer trip to $destinationName is available, but it may take longer.',
+                  l10n.homeCalmerTripAvailable(destinationName),
                   style: const TextStyle(
                     color: Color(0xFF667085),
                     fontWeight: FontWeight.w600,
@@ -846,7 +865,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Take a more relaxed route'),
+                    child: Text(l10n.homeTakeRelaxedRoute),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -854,7 +873,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Keep with crowded route'),
+                    child: Text(l10n.trackKeepCrowdedRoute),
                   ),
                 ),
               ],
@@ -956,17 +975,18 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     required ValueChanged<bool> onFocusOriginChanged,
     required VoidCallback onNext,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Plan Your Trip',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+        Text(
+          l10n.trackPlanYourTrip,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Select origin and destination stations.',
-          style: TextStyle(
+        Text(
+          l10n.trackSelectOriginDestination,
+          style: const TextStyle(
             color: Color(0xFF667085),
             fontWeight: FontWeight.w600,
           ),
@@ -983,7 +1003,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           child: TextField(
             autofocus: true,
             decoration: InputDecoration(
-              hintText: origin?.stationName ?? 'From',
+              hintText: origin?.stationName ?? l10n.trackFromLabel,
               prefixIcon: const Icon(Icons.trip_origin_rounded),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1008,7 +1028,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           ),
           child: TextField(
             decoration: InputDecoration(
-              hintText: destination?.stationName ?? 'To',
+              hintText: destination?.stationName ?? l10n.trackToLabel,
               prefixIcon: const Icon(Icons.location_on_rounded),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1080,7 +1100,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           width: double.infinity,
           child: ElevatedButton(
             onPressed: origin != null && destination != null ? onNext : null,
-            child: const Text('Set arrival time'),
+            child: Text(l10n.trackSetArrivalTime),
           ),
         ),
       ],
@@ -1091,20 +1111,21 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     required void Function(void Function()) setSheetState,
     required ValueChanged<DateTime> onConfirm,
   }) {
+    final l10n = AppLocalizations.of(context);
     var date = DateTime.now().add(const Duration(hours: 1));
     var time = TimeOfDay(hour: date.hour, minute: date.minute);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'When do you want to arrive?',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+        Text(
+          l10n.trackWhenArrive,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Set your target arrival time and we\'ll calculate when to leave.',
-          style: TextStyle(
+        Text(
+          l10n.trackTargetArrivalHint,
+          style: const TextStyle(
             color: Color(0xFF667085),
             fontWeight: FontWeight.w600,
           ),
@@ -1162,7 +1183,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                 date.year, date.month, date.day, time.hour, time.minute,
               ));
             },
-            child: const Text('Calculate'),
+            child: Text(l10n.trackCalculate),
           ),
         ),
       ],
@@ -1174,7 +1195,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     required _TrackStationOption destination,
     required DateTime targetArrivalTime,
   }) async {
-    _showTrackMessage('Calculating schedule...');
+    final l10n = AppLocalizations.of(context);
+    _showTrackMessage(l10n.trackCalculatingSchedule);
 
     try {
       final originStopId = origin.stopIds.first;
@@ -1185,7 +1207,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         preferComfort: false,
       );
       if (result == null) {
-        _showTrackMessage('No route found to ${destination.stationName}.');
+        _showTrackMessage(l10n.trackNoRouteFoundTo(destination.stationName));
         return;
       }
 
@@ -1247,7 +1269,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         canStartNow: leaveByTime.isBefore(now) || leaveByTime.isAtSameMomentAs(now),
       );
     } catch (e) {
-      _showTrackMessage('Could not plan ahead: $e');
+      _showTrackMessage(l10n.trackPlanAheadFailed('$e'));
     }
   }
 
@@ -1265,6 +1287,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       context: context,
       showDragHandle: true,
       builder: (context) {
+        final l10n = AppLocalizations.of(context);
         final localizations = MaterialLocalizations.of(context);
         final leaveLabel = localizations.formatTimeOfDay(
           TimeOfDay.fromDateTime(leaveByTime),
@@ -1280,14 +1303,17 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.schedule_rounded, color: Color(0xFF0A3A8B)),
-                    SizedBox(width: 10),
+                    const Icon(
+                      Icons.schedule_rounded,
+                      color: Color(0xFF0A3A8B),
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Trip Plan',
-                        style: TextStyle(
+                        l10n.trackTripPlan,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1307,25 +1333,29 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                     children: [
                       _PlanRow(
                         icon: Icons.departure_board_rounded,
-                        label: 'Leave by',
+                        label: l10n.trackLeaveBy,
                         value: leaveLabel,
                       ),
                       const SizedBox(height: 8),
                       _PlanRow(
                         icon: Icons.directions_walk_rounded,
-                        label: 'Walk to $originStopName',
-                        value: '$walkMinutes min',
+                        label: l10n.trackWalkTo(originStopName),
+                        value: l10n.trackDurationMinutes(walkMinutes),
                       ),
                       const SizedBox(height: 8),
                       _PlanRow(
                         icon: Icons.train_rounded,
-                        label: 'Via ${result.path.map((e) => e.routeId).toSet().join(' → ')}',
-                        value: '${totalMinutes - walkMinutes} min',
+                        label: l10n.trackVia(
+                          result.path.map((e) => e.routeId).toSet().join(' → '),
+                        ),
+                        value: l10n.trackDurationMinutes(
+                          totalMinutes - walkMinutes,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       _PlanRow(
                         icon: Icons.location_on_rounded,
-                        label: 'Arrive at ${destination.stationName}',
+                        label: l10n.trackArriveAt(destination.stationName),
                         value: arriveLabel,
                       ),
                     ],
@@ -1333,7 +1363,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Estimated total: $totalMinutes min',
+                  l10n.trackEstimatedTotal(totalMinutes),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF667085),
@@ -1349,7 +1379,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                         unawaited(_startTripFromSearch(destination));
                       },
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('Start this trip now'),
+                      label: Text(l10n.trackStartThisTripNow),
                     ),
                   ),
                 ],
@@ -1363,9 +1393,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
   Future<void> _startTripFromSearch(_TrackStationOption option) async {
     if (_isCreatingTrip || option.stopIds.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
     if (_isStationOptionClosed(option)) {
       _showTrackMessage(
-        '${option.stationName} is unavailable during closing hours.',
+        l10n.trackStationUnavailableClosingHours(option.stationName),
       );
       return;
     }
@@ -1374,7 +1405,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _showTrackMessage('Enable location services before starting a trip.');
+        _showTrackMessage(l10n.trackEnableLocationServices);
         return;
       }
 
@@ -1384,7 +1415,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        _showTrackMessage('Location permission is required to start a trip.');
+        _showTrackMessage(l10n.trackLocationPermissionRequired);
         return;
       }
 
@@ -1393,7 +1424,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       );
       final originStop = _nearestStop(position.latitude, position.longitude);
       if (originStop == null) {
-        _showTrackMessage('Could not determine your nearest station yet.');
+        _showTrackMessage(l10n.homeNearestStationUnavailable);
         return;
       }
 
@@ -1462,7 +1493,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         _reportMenuVisible = false;
       });
     } catch (e) {
-      _showTrackMessage('Could not start trip: $e');
+      _showTrackMessage(l10n.trackStartTripFailed('$e'));
     } finally {
       if (mounted) {
         setState(() => _isCreatingTrip = false);
@@ -1474,6 +1505,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     final trip = _trip;
     if (trip == null || _routeStops.isEmpty || _stationOptions.isEmpty) return;
 
+    final l10n = AppLocalizations.of(context);
     final currentStop = _routeStops[_resolvedCurrentIndex];
     final option = await _showDestinationPicker(currentStop);
     if (option == null) return;
@@ -1481,7 +1513,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     final candidateStopIds =
         option.stopIds.where((stopId) => stopId != currentStop.stopId).toList();
     if (candidateStopIds.isEmpty) {
-      _showTrackMessage('Choose a destination beyond ${currentStop.stopName}.');
+      _showTrackMessage(
+        l10n.trackChooseDestinationBeyond(currentStop.stopName),
+      );
       return;
     }
 
@@ -1491,7 +1525,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       preferComfort: trip.routePreference == 'comfort',
     );
     if (result == null) {
-      _showTrackMessage('No route found for ${option.stationName}.');
+      _showTrackMessage(l10n.homeNoRouteFound(option.stationName));
       return;
     }
 
@@ -1572,16 +1606,17 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Switch destination from ${currentStop.stopName}',
+                        AppLocalizations.of(context)
+                            .trackSwitchDestinationFrom(currentStop.stopName),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Pick a new target station and the route will restart from where you are now.',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).trackSwitchDestinationHint,
+                        style: const TextStyle(
                           color: Color(0xFF667085),
                           fontWeight: FontWeight.w600,
                         ),
@@ -1589,9 +1624,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                       const SizedBox(height: 14),
                       TextField(
                         autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Search station or code',
-                          prefixIcon: Icon(Icons.search_rounded),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)
+                              .trackSearchStationOrCode,
+                          prefixIcon: const Icon(Icons.search_rounded),
                         ),
                         onChanged: (value) =>
                             setSheetState(() => query = value),
@@ -1675,6 +1711,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     }
     _lastCommunityDelayCheck = now;
 
+    final l10n = AppLocalizations.of(context);
     final index = _resolvedCurrentIndex;
     if (index < 0 || index >= _routeStops.length) return;
     final lineId = _routeStops[index].routeId;
@@ -1686,8 +1723,11 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
     if (!mounted) return;
     _communityDelayNotifier.value = signal.offsetMinutes > 0
-        ? '${signal.distinctReporters} riders report delays on '
-            '${getRouteDisplayName(lineId)} · +${signal.offsetMinutes} min'
+        ? l10n.trackRidersReportDelays(
+            signal.distinctReporters,
+            getRouteDisplayName(lineId),
+            signal.offsetMinutes,
+          )
         : null;
 
     if (signal.offsetMinutes <= 0) return;
@@ -1779,6 +1819,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
 
   Future<void> _handleProgressNotifications(int nearestIndex) async {
     if (nearestIndex < 0 || nearestIndex >= _routeStops.length) return;
+    final l10n = AppLocalizations.of(context);
     final currentStop = _routeStops[nearestIndex];
     final nextStop = nearestIndex + 1 < _routeStops.length
         ? _routeStops[nearestIndex + 1]
@@ -1788,8 +1829,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       final key = 'change:${currentStop.stopId}:${nextStop.routeId}';
       if (_sentNotificationKeys.add(key)) {
         await _notificationService.showNotification(
-          title: 'Change line at ${currentStop.stopName}',
-          body: 'Switch to the ${nextStop.routeId} line after this station.',
+          title: l10n.trackChangeLineAt(currentStop.stopName),
+          body: l10n.trackSwitchToLine(nextStop.routeId),
           type: NotificationType.trainArrival,
         );
       }
@@ -1799,12 +1840,13 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   Future<void> _handleArrivalWithFeedback() async {
     final trip = _trip;
     if (trip == null) return;
+    final l10n = AppLocalizations.of(context);
     final key = 'arrived:${trip.destinationStopId}';
     if (!_sentNotificationKeys.add(key)) return;
 
     await _notificationService.showNotification(
-      title: 'You have reached ${trip.destinationName}',
-      body: 'Your trip has ended.',
+      title: l10n.trackReachedDestination(trip.destinationName),
+      body: l10n.trackTripEnded,
       type: NotificationType.info,
     );
 
@@ -1948,33 +1990,32 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     _inactivityDialogOpen = true;
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context);
     final action = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.help_outline_rounded, color: Color(0xFFDC2626)),
-              SizedBox(width: 10),
-              Text('Are you okay?'),
+              const Icon(Icons.help_outline_rounded, color: Color(0xFFDC2626)),
+              const SizedBox(width: 10),
+              Text(l10n.trackAreYouOkay),
             ],
           ),
-          content: const Text(
-            'You haven\'t moved in a while. Is everything alright?',
-          ),
+          content: Text(l10n.trackInactivityBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop('fine'),
-              child: const Text(
-                'I\'m fine',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                l10n.trackImFine,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop('emergency'),
               child: Text(
-                'Call emergency contact',
+                l10n.trackCallEmergencyContact,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Colors.red[700],
@@ -1983,9 +2024,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop('cancel'),
-              child: const Text(
-                'Cancel trip',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                l10n.trackCancelTrip,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -2003,7 +2044,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
           timestamp: DateTime.now(),
         );
       case 'emergency':
-        _showTrackMessage('Emergency contact dialer would open here.');
+        _showTrackMessage(l10n.trackEmergencyDialer);
         _lastMovement = _PositionRecord(
           latitude: position.latitude,
           longitude: position.longitude,
@@ -2059,6 +2100,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   Future<void> _rerouteFromCurrentPosition(_StopNode currentStop) async {
     final trip = _trip;
     if (trip == null || _isRerouting) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isRerouting = true);
     _lastRerouteTime = DateTime.now();
 
@@ -2085,7 +2127,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         _sentNotificationKeys.clear();
       });
 
-      _showTrackMessage('Route recalculated');
+      _showTrackMessage(l10n.trackRouteRecalculated);
 
       if (_rerouteCount >= 3) {
         await _showReroutePrompt();
@@ -2103,6 +2145,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       context: context,
       showDragHandle: true,
       builder: (context) {
+        final l10n = AppLocalizations.of(context);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -2110,14 +2153,17 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.alt_route_rounded, color: Color(0xFFDC2626)),
-                    SizedBox(width: 10),
+                    const Icon(
+                      Icons.alt_route_rounded,
+                      color: Color(0xFFDC2626),
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'You\'ve deviated from your route a few times.',
-                        style: TextStyle(
+                        l10n.trackDeviatedFromRoute,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -2126,9 +2172,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Would you like to pick a new destination instead?',
-                  style: TextStyle(
+                Text(
+                  l10n.trackPickNewDestination,
+                  style: const TextStyle(
                     color: Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                   ),
@@ -2138,7 +2184,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text('Continue to current destination'),
+                    child: Text(l10n.trackContinueToDestination),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -2149,7 +2195,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                       Navigator.of(context).pop(null);
                       _changeDestinationFromCurrentStation();
                     },
-                    child: const Text('Choose a new destination'),
+                    child: Text(l10n.trackChooseNewDestination),
                   ),
                 ),
               ],
@@ -2309,7 +2355,9 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   String get _currentStationName {
-    if (_routeStops.isEmpty) return 'Locating train';
+    if (_routeStops.isEmpty) {
+      return AppLocalizations.of(context).trackLocatingTrain;
+    }
     return _routeStops[_resolvedCurrentIndex].stopName;
   }
 
@@ -2331,6 +2379,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
     required _RouteReportType type,
   }) async {
     if (_isSubmittingReport || _routeStops.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
     final stopId = _routeStops[_resolvedCurrentIndex].stopId;
     setState(() => _isSubmittingReport = true);
     try {
@@ -2362,10 +2411,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         if (!ok) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Could not submit the delay report. Please try again.',
-              ),
+            SnackBar(
+              content: Text(l10n.trackDelayReportFailed),
             ),
           );
           return;
@@ -2384,8 +2431,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
         SnackBar(
           content: Text(
             type == _RouteReportType.crowd
-                ? 'Crowded train reported for $stopId.'
-                : 'Delay reported for $stopId.',
+                ? l10n.trackCrowdedReported(stopId)
+                : l10n.trackDelayReported(stopId),
           ),
         ),
       );
@@ -2393,7 +2440,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not submit report: $e'),
+          content: Text(l10n.trackReportSubmitFailed('$e')),
         ),
       );
     } finally {
@@ -2409,15 +2456,14 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) {
+          final l10n = AppLocalizations.of(context);
           return AlertDialog(
-            title: const Text('Cancel active trip?'),
-            content: const Text(
-              'This will stop live tracking and clear the saved route.',
-            ),
+            title: Text(l10n.trackCancelActiveTripTitle),
+            content: Text(l10n.trackCancelActiveTripBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Keep Trip'),
+                child: Text(l10n.trackKeepTrip),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
@@ -2425,7 +2471,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   backgroundColor: const Color(0xFFDC2626),
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Cancel Trip'),
+                child: Text(l10n.trackCancelTrip),
               ),
             ],
           );
@@ -2475,15 +2521,16 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   @override
   Widget build(BuildContext context) {
     final trip = _trip;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 78,
-        title: const AppPageTitle(
+        title: AppPageTitle(
           icon: Icons.route_rounded,
-          leadingText: 'Trip',
-          accentText: 'Motion',
-          badge: ConnectionStatusBadge(),
-          subtitle: 'Tracking',
+          leadingText: l10n.trackTitleLeading,
+          accentText: l10n.trackTitleAccent,
+          badge: const ConnectionStatusBadge(),
+          subtitle: l10n.trackTitleSubtitle,
         ),
       ),
       body: trip == null
@@ -2508,13 +2555,14 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                               orElse: () => null,
                             );
                     if (selected == null) {
-                      _showTrackMessage(
-                          'Pick a station from the search results.');
+                      _showTrackMessage(l10n.trackPickStationFromResults);
                       return;
                     }
                     if (_isStationOptionClosed(selected)) {
                       _showTrackMessage(
-                        '${selected.stationName} is unavailable during closing hours.',
+                        l10n.trackStationUnavailableClosingHours(
+                          selected.stationName,
+                        ),
                       );
                       return;
                     }
@@ -2529,6 +2577,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
   }
 
   Widget _buildTrackingBody(ActiveTrip trip) {
+    final l10n = AppLocalizations.of(context);
     return Stack(
       children: [
         Padding(
@@ -2591,10 +2640,10 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                           ? null
                           : _buildTimelineItems();
                       if (timelineItems == null) {
-                        return const Center(
+                        return Center(
                           child: Text(
-                            'Preparing route timeline...',
-                            style: TextStyle(
+                            l10n.trackPreparingTimeline,
+                            style: const TextStyle(
                               color: Color(0xFF667085),
                               fontWeight: FontWeight.w600,
                             ),
@@ -2659,7 +2708,7 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                 children: [
                   _ActionPillButton(
                     icon: Icons.close_rounded,
-                    label: 'Cancel Trip',
+                    label: l10n.trackCancelTrip,
                     onPressed: _cancelTrip,
                     baseBackgroundColor:
                         Theme.of(context).cardColor,
@@ -2676,8 +2725,8 @@ class _TrackRouteScreenState extends State<TrackRouteScreen>
                   _ActionPillButton(
                     icon: Icons.campaign_rounded,
                     label: _isSubmittingReport
-                        ? 'Sending...'
-                        : 'Report',
+                        ? l10n.trackSending
+                        : l10n.trackReport,
                     onPressed: _isSubmittingReport
                         ? null
                         : _openReportMenu,
@@ -2717,7 +2766,8 @@ class _LegacyTrackHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crowdLabel = _crowdLabel(trip.highestCrowdLevel);
+    final l10n = AppLocalizations.of(context);
+    final crowdLabel = _crowdLabel(l10n, trip.highestCrowdLevel);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -2733,7 +2783,10 @@ class _LegacyTrackHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${trip.originName} -> ${trip.destinationName}',
+                  l10n.trackOriginDestination(
+                    trip.originName,
+                    trip.destinationName,
+                  ),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -2754,19 +2807,23 @@ class _LegacyTrackHeader extends StatelessWidget {
             children: [
               _HeaderChip(
                 label: trip.routePreference == 'comfort'
-                    ? 'Comfort route'
-                    : 'Efficiency route',
+                    ? l10n.trackComfortRoute
+                    : l10n.trackEfficiencyRoute,
               ),
-              _HeaderChip(label: 'Crowd: $crowdLabel'),
+              _HeaderChip(label: l10n.trackCrowdShort(crowdLabel)),
               _HeaderChip(
                 label: distanceToDestination == null
-                    ? 'Locating train path'
-                    : 'Remaining: ${_formatMeters(distanceToDestination!)}',
+                    ? l10n.trackLocatingTrainPath
+                    : l10n.trackRemaining(
+                        _formatMeters(distanceToDestination!),
+                      ),
               ),
               _HeaderChip(
                 label: estimatedTotalMinutes == null
-                    ? 'Calculating ETA'
-                    : 'Journey: ${_formatDuration(estimatedTotalMinutes!)}',
+                    ? l10n.trackCalculatingEta
+                    : l10n.trackJourney(
+                        _formatDuration(l10n, estimatedTotalMinutes!),
+                      ),
               ),
             ],
           ),
@@ -2784,7 +2841,7 @@ class _LegacyTrackHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${(progress * 100).round()}% completed',
+            l10n.trackPercentCompleted((progress * 100).round()),
             style: const TextStyle(
               color: Color(0xFF475467),
               fontWeight: FontWeight.w700,
@@ -2795,17 +2852,17 @@ class _LegacyTrackHeader extends StatelessWidget {
     );
   }
 
-  static String _crowdLabel(int level) {
-    return crowdLevelLabel(level);
+  static String _crowdLabel(AppLocalizations l10n, int level) {
+    return localizedCrowdLevelLabel(l10n, level);
   }
 
-  static String _formatDuration(int minutes) {
+  static String _formatDuration(AppLocalizations l10n, int minutes) {
     final safe = minutes < 0 ? 0 : minutes;
     final hours = safe ~/ 60;
     final mins = safe % 60;
-    if (hours <= 0) return '${mins}m';
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
+    if (hours <= 0) return l10n.homeDurationMinutesShort(mins);
+    if (mins == 0) return l10n.homeDurationHoursShort(hours);
+    return l10n.homeDurationHoursMinutesShort(hours, mins);
   }
 }
 
@@ -2858,6 +2915,7 @@ class _LegacyTrackStopTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final routeColor = getRouteColor(stop.routeId);
     final lineOpacity = status == _TrackStopStatus.passed ? 0.35 : 1.0;
     return Padding(
@@ -2916,7 +2974,7 @@ class _LegacyTrackStopTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
-                        'Change to ${stop.routeId}',
+                        l10n.trackChangeTo(stop.routeId),
                         style: TextStyle(
                           color: routeColor,
                           fontWeight: FontWeight.w800,
@@ -2936,7 +2994,8 @@ class _LegacyTrackStopTile extends StatelessWidget {
                       ),
                       if (crowdLevel != null)
                         Text(
-                          _TrackHeader._crowdLabel(crowdLevel!),
+                          _TrackHeader._crowdLabel(
+                              AppLocalizations.of(context), crowdLevel!),
                           style: TextStyle(
                             color: _crowdColor(crowdLevel!),
                             fontWeight: FontWeight.w800,
@@ -3010,17 +3069,18 @@ class _TrackHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crowdLabel = _crowdLabel(highestCrowdLevel);
+    final l10n = AppLocalizations.of(context);
+    final crowdLabel = _crowdLabel(l10n, highestCrowdLevel);
     final crowdColor = crowdLevelColor(highestCrowdLevel);
     final localizations = MaterialLocalizations.of(context);
     final durationLabel = switch (estimatedMinutes) {
-      null => 'syncing',
-      final value => _formatDuration(value),
+      null => l10n.trackSyncing,
+      final value => _formatDuration(l10n, value),
     };
     final arrivalLabel = arrived
-        ? 'Arrived'
+        ? l10n.trackArrived
         : estimatedArrivalTime == null
-            ? 'syncing'
+            ? l10n.trackSyncing
             : localizations.formatTimeOfDay(TimeOfDay.fromDateTime(estimatedArrivalTime!));
     return Container(
       width: double.infinity,
@@ -3136,7 +3196,7 @@ class _TrackHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$remainingStops stops',
+                  l10n.trackStopsRemaining(remainingStops),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF667085),
@@ -3150,12 +3210,12 @@ class _TrackHeader extends StatelessWidget {
           Row(
             children: [
               _InfoBlock(
-                label: 'Time left',
+                label: l10n.trackTimeLeft,
                 value: durationLabel,
               ),
               const SizedBox(width: 8),
               _InfoBlock(
-                label: 'Arrive by',
+                label: l10n.trackArriveBy,
                 value: arrivalLabel,
               ),
             ],
@@ -3168,8 +3228,8 @@ class _TrackHeader extends StatelessWidget {
             children: [
               Text(
                 arrived
-                    ? 'Arrived'
-                    : '${(progress * 100).round()}%',
+                    ? l10n.trackArrived
+                    : l10n.trackPercent((progress * 100).round()),
                 style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF475467),
@@ -3184,7 +3244,13 @@ class _TrackHeader extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('Change destination', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                child: Text(
+                  l10n.trackChangeDestination,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
@@ -3193,17 +3259,17 @@ class _TrackHeader extends StatelessWidget {
     );
   }
 
-  static String _crowdLabel(int level) {
-    return crowdLevelLabel(level);
+  static String _crowdLabel(AppLocalizations l10n, int level) {
+    return localizedCrowdLevelLabel(l10n, level);
   }
 
-  static String _formatDuration(int minutes) {
+  static String _formatDuration(AppLocalizations l10n, int minutes) {
     final safe = minutes < 0 ? 0 : minutes;
     final hours = safe ~/ 60;
     final mins = safe % 60;
-    if (hours <= 0) return '${mins}m';
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
+    if (hours <= 0) return l10n.homeDurationMinutesShort(mins);
+    if (mins == 0) return l10n.homeDurationHoursShort(hours);
+    return l10n.homeDurationHoursMinutesShort(hours, mins);
   }
 }
 
@@ -3382,6 +3448,7 @@ class _TrackStopTile extends StatelessWidget {
   }
 
   Widget _buildTile(BuildContext context, double flashValue) {
+    final l10n = AppLocalizations.of(context);
     final stop = item.primaryStop;
     final secondaryStop = item.secondaryStop;
     final isInterchange = secondaryStop != null;
@@ -3420,7 +3487,8 @@ class _TrackStopTile extends StatelessWidget {
     final crowdColor = crowdLevel == null
         ? const Color(0xFF667085)
         : crowdLevelColor(crowdLevel!);
-    final crowdLabel = crowdLevel == null ? null : crowdLevelLabel(crowdLevel!);
+    final crowdLabel =
+        crowdLevel == null ? null : localizedCrowdLevelLabel(l10n, crowdLevel!);
 
     return IntrinsicHeight(
       child: Row(
@@ -3482,7 +3550,7 @@ class _TrackStopTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        'Change to ${secondaryStop.routeId}',
+                        l10n.trackChangeTo(secondaryStop.routeId),
                         style: TextStyle(
                           fontSize: 11,
                           color: isPassed
@@ -3500,16 +3568,16 @@ class _TrackStopTile extends StatelessWidget {
                         runSpacing: 6,
                         children: [
                           if (item.isFirst)
-                            const _TrackTimelineFlag(
-                              label: 'Start station',
-                              color: Color(0xFF0A3A8B),
-                              backgroundColor: Color(0xFFEEF4FF),
+                            _TrackTimelineFlag(
+                              label: l10n.trackStartStation,
+                              color: const Color(0xFF0A3A8B),
+                              backgroundColor: const Color(0xFFEEF4FF),
                             ),
                           if (item.isLast)
-                            const _TrackTimelineFlag(
-                              label: 'End station',
-                              color: Color(0xFFB42318),
-                              backgroundColor: Color(0xFFFEF3F2),
+                            _TrackTimelineFlag(
+                              label: l10n.trackEndStation,
+                              color: const Color(0xFFB42318),
+                              backgroundColor: const Color(0xFFFEF3F2),
                             ),
                         ],
                       ),
@@ -3550,7 +3618,7 @@ class _TrackStopTile extends StatelessWidget {
                   if (crowdLabel != null) ...[
                     const SizedBox(height: 4),
                     _TrackTimelineFlag(
-                      label: 'Forecast: $crowdLabel',
+                      label: l10n.trackForecast(crowdLabel),
                       color: crowdColor,
                       backgroundColor: crowdColor.withValues(alpha: 0.10),
                     ),
@@ -3789,6 +3857,7 @@ class _RouteReportMenu extends StatelessWidget {
     if (!visible && controller.isDismissed) {
       return const SizedBox.shrink();
     }
+    final l10n = AppLocalizations.of(context);
     return FadeTransition(
       opacity: CurvedAnimation(parent: controller, curve: Curves.easeOutCubic),
       child: Column(
@@ -3800,7 +3869,7 @@ class _RouteReportMenu extends StatelessWidget {
               curve: const Interval(0.0, 1.0, curve: Curves.easeOutBack),
             ),
             icon: Icons.groups_rounded,
-            tooltip: 'Crowded train',
+            tooltip: l10n.trackCrowdedTrain,
             onPressed: onCrowdReport,
           ),
           const SizedBox(height: 10),
@@ -3810,7 +3879,7 @@ class _RouteReportMenu extends StatelessWidget {
               curve: const Interval(0.12, 1.0, curve: Curves.easeOutBack),
             ),
             icon: Icons.schedule_rounded,
-            tooltip: 'Delay',
+            tooltip: l10n.trackDelay,
             onPressed: onDelayReport,
           ),
         ],
@@ -4163,6 +4232,7 @@ class _EmptyTrackState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
@@ -4186,18 +4256,18 @@ class _EmptyTrackState extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.route_rounded,
                       size: 30,
                       color: Color(0xFF0A3A8B),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'No active trip yet.',
-                        style: TextStyle(
+                        l10n.trackNoActiveTrip,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
                         ),
@@ -4206,9 +4276,9 @@ class _EmptyTrackState extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Search for a destination here and start tracking straight from the track page.',
-                  style: TextStyle(
+                Text(
+                  l10n.trackNoActiveTripBody,
+                  style: const TextStyle(
                     color: Color(0xFF667085),
                     fontWeight: FontWeight.w600,
                   ),
@@ -4242,9 +4312,9 @@ class _EmptyTrackState extends StatelessWidget {
                     return TextField(
                       controller: textController,
                       focusNode: focusNode,
-                      decoration: const InputDecoration(
-                        hintText: 'Search train station',
-                        prefixIcon: Icon(Icons.search_rounded),
+                      decoration: InputDecoration(
+                        hintText: l10n.homeSearchTrainStation,
+                        prefixIcon: const Icon(Icons.search_rounded),
                       ),
                       onChanged: (_) => controller.value = textController.value,
                       onSubmitted: (_) => onSearch(),
@@ -4313,9 +4383,9 @@ class _EmptyTrackState extends StatelessWidget {
                                       .toList(),
                                 ),
                                 trailing: isClosed
-                                    ? const Text(
-                                        'Closing hours',
-                                        style: TextStyle(
+                                    ? Text(
+                                        l10n.homeClosingHours,
+                                        style: const TextStyle(
                                           color: Color(0xFF98A2B3),
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
@@ -4342,7 +4412,9 @@ class _EmptyTrackState extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: isSearching ? null : onSearch,
                     icon: const Icon(Icons.search_rounded),
-                    label: Text(isSearching ? 'Starting trip...' : 'Search'),
+                    label: Text(
+                      isSearching ? l10n.trackStartingTrip : l10n.trackSearch,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -4351,7 +4423,7 @@ class _EmptyTrackState extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onPlanAhead,
                     icon: const Icon(Icons.schedule_rounded),
-                    label: const Text('Plan ahead'),
+                    label: Text(l10n.trackPlanAhead),
                   ),
                 ),
               ],

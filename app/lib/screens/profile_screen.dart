@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_features.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/accessibility_service.dart';
 import '../services/auth_service.dart';
 import '../services/offline_mode_service.dart';
 import '../services/education_service.dart';
+import '../services/locale_controller.dart';
 import '../services/location_privacy_service.dart';
 import '../services/ml_consent_service.dart';
 import '../services/notification_service.dart';
@@ -15,6 +18,7 @@ import '../widgets/app_page_title.dart';
 import 'education_screen.dart';
 import 'friends_screen.dart';
 import 'route_builder_screen.dart';
+import 'support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -55,10 +59,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _requestLocationPermission() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _showProfileMessage('Turn on Location Services to use nearby stations.');
+        _showProfileMessage(l10n.locationServicesOff);
         return;
       }
       var permission = await Geolocator.checkPermission();
@@ -67,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        _showProfileMessage('Location permission denied in system settings.');
+        _showProfileMessage(l10n.locationPermissionDenied);
       }
     } catch (_) {}
   }
@@ -87,21 +92,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final user = _authService.currentUser.value;
     final anonymous = _authService.isAnonymous;
-    final userName = anonymous ? 'Commuter' : (user?.name ?? 'User');
+    final userName =
+        anonymous ? l10n.profileCommuter : (user?.name ?? l10n.profileUserFallback);
     final userEmail = anonymous
-        ? 'No account needed — reports are anonymous'
+        ? l10n.profileNoAccount
         : (user?.email ?? 'no-email@example.com');
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 78,
-        title: const AppPageTitle(
+        title: AppPageTitle(
           icon: Icons.person_rounded,
           leadingText: 'Commute',
           accentText: 'Hub',
-          badgeText: 'PROFILE',
-          subtitle: 'Preferences',
+          badgeText: l10n.navProfile.toUpperCase(),
+          subtitle: l10n.preferencesTitle,
         ),
       ),
       body: ListView(
@@ -153,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   IconButton(
                     onPressed: () => _showEditProfile(context),
                     icon: const Icon(Icons.edit_outlined),
-                    tooltip: 'Edit profile',
+                    tooltip: l10n.profileEditTooltip,
                   ),
               ],
             ),
@@ -163,15 +170,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _MasteryPanel(stats: _mastery!),
             const SizedBox(height: 20),
           ],
-          Text('Preferences', style: theme.textTheme.titleLarge),
+          Text(l10n.preferencesTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: 10),
           _Panel(
             children: [
               SwitchListTile(
                 value: _notificationsEnabled,
                 onChanged: (v) => setState(() => _notificationsEnabled = v),
-                title: const Text('Push Notifications'),
-                subtitle: const Text('Delay and route alerts'),
+                title: Text(l10n.pushNotificationsTitle),
+                subtitle: Text(l10n.pushNotificationsSubtitle),
               ),
               const Divider(height: 1),
               SwitchListTile(
@@ -181,8 +188,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   setState(() => _offlineModeEnabled = v);
                 },
-                title: const Text('Offline Mode'),
-                subtitle: const Text('Cache schedules for weak coverage'),
+                title: Text(l10n.offlineModeTitle),
+                subtitle: Text(l10n.offlineModeSubtitle),
               ),
               const Divider(height: 1),
               SwitchListTile(
@@ -195,10 +202,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   setState(() => _locationConsent = v);
                 },
-                title: const Text('Location Sharing'),
-                subtitle: const Text(
-                  'Used for nearby stations; sent rounded to ~1 km',
-                ),
+                title: Text(l10n.locationSharingTitle),
+                subtitle: Text(l10n.locationSharingSubtitle),
               ),
               const Divider(height: 1),
               SwitchListTile(
@@ -207,10 +212,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await MlConsentService.instance.setConsent(v);
                   setState(() => _mlConsent = v);
                 },
-                title: const Text('Improve predictions with my trip data'),
-                subtitle: const Text(
-                  'Optional. Uses your reports and trip times for model training',
-                ),
+                title: Text(l10n.mlConsentTitle),
+                subtitle: Text(l10n.mlConsentSubtitle),
               ),
               const Divider(height: 1),
               SwitchListTile(
@@ -220,8 +223,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   setState(() => _accessibilityEnabled = v);
                 },
-                title: const Text('Accessibility'),
-                subtitle: const Text('Larger labels and stronger contrast'),
+                title: Text(l10n.accessibilityTitle),
+                subtitle: Text(l10n.accessibilitySubtitle),
               ),
               const Divider(height: 1),
               SwitchListTile(
@@ -230,47 +233,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await ThemeController.instance.toggle();
                   setState(() {});
                 },
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Enable dark theme for the app'),
+                title: Text(l10n.darkModeTitle),
+                subtitle: Text(l10n.darkModeSubtitle),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.translate_rounded,
+                    color: theme.colorScheme.primary),
+                title: Text(l10n.languageTitle),
+                subtitle: Text(_currentLanguageLabel(l10n)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showLanguageDialog(context),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          Text('Data Attributions', style: theme.textTheme.titleLarge),
+          Text(l10n.dataAttributionsTitle,
+              style: theme.textTheme.titleLarge),
           const SizedBox(height: 10),
           _Panel(
             children: [
               ListTile(
                 leading: Icon(Icons.map_outlined,
                     color: theme.colorScheme.primary),
-                title: const Text('Map tiles'),
-                subtitle: const Text('© CartoDB'),
+                title: Text(l10n.mapTilesTitle),
+                subtitle: Text(l10n.mapTilesSource),
               ),
               const Divider(height: 1),
               ListTile(
                 leading: Icon(Icons.cloud_outlined,
                     color: theme.colorScheme.primary),
-                title: const Text('Weather'),
-                subtitle: const Text('Weather data by Open-Meteo.com'),
+                title: Text(l10n.weatherTitle),
+                subtitle: Text(l10n.weatherSource),
               ),
               const Divider(height: 1),
               ListTile(
                 leading: Icon(Icons.train_outlined,
                     color: theme.colorScheme.primary),
-                title: const Text('Transit schedule'),
-                subtitle: const Text(
-                    '© Prasarana Malaysia via data.gov.my'),
+                title: Text(l10n.transitScheduleTitle),
+                subtitle: Text(l10n.transitScheduleSource),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Text('Quick Actions', style: theme.textTheme.titleLarge),
+          Text(l10n.quickActionsTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: 10),
           _Panel(
             children: [
               _ActionRow(
                   icon: Icons.alt_route_rounded,
-                  title: 'Route Builder',
+                  title: l10n.routeBuilderTitle,
                   onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -279,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (AppFeatures.socialEnabled) ...[
                 _ActionRow(
                     icon: Icons.people_outline,
-                    title: 'Friends',
+                    title: l10n.friendsTitle,
                     onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -289,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (AppFeatures.educationEnabled) ...[
                 _ActionRow(
                     icon: Icons.school_outlined,
-                    title: 'Learn the Rails',
+                    title: l10n.learnTheRailsTitle,
                     onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -298,39 +310,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
               _ActionRow(
                   icon: Icons.favorite_outline,
-                  title: 'Favorite Routes',
+                  title: l10n.favoriteRoutesTitle,
                   onTap: () {}),
               const Divider(height: 1),
               _ActionRow(
-                  icon: Icons.history, title: 'Travel History', onTap: () {}),
+                  icon: Icons.history,
+                  title: l10n.travelHistoryTitle,
+                  onTap: () {}),
               const Divider(height: 1),
               _ActionRow(
                   icon: Icons.notifications_active_outlined,
-                  title: 'Test notification',
+                  title: l10n.testNotificationTitle,
                   onTap: () async {
                     final service = NotificationService();
                     await service.requestPermissions();
                     await service.showNotification(
                       title: 'Smart Commuter Assistant+',
-                      body: 'This is a test notification. 🚆',
+                      body: l10n.testNotificationBody,
                       type: NotificationType.info,
                     );
                   }),
               const Divider(height: 1),
               _ActionRow(
                   icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () {}),
+                  title: l10n.helpSupportTitle,
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const SupportScreen()))),
               const Divider(height: 1),
               _ActionRow(
                 icon: Icons.info_outline,
-                title: 'About',
+                title: l10n.aboutTitle,
                 onTap: () => _showAboutDialog(context),
               ),
               const Divider(height: 1),
               _ActionRow(
                 icon: Icons.privacy_tip_outlined,
-                title: 'Privacy Policy',
+                title: l10n.privacyPolicyTitle,
                 onTap: () => launchUrl(
                   Uri.parse(
                     'https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html',
@@ -347,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await _authService.logout();
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
+              label: Text(l10n.logoutButton),
               style: OutlinedButton.styleFrom(
                 foregroundColor: theme.colorScheme.secondary,
               ),
@@ -357,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => _confirmDeleteAccount(context),
             child: Text(
-              anonymous ? 'Delete my data' : 'Delete Account',
+              anonymous ? l10n.deleteMyDataButton : l10n.deleteAccountButton,
               style: const TextStyle(color: Colors.red),
             ),
           ),
@@ -366,7 +383,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showLanguageDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final current = LocaleController.instance.locale.value?.languageCode;
+    showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(l10n.languageTitle),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'system'),
+            child: Row(
+              children: [
+                Icon(current == null
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.languageSystemOption)),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'en'),
+            child: Row(
+              children: [
+                Icon(current == 'en'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.languageEnglishOption)),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'ms'),
+            child: Row(
+              children: [
+                Icon(current == 'ms'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.languageMalayOption)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).then((selected) async {
+      if (selected == null) return;
+      if (selected == 'system') {
+        await LocaleController.instance.setLocale(null);
+      } else {
+        await LocaleController.instance.setLocale(Locale(selected));
+      }
+    });
+  }
+
+  String _currentLanguageLabel(AppLocalizations l10n) {
+    final locale = LocaleController.instance.locale.value;
+    switch (locale?.languageCode) {
+      case 'en':
+        return l10n.languageEnglishOption;
+      case 'ms':
+        return l10n.languageMalayOption;
+      default:
+        return l10n.languageSystemOption;
+    }
+  }
+
   void _showEditProfile(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profileService = ProfileService.instance;
     final profile = profileService.currentProfile.value;
     final handleController = TextEditingController(text: profile?.handle ?? '');
@@ -395,45 +481,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Edit Profile', style: Theme.of(context).textTheme.titleLarge),
+                Text(l10n.editProfileTitle,
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 TextField(
                   controller: handleController,
-                  decoration: const InputDecoration(labelText: 'Handle'),
+                  decoration:
+                      InputDecoration(labelText: l10n.handleLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Display name'),
+                  decoration:
+                      InputDecoration(labelText: l10n.displayNameLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: bioController,
-                  decoration: const InputDecoration(labelText: 'Bio'),
+                  decoration: InputDecoration(labelText: l10n.bioLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: colorController,
-                  decoration: const InputDecoration(
-                      labelText: 'Avatar color (hex, optional)'),
+                  decoration: InputDecoration(
+                      labelText: l10n.avatarColorLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: homeController,
                   decoration:
-                      const InputDecoration(labelText: 'Home station ID (optional)'),
+                      InputDecoration(labelText: l10n.homeStationLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: lineController,
                   decoration:
-                      const InputDecoration(labelText: 'Favorite line (optional)'),
+                      InputDecoration(labelText: l10n.favoriteLineLabel),
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: allowSearch,
                   onChanged: (v) => setModalState(() => allowSearch = v),
-                  title: const Text('Allow others to find me by handle'),
+                  title: Text(l10n.allowFindByHandle),
                 ),
                 const SizedBox(height: 8),
                 FilledButton(
@@ -449,7 +538,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     });
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Save'),
+                  child: Text(l10n.saveButton),
                 ),
               ],
             ),
@@ -460,26 +549,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final anonymousUser = _authService.isAnonymous;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(anonymousUser ? 'Delete my data?' : 'Delete account?'),
-        content: Text(
-          anonymousUser
-              ? 'This permanently deletes your contributed reports and anonymous '
-                  'device profile. This cannot be undone.'
-              : 'This permanently deletes your account, profile, and travel history. '
-                  'This cannot be undone.',
-        ),
+        title: Text(anonymousUser
+            ? l10n.profileDeleteDataDialogTitle
+            : l10n.profileDeleteAccountDialogTitle),
+        content: Text(anonymousUser
+            ? l10n.profileDeleteDataDialogBody
+            : l10n.profileDeleteAccountDialogBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancelButton),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.deleteButton,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -491,28 +580,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          deleted
-              ? 'Account deleted.'
-              : 'Could not delete account automatically. Please use the account deletion link in the privacy policy.',
+          deleted ? l10n.accountDeleted : l10n.deleteAccountFailed,
         ),
       ),
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showAboutDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    var version = '1.0.0';
+    try {
+      final info = await PackageInfo.fromPlatform();
+      version = '${info.version}+${info.buildNumber}';
+    } catch (_) {}
+    if (!context.mounted) return;
+    await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About Smart Commuter Assistant+'),
-        content: const Text(
-          'Smart Commuter Assistant+ v1.0\n\n'
-          'Dynamic Navigation & Occupancy Computations.\n\n'
-          'An intelligent companion for Malaysian public transport.',
-        ),
+        title: Text(l10n.aboutDialogTitle),
+        content: Text(l10n.aboutDialogBody(version)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.okButton),
           ),
         ],
       ),
@@ -569,6 +659,7 @@ class _MasteryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final total = stats.totalAttempts;
     final independence = total == 0
         ? 0
@@ -587,15 +678,14 @@ class _MasteryPanel extends StatelessWidget {
             children: [
               Icon(Icons.trending_up, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text('Your Rail Independence',
+              Text(l10n.railIndependenceTitle,
                   style: theme.textTheme.titleMedium),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'You know ${stats.stationsLearned} station${stats.stationsLearned == 1 ? '' : 's'} and answer '
-            '${stats.accuracyPct}% of trivia correctly. Keep going — the goal is '
-            'to not need us.',
+            l10n.railIndependenceBody(
+                stats.stationsLearned, stats.accuracyPct.round()),
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),

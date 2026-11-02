@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
 
@@ -41,9 +42,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
       if (needsVerification) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Account created! Check your email to verify it, then log in.',
+              AppLocalizations.of(context).accountCreatedVerify,
             ),
           ),
         );
@@ -61,8 +62,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Your Pass')),
+      appBar: AppBar(title: Text(l10n.signUpTitle)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -78,10 +80,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Full name'),
+                      decoration:
+                          InputDecoration(labelText: l10n.fullNameLabel),
                       validator: (value) {
                         if ((value ?? '').trim().isEmpty) {
-                          return 'Name is required';
+                          return l10n.nameRequired;
                         }
                         return null;
                       },
@@ -90,11 +93,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration:
+                          InputDecoration(labelText: l10n.emailLabel),
                       validator: (value) {
                         final v = value?.trim() ?? '';
-                        if (v.isEmpty) return 'Email is required';
-                        if (!v.contains('@')) return 'Enter a valid email';
+                        if (v.isEmpty) return l10n.emailRequired;
+                        if (!v.contains('@')) return l10n.emailInvalid;
                         return null;
                       },
                     ),
@@ -102,10 +106,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration:
+                          InputDecoration(labelText: l10n.passwordLabel),
                       validator: (value) {
                         final v = value ?? '';
-                        if (v.length < 6) return 'Use at least 6 characters';
+                        if (v.length < 6) return l10n.passwordMinLength;
                         return null;
                       },
                     ),
@@ -113,11 +118,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration:
-                          const InputDecoration(labelText: 'Confirm password'),
+                      decoration: InputDecoration(
+                          labelText: l10n.confirmPasswordLabel),
                       validator: (value) {
                         if (value != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return l10n.passwordsDoNotMatch;
                         }
                         return null;
                       },
@@ -125,7 +130,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _loading ? null : _signUp,
-                      child: Text(_loading ? 'Creating…' : 'Create account'),
+                      child: Text(_loading
+                          ? l10n.creatingAccount
+                          : l10n.createAccountButton),
                     ),
                   ],
                 ),

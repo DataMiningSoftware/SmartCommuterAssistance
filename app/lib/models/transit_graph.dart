@@ -53,9 +53,23 @@ class TransitGraph {
   Map<String, TransitStation> get stationsById => stations;
 
   List<TransitPath> enumerateCandidatePaths(String from, String to, {int maxPaths = 3, DateTime? departureTime}) {
-    final path = findShortestPath(from, to, departureTime: departureTime);
-    if (path == null) return [];
-    return [path];
+    final results = <TransitPath>[];
+    final seen = <String>{};
+    for (final penalty in const <int>[4, 8, 20]) {
+      final path = findShortestPath(
+        from,
+        to,
+        departureTime: departureTime,
+        transferPenalty: penalty,
+      );
+      if (path == null) continue;
+      final signature = path.stationIds.join('>');
+      if (!seen.add(signature)) continue;
+      results.add(path);
+      if (results.length >= maxPaths) break;
+    }
+    results.sort((a, b) => a.rideMinutes.compareTo(b.rideMinutes));
+    return results;
   }
 
   static TransitGraph klangValleyDemo() => TransitGraph();
@@ -156,7 +170,12 @@ class TransitGraph {
     return ordered;
   }
 
-  TransitPath? findShortestPath(String originId, String destinationId, {DateTime? departureTime}) {
+  TransitPath? findShortestPath(
+    String originId,
+    String destinationId, {
+    DateTime? departureTime,
+    int transferPenalty = 8,
+  }) {
     if (!stations.containsKey(originId) || !stations.containsKey(destinationId)) {
       return null;
     }
@@ -180,7 +199,10 @@ class TransitGraph {
         if (!stations.containsKey(edge.to)) continue;
         final nextId = edge.to;
         final prev = previous[currentId];
-        final switching = prev != null && prev.line != null && prev.line != edge.line;
+        final switching = prev != null &&
+            prev.line != null &&
+            prev.line != 'INTERCHANGE' &&
+            prev.line != edge.line;
         var cost = edge.minutes;
         if (switching) cost += transferPenalty;
 
@@ -269,6 +291,9 @@ class TransitPath {
     final transfers = transferCount > 0 ? '$transferCount transfer' : 'Direct';
     return '$time · $transfers';
   }
+
+  int get rideMinutes =>
+      edges.where((edge) => !edge.isTransfer).fold<int>(0, (sum, edge) => sum + edge.minutes);
 
   // Backward compat
   double get totalDistanceKm => totalMinutes * 0.8;

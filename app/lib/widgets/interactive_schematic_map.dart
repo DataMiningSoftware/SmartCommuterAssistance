@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 import '../constants/route_colors.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/map_station.dart';
 import '../models/schematic_layout.dart';
 import '../models/transit_graph.dart';
@@ -142,6 +143,7 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final segments = widget.controller.routeSegments;
     final hasRoute = widget.controller.isRouteActive;
     final fromId = widget.controller.from?.stationId;
@@ -170,7 +172,7 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                   boundaryMargin: const EdgeInsets.all(160),
                   child: Semantics(
                     container: true,
-                    label: 'Transit map. Tap a station to select it.',
+                    label: l10n.mapSchematicA11yLabel,
                     child: GestureDetector(
                       onTapUp: (details) {
                         final station = _stationAt(details.localPosition);
@@ -196,6 +198,7 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
                               backgroundColor: scheme.surface,
                               gridColor:
                                   scheme.onSurface.withValues(alpha: 0.05),
+                              stationHint: l10n.mapStationHint,
                             ),
                           ),
                         ),
@@ -225,13 +228,13 @@ class _InteractiveSchematicMapState extends State<InteractiveSchematicMap>
             children: [
               _ZoomButton(
                 icon: Icons.add_rounded,
-                label: 'Zoom in',
+                label: l10n.mapZoomIn,
                 onTap: () => _zoomBy(1.3),
               ),
               const SizedBox(height: 8),
               _ZoomButton(
                 icon: Icons.remove_rounded,
-                label: 'Zoom out',
+                label: l10n.mapZoomOut,
                 onTap: () => _zoomBy(0.75),
               ),
             ],
@@ -352,6 +355,7 @@ class _SchematicPainter extends CustomPainter {
     required this.toPixel,
     required this.backgroundColor,
     required this.gridColor,
+    this.stationHint = 'Station',
     this.hiddenLineIds = const {},
   });
 
@@ -365,6 +369,7 @@ class _SchematicPainter extends CustomPainter {
   final Offset Function(double, double) toPixel;
   final Color backgroundColor;
   final Color gridColor;
+  final String stationHint;
   final Set<String> hiddenLineIds;
 
   @override
@@ -378,7 +383,7 @@ class _SchematicPainter extends CustomPainter {
               rect: Rect.fromCenter(center: center, width: 40, height: 40),
               properties: SemanticsProperties(
                 label: station.name,
-                hint: 'Station',
+                hint: stationHint,
                 button: true,
               ),
             ),
@@ -388,7 +393,8 @@ class _SchematicPainter extends CustomPainter {
       };
 
   @override
-  bool shouldRebuildSemantics(covariant _SchematicPainter oldDelegate) => false;
+  bool shouldRebuildSemantics(covariant _SchematicPainter oldDelegate) =>
+      oldDelegate.stationHint != stationHint;
 
   @override
   void paint(Canvas canvas, Size size) {

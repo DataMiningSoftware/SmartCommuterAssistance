@@ -267,6 +267,11 @@ class DatabaseService {
     );
   }
 
+  Future<void> wipeUserData() async {
+    final db = await database;
+    await db.delete('users');
+  }
+
   Future<void> cacheTrainStops(List<Map<String, dynamic>> stops) async {
     final db = await database;
     await db.transaction((txn) async {

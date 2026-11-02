@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 class DataSourceBadge extends StatelessWidget {
   final String source;
   final bool compact;
@@ -12,7 +14,7 @@ class DataSourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = _badgeData(source);
+    final data = _badgeData(AppLocalizations.of(context), source);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 6 : 8,
@@ -46,53 +48,53 @@ class DataSourceBadge extends StatelessWidget {
   }
 }
 
-_BadgeMeta _badgeData(String source) {
+_BadgeMeta _badgeData(AppLocalizations l10n, String source) {
   final s = source.trim().toLowerCase();
   if (s == 'gtfs_static_schedule') {
-    return const _BadgeMeta(
-      label: 'Scheduled',
-      color: Color(0xFF0A3A8B),
+    return _BadgeMeta(
+      label: l10n.dataSourceScheduled,
+      color: const Color(0xFF0A3A8B),
       icon: Icons.schedule_rounded,
     );
   }
   if (s == 'user') {
-    return const _BadgeMeta(
-      label: 'Rider report',
-      color: Color(0xFF16A34A),
+    return _BadgeMeta(
+      label: l10n.dataSourceRiderReport,
+      color: const Color(0xFF16A34A),
       icon: Icons.person_outline_rounded,
     );
   }
   if (s == 'user_blend' || s.startsWith('forecast+')) {
-    return const _BadgeMeta(
-      label: 'Blended',
-      color: Color(0xFF7C3AED),
+    return _BadgeMeta(
+      label: l10n.dataSourceBlended,
+      color: const Color(0xFF7C3AED),
       icon: Icons.merge_type_rounded,
     );
   }
   if (s == 'forecast' || s.contains('trend')) {
-    return const _BadgeMeta(
-      label: 'Estimated',
-      color: Color(0xFFF59E0B),
+    return _BadgeMeta(
+      label: l10n.dataSourceEstimated,
+      color: const Color(0xFFF59E0B),
       icon: Icons.analytics_rounded,
     );
   }
   if (s == 'closed_hours') {
-    return const _BadgeMeta(
-      label: 'Closed',
-      color: Color(0xFF667085),
+    return _BadgeMeta(
+      label: l10n.dataSourceClosed,
+      color: const Color(0xFF667085),
       icon: Icons.block_rounded,
     );
   }
   if (s.contains('simulated') || s == 'fallback' || s == 'unknown') {
-    return const _BadgeMeta(
-      label: 'Fallback',
-      color: Color(0xFFDC2626),
+    return _BadgeMeta(
+      label: l10n.dataSourceFallback,
+      color: const Color(0xFFDC2626),
       icon: Icons.warning_amber_rounded,
     );
   }
-  return const _BadgeMeta(
-    label: 'Unknown',
-    color: Color(0xFF98A2B3),
+  return _BadgeMeta(
+    label: l10n.dataSourceUnknown,
+    color: const Color(0xFF98A2B3),
     icon: Icons.help_outline_rounded,
   );
 }

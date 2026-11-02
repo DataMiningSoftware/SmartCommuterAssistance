@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_shadows.dart';
 import '../constants/crowd_levels.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/crowd_reports_service.dart';
 import '../widgets/data_source_badge.dart';
 
@@ -56,8 +57,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Crowd Outlook')),
+      appBar: AppBar(title: Text(l10n.forecastTitle)),
       body: FutureBuilder<List<StationOption>>(
         future: _stationsFuture,
         builder: (context, snapshot) {
@@ -68,6 +70,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
   }
 
   Widget _buildScreenContent(AsyncSnapshot<List<StationOption>> snapshot) {
+    final l10n = AppLocalizations.of(context);
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const SizedBox.shrink();
     }
@@ -76,7 +79,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            'Failed to load stations: ${snapshot.error}',
+            l10n.homeLoadStationsFailed(snapshot.error.toString()),
             textAlign: TextAlign.center,
           ),
         ),
@@ -85,7 +88,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
 
     final stations = snapshot.data ?? const <StationOption>[];
     if (stations.isEmpty) {
-      return const Center(child: Text('No stations found.'));
+      return Center(child: Text(l10n.forecastNoStations));
     }
 
     _selectedStationId ??= stations.first.stopId;
@@ -101,9 +104,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
           DropdownButtonFormField<String>(
             key: ValueKey(_selectedStationId),
             initialValue: _selectedStationId,
-            decoration: const InputDecoration(
-              labelText: 'Station',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.forecastStationLabel,
+              border: const OutlineInputBorder(),
             ),
             items: stations
                 .map(
@@ -129,7 +132,9 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
                 if (forecastSnap.hasError) {
                   return Center(
                     child: Text(
-                      'Failed to load crowd forecast: ${forecastSnap.error}',
+                      l10n.forecastLoadFailed(
+                        forecastSnap.error.toString(),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   );
@@ -137,13 +142,14 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
 
                 final forecast = forecastSnap.data;
                 if (forecast == null) {
-                  return const Center(
-                    child: Text('No forecast yet for this station.'),
+                  return Center(
+                    child: Text(l10n.forecastEmpty),
                   );
                 }
 
                 final isClosed = forecast.isClosedHours;
                 final ui = _levelUi(
+                  l10n,
                   forecast.occupancyLevel,
                   isClosedHours: isClosed,
                 );
@@ -162,6 +168,7 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
                         level: forecast.occupancyLevel,
                       ),
                       explanation: _forecastExplanation(
+                        l10n,
                         sourceType: forecast.sourceType,
                         level: forecast.occupancyLevel,
                       ),
@@ -178,25 +185,28 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     );
   }
 
-  _LevelUi _levelUi(int level, {bool isClosedHours = false}) {
+  _LevelUi _levelUi(
+    AppLocalizations l10n,
+    int level, {
+    bool isClosedHours = false,
+  }) {
     if (isClosedHours) {
-      return const _LevelUi(
-        title: 'Closing hours',
-        subtitle:
-            'Train service is currently closed. Forecasts resume from 6:00 AM.',
-        color: Color(0xFF98A2B3),
+      return _LevelUi(
+        title: l10n.homeClosingHours,
+        subtitle: l10n.forecastClosingHoursBody,
+        color: const Color(0xFF98A2B3),
       );
     }
     final crowd = crowdLevelStyleFromIndex(level);
     return _LevelUi(
-      title: crowd.label,
+      title: localizedCrowdLevelLabel(l10n, level),
       subtitle: switch (level) {
-        1 => 'Almost empty with seats widely available',
-        2 => 'Comfortable ride with space to spare',
-        3 => 'Moderate traffic with routine standing demand',
-        4 => 'Heavy crowding with slower boarding likely',
-        5 => 'Crowded conditions across the platform and carriage',
-        _ => 'No valid occupancy level',
+        1 => l10n.forecastLevel1Subtitle,
+        2 => l10n.forecastLevel2Subtitle,
+        3 => l10n.forecastLevel3Subtitle,
+        4 => l10n.forecastLevel4Subtitle,
+        5 => l10n.forecastLevel5Subtitle,
+        _ => l10n.forecastUnknownLevelSubtitle,
       },
       color: crowd.color,
     );
@@ -228,40 +238,41 @@ class _CrowdForecastScreenState extends State<CrowdForecastScreen> {
     return base.clamp(0.50, 0.97);
   }
 
-  String _forecastExplanation({
+  String _forecastExplanation(
+    AppLocalizations l10n, {
     required String sourceType,
     required int level,
   }) {
     final source = sourceType.toLowerCase();
     if (CrowdReportsService.isClosedHoursSource(source)) {
-      return 'Train service is outside operating hours. Stations are shown as unavailable until 6:00 AM.';
+      return l10n.forecastExplanationClosed;
     }
     final reasons = <String>[];
     if (source.contains('user')) {
-      reasons.add('based on recent rider reports');
+      reasons.add(l10n.forecastExplanationRecentReports);
     } else if (source.contains('trend') || source.contains('forecast')) {
-      reasons.add('based on hourly ridership forecasts');
+      reasons.add(l10n.forecastExplanationHourlyForecast);
     } else if (source.contains('simulated')) {
-      reasons.add('using 10-minute simulation fallback');
+      reasons.add(l10n.forecastExplanationSimulation);
     } else {
-      reasons.add('using offline fallback estimate');
+      reasons.add(l10n.forecastExplanationOfflineFallback);
     }
 
     switch (level) {
       case 1:
-        reasons.add('very low expected occupancy');
+        reasons.add(l10n.forecastReasonVeryLowOccupancy);
         break;
       case 2:
-        reasons.add('comfortable space still available');
+        reasons.add(l10n.forecastReasonComfortableSpace);
         break;
       case 3:
-        reasons.add('moderate standing demand likely');
+        reasons.add(l10n.forecastReasonModerateStanding);
         break;
       case 4:
-        reasons.add('standing demand likely');
+        reasons.add(l10n.stationsForecastReasonStandingDemand);
         break;
       case 5:
-        reasons.add('peak-load conditions likely');
+        reasons.add(l10n.stationsForecastReasonPeakLoad);
         break;
     }
 
@@ -294,6 +305,7 @@ class _CrowdLevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final cardColor = isClosedHours ? const Color(0xFFF8FAFC) : Colors.white;
     final borderColor =
         isClosedHours ? const Color(0xFFD0D5DD) : const Color(0xFFE2E8F0);
@@ -322,7 +334,9 @@ class _CrowdLevelCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                isClosedHours ? 'Level $level · Closed' : 'Level $level',
+                isClosedHours
+                    ? l10n.forecastLevelClosed(level)
+                    : l10n.forecastLevelLabel(level),
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: color,
@@ -346,7 +360,9 @@ class _CrowdLevelCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Forecast confidence: ${(confidence * 100).round()}%',
+            l10n.stationsForecastConfidence(
+              '${(confidence * 100).round()}%',
+            ),
             style: TextStyle(
               color: isClosedHours
                   ? const Color(0xFF667085)
@@ -372,7 +388,7 @@ class _CrowdLevelCard extends StatelessWidget {
           ),
           if (createdAt != null)
             Text(
-              'Updated: ${createdAt!.toLocal()}',
+              l10n.forecastUpdated(createdAt!.toLocal().toString()),
               style: TextStyle(color: secondaryTextColor),
             ),
         ],

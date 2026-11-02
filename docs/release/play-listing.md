@@ -52,7 +52,7 @@ Independent, unofficial app — not affiliated with Rapid KL or Prasarana.
 |---|---|
 | Does your app collect or share any required user data? | Yes (location, optional reports) |
 | Is all collected data encrypted in transit? | Yes |
-| Do you provide a way for users to request data deletion? | Yes — Profile → Delete my data |
+| Do you provide a way for users to request data deletion? | Yes — Profile → Delete my data (in-app) + https://dataminingsoftware.github.io/SmartCommuterAssistance/delete-account.html |
 | Location — approximate/precise | Collected (optional, foreground only), not shared with third parties |
 | Personal info — email | Only if the user creates an optional account; not required |
 | App activity — in-app actions | Crowd/delay reports and trip feedback; used for app functionality |
@@ -71,6 +71,8 @@ Independent, unofficial app — not affiliated with Rapid KL or Prasarana.
 - [x] Feature graphic 1024×500 — `docs/release/feature-graphic-1024x500.png`
 - [x] Phone screenshots (1080×1920) — `docs/release/screenshots/` (7: home, transit map, geographic map, stations, crowd board, track, profile)
 - [x] Privacy policy URL: https://dataminingsoftware.github.io/SmartCommuterAssistance/privacy.html
+- [x] Data deletion URL: https://dataminingsoftware.github.io/SmartCommuterAssistance/delete-account.html
+- [x] Developer contact email: mnawfalbn@gmail.com
 - [x] Release notes for v1.0.0 — see below
 
 ## Release notes — v1.0.0

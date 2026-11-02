@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'constants/app_features.dart';
 import 'constants/app_shadows.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
@@ -20,6 +22,7 @@ import 'services/commuter_ml_service.dart';
 import 'services/database_service.dart';
 import 'services/closing_time_service.dart';
 import 'services/database_health_service.dart';
+import 'services/locale_controller.dart';
 import 'services/location_sharing_service.dart';
 import 'services/ml_consent_service.dart';
 import 'services/navigation_state.dart';
@@ -251,27 +254,41 @@ class SmartCommuterApp extends StatelessWidget {
         return ValueListenableBuilder<bool>(
           valueListenable: AccessibilityService.instance.enabled,
           builder: (context, accessible, _) {
-            return MaterialApp(
-              title: 'Smart Commuter Assistant+',
-              debugShowCheckedModeBanner: false,
-              themeMode: mode,
-              theme: lightTheme,
-              darkTheme: darkTheme,
-              builder: (context, child) {
-                if (!accessible || child == null) {
-                  return child ?? const SizedBox.shrink();
-                }
-                final media = MediaQuery.of(context);
-                return MediaQuery(
-                  data: media.copyWith(
-                    textScaler:
-                        media.textScaler.clamp(minScaleFactor: 1.15),
-                    boldText: true,
-                  ),
-                  child: child,
+            return ValueListenableBuilder<Locale?>(
+              valueListenable: LocaleController.instance.locale,
+              builder: (context, locale, _) {
+                return MaterialApp(
+                  onGenerateTitle: (context) =>
+                      AppLocalizations.of(context).appTitle,
+                  debugShowCheckedModeBanner: false,
+                  locale: locale,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  themeMode: mode,
+                  theme: lightTheme,
+                  darkTheme: darkTheme,
+                  builder: (context, child) {
+                    if (!accessible || child == null) {
+                      return child ?? const SizedBox.shrink();
+                    }
+                    final media = MediaQuery.of(context);
+                    return MediaQuery(
+                      data: media.copyWith(
+                        textScaler:
+                            media.textScaler.clamp(minScaleFactor: 1.15),
+                        boldText: true,
+                      ),
+                      child: child,
+                    );
+                  },
+                  home: const _BootstrapGate(),
                 );
               },
-              home: const _BootstrapGate(),
             );
           },
         );
@@ -320,6 +337,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
 
     await Future.wait<void>([
       _runStep(ThemeController.initialize, label: 'theme'),
+      _runStep(LocaleController.initialize, label: 'locale'),
       _runStep(AuthService().initialize, label: 'auth'),
       _runStep(ActiveTripService.instance.initialize, label: 'active trip'),
       _runStep(NotificationService().initialize, label: 'notifications'),
@@ -357,7 +375,8 @@ class _BootstrapGateState extends State<_BootstrapGate> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _ConfigurationErrorScreen(
-            message: 'Startup failed.\n\n${snapshot.error}',
+            message: AppLocalizations.of(context)
+                .startupFailed('${snapshot.error}'),
             onRetry: _runBootstrap,
           );
         }
@@ -399,6 +418,7 @@ class _ConfigurationErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
@@ -421,9 +441,9 @@ class _ConfigurationErrorScreen extends StatelessWidget {
                     color: Color(0xFFD7263D),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Configuration Required',
-                    style: TextStyle(
+                  Text(
+                    l10n.configurationRequired,
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                     ),
@@ -441,7 +461,7 @@ class _ConfigurationErrorScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: onRetry,
-                      child: const Text('Retry'),
+                      child: Text(l10n.retry),
                     ),
                   ],
                 ],
@@ -459,20 +479,21 @@ class _StartupLoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: const Padding(
-            padding: EdgeInsets.all(24),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 18),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 18),
                 Text(
-                  'Preparing your commute data...',
-                  style: TextStyle(
+                  l10n.preparingData,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -637,33 +658,33 @@ class _MainNavigationState extends State<MainNavigation> {
     ];
   }
 
-  List<NavigationDestination> buildDestinations() {
-    return const [
+  List<NavigationDestination> buildDestinations(AppLocalizations l10n) {
+    return [
       NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home_rounded),
-        label: 'Home',
+        icon: const Icon(Icons.home_outlined),
+        selectedIcon: const Icon(Icons.home_rounded),
+        label: l10n.navHome,
       ),
       NavigationDestination(
-        icon: Icon(Icons.map_outlined),
-        selectedIcon: Icon(Icons.map_rounded),
-        label: 'Map',
+        icon: const Icon(Icons.map_outlined),
+        selectedIcon: const Icon(Icons.map_rounded),
+        label: l10n.navMap,
       ),
       NavigationDestination(
-        icon: Icon(Icons.route_outlined),
-        selectedIcon: Icon(Icons.route_rounded),
-        label: 'Track',
+        icon: const Icon(Icons.route_outlined),
+        selectedIcon: const Icon(Icons.route_rounded),
+        label: l10n.navTrack,
       ),
       if (AppFeatures.racingEnabled)
         NavigationDestination(
-          icon: Icon(Icons.emoji_events_outlined),
-          selectedIcon: Icon(Icons.emoji_events_rounded),
-          label: 'Race',
+          icon: const Icon(Icons.emoji_events_outlined),
+          selectedIcon: const Icon(Icons.emoji_events_rounded),
+          label: l10n.navRace,
         ),
       NavigationDestination(
-        icon: Icon(Icons.person_outline_rounded),
-        selectedIcon: Icon(Icons.person_rounded),
-        label: 'Profile',
+        icon: const Icon(Icons.person_outline_rounded),
+        selectedIcon: const Icon(Icons.person_rounded),
+        label: l10n.navProfile,
       ),
     ];
   }
@@ -686,6 +707,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final screens = buildScreens();
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Scaffold(
@@ -784,7 +806,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 child: NavigationBar(
                   selectedIndex: currentIndex,
                   onDestinationSelected: handleTabSwitch,
-                  destinations: buildDestinations(),
+                  destinations: buildDestinations(l10n),
                 ),
               ),
             ),
@@ -823,7 +845,10 @@ class _MainNavigationState extends State<MainNavigation> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'Trains closing in ${ClosingTimeService.instance.countdownFormatted}',
+                                l10n.closingIn(
+                                  ClosingTimeService.instance
+                                      .countdownFormatted,
+                                ),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -859,8 +884,9 @@ class _DataModeIndicator extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: DatabaseHealthService.instance.isConnected,
       builder: (context, connected, _) {
+        final l10n = AppLocalizations.of(context);
         final color = connected ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
-        final label = connected ? 'LIVE' : 'OFFLINE';
+        final label = connected ? l10n.dataLive : l10n.dataOffline;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
@@ -905,6 +931,7 @@ class _OfflineOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: scheme.surface.withValues(alpha: 0.97),
@@ -919,7 +946,7 @@ class _OfflineOverlay extends StatelessWidget {
                 Icon(Icons.wifi_off_rounded, size: 48, color: scheme.primary),
                 const SizedBox(height: 16),
                 Text(
-                  "You're offline",
+                  l10n.offlineTitle,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -928,8 +955,7 @@ class _OfflineOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Some features need a connection. Cached stations, saved '
-                  'routes and local crowd estimates still work.',
+                  l10n.offlineBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.7),
@@ -942,7 +968,7 @@ class _OfflineOverlay extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => onRetry(),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Try again'),
+                    label: Text(l10n.tryAgain),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -950,7 +976,7 @@ class _OfflineOverlay extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: onContinue,
-                    child: const Text('Continue offline'),
+                    child: Text(l10n.continueOffline),
                   ),
                 ),
               ],
@@ -977,11 +1003,14 @@ class _NetworkStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final visible = type != _NetworkBannerType.hidden;
     final isConnected = type == _NetworkBannerType.connected;
     final color =
         isConnected ? const Color(0xFF16A34A) : const Color(0xFF111827);
-    final text = isConnected ? 'You are connected' : 'Disconnected';
+    final text = isConnected
+        ? l10n.connectivityConnected
+        : l10n.connectivityDisconnected;
     final icon = isConnected ? Icons.wifi_rounded : Icons.wifi_off_rounded;
 
     return IgnorePointer(

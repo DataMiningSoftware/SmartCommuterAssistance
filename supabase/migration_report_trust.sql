@@ -178,31 +178,31 @@ BEGIN
   ),
   ordered AS (
     SELECT
-      occupancy_level,
-      SUM(weight) OVER (
-        ORDER BY occupancy_level
+      w.occupancy_level,
+      SUM(w.weight) OVER (
+        ORDER BY w.occupancy_level
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
       ) AS cum_weight,
-      SUM(weight) OVER () AS total_weight
-    FROM weighted
-    WHERE weight > 0
+      SUM(w.weight) OVER () AS total_weight
+    FROM weighted w
+    WHERE w.weight > 0
   )
-  SELECT occupancy_level, total_weight
+  SELECT o.occupancy_level, o.total_weight
   INTO v_median, v_total_weight
-  FROM ordered
-  WHERE cum_weight >= total_weight / 2.0
-  ORDER BY occupancy_level
+  FROM ordered o
+  WHERE o.cum_weight >= o.total_weight / 2.0
+  ORDER BY o.occupancy_level
   LIMIT 1;
 
   IF v_total_weight IS NOT NULL AND v_total_weight >= 1.5 THEN
     v_blended := ROUND((v_forecast_level * 0.4) + (v_median * 0.6))::INT;
   ELSE
-    SELECT ROUND(AVG(blended_level))::INT INTO v_blended
-    FROM historical_crowds
-    WHERE stop_id = p_stop_id
-      AND forecast_hour = v_hour
-      AND is_weekend = v_is_weekend
-      AND snapshot_date >= CURRENT_DATE - 14;
+    SELECT ROUND(AVG(hc.blended_level))::INT INTO v_blended
+    FROM historical_crowds hc
+    WHERE hc.stop_id = p_stop_id
+      AND hc.forecast_hour = v_hour
+      AND hc.is_weekend = v_is_weekend
+      AND hc.snapshot_date >= CURRENT_DATE - 14;
     IF v_blended IS NULL THEN
       v_blended := v_forecast_level;
     END IF;

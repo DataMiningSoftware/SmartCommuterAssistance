@@ -173,6 +173,7 @@ class AuthService {
           )
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
+        await _databaseService.wipeUserData();
         await logout();
         return true;
       }
