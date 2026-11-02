@@ -772,6 +772,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreeting => 'Where to today?';
 
   @override
+  String get homeFastRouteTitle => '⚡ Fast route';
+
+  @override
+  String get homeLessCrowdedTitle => '🌿 Less crowded';
+
+  @override
+  String get homeKeepFastRoute => 'Keep with fast route';
+
+  @override
+  String get homeTakeLessCrowdedRoute => 'Take a less crowded route';
+
+  @override
+  String get languageChineseOption => '中文';
+
+  @override
+  String get languageTamilOption => 'தமிழ்';
+
+  @override
   String homeTripEtaTo(int minutes, String destination) {
     return '$minutes min to $destination';
   }

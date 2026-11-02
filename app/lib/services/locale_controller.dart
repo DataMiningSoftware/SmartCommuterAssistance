@@ -8,7 +8,7 @@ class LocaleController {
   final ValueNotifier<Locale?> locale = ValueNotifier<Locale?>(null);
 
   static const _key = 'app_locale';
-  static const supportedLanguageCodes = <String>['en', 'ms'];
+  static const supportedLanguageCodes = <String>['en', 'ms', 'zh', 'ta'];
 
   static Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();

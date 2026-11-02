@@ -427,6 +427,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'zh'),
+            child: Row(
+              children: [
+                Icon(current == 'zh'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.languageChineseOption)),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'ta'),
+            child: Row(
+              children: [
+                Icon(current == 'ta'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.languageTamilOption)),
+              ],
+            ),
+          ),
         ],
       ),
     ).then((selected) async {
@@ -446,6 +470,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return l10n.languageEnglishOption;
       case 'ms':
         return l10n.languageMalayOption;
+      case 'zh':
+        return l10n.languageChineseOption;
+      case 'ta':
+        return l10n.languageTamilOption;
       default:
         return l10n.languageSystemOption;
     }

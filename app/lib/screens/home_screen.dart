@@ -241,79 +241,73 @@ class _HomeScreenState extends State<HomeScreen> {
     required _HomeRoutePreview relaxedPreview,
   }) {
     final l10n = AppLocalizations.of(context);
-    final efficientReasoning = _buildChoiceReasoningLabels(
-      preview: efficientPreview,
-      comparison: relaxedPreview,
-      prioritizeCrowd: false,
-      l10n: l10n,
-    );
-    final relaxedReasoning = _buildChoiceReasoningLabels(
-      preview: relaxedPreview,
-      comparison: efficientPreview,
-      prioritizeCrowd: true,
-      l10n: l10n,
-    );
-    return showModalBottomSheet<_HomeRoutePreview>(
+    return showDialog<_HomeRoutePreview>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) {
-        final sheetL10n = AppLocalizations.of(context);
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.sentiment_dissatisfied_rounded,
-                      color: Color(0xFFDC2626),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        sheetL10n.homeRouteCrowdedTitle,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  sheetL10n.homeCalmerTripAvailable(destinationName),
+      builder: (dialogContext) {
+        final dL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          title: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.sentiment_dissatisfied_rounded,
+                color: Color(0xFFDC2626),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  dL10n.homeRouteCrowdedTitle,
                   style: const TextStyle(
-                    color: Color(0xFF667085),
-                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 16),
-                _HomeRouteChoiceCard(
-                  title: sheetL10n.homeEfficientRoute,
-                  subtitle: sheetL10n.homeFastestOptionNow,
-                  preview: efficientPreview,
-                  reasoningLabels: efficientReasoning,
-                  actionLabel: sheetL10n.homeKeepThisRoute,
-                  isPrimary: false,
-                  onTap: () => Navigator.of(context).pop(efficientPreview),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                dL10n.homeCalmerTripAvailable(destinationName),
+                style: const TextStyle(
+                  color: Color(0xFF55627A),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12.5,
+                  height: 1.35,
                 ),
-                const SizedBox(height: 10),
-                _HomeRouteChoiceCard(
-                  title: sheetL10n.homeRelaxedRoute,
-                  subtitle: sheetL10n.homeCalmerRideDetour,
-                  preview: relaxedPreview,
-                  reasoningLabels: relaxedReasoning,
-                  actionLabel: sheetL10n.homeTakeRelaxedRoute,
-                  isPrimary: true,
-                  onTap: () => Navigator.of(context).pop(relaxedPreview),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              _CrowdOptionCard(
+                overline: dL10n.homeFastRouteTitle,
+                title: dL10n.homeKeepFastRoute,
+                detail:
+                    '${efficientPreview.totalMinutes} ${dL10n.homeMinutesShort} · '
+                    '${dL10n.homeTransferCount(efficientPreview.transferCount)}',
+                accent: const Color(0xFFB4791A),
+                background: const Color(0xFFFFF7E6),
+                border: const Color(0xFFF3D08A),
+                icon: Icons.bolt_rounded,
+                onTap: () => Navigator.of(dialogContext).pop(efficientPreview),
+              ),
+              const SizedBox(height: 10),
+              _CrowdOptionCard(
+                overline: dL10n.homeLessCrowdedTitle,
+                title: dL10n.homeTakeLessCrowdedRoute,
+                detail:
+                    '${relaxedPreview.totalMinutes} ${dL10n.homeMinutesShort} · '
+                    '${dL10n.homeTransferCount(relaxedPreview.transferCount)}',
+                accent: const Color(0xFF1B6B3A),
+                background: const Color(0xFFEDF9F0),
+                border: const Color(0xFF9FD8AF),
+                icon: Icons.eco_rounded,
+                onTap: () => Navigator.of(dialogContext).pop(relaxedPreview),
+              ),
+            ],
           ),
         );
       },
@@ -1345,23 +1339,11 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
       padding: EdgeInsets.only(bottom: keyboardInset > 0 ? 12 : 0),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFFFFFCF5),
-              primary.withValues(alpha: 0.09),
-              const Color(0xFFFFFFFF),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: primary.withValues(alpha: 0.18),
-            width: 1.2,
-          ),
-          boxShadow: appCardShadows(context, prominent: true),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE6E9EF)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1369,25 +1351,30 @@ class _HomeRouteSearchCardState extends State<_HomeRouteSearchCard> {
             Text(
               l10n.homePickNextStop,
               style: const TextStyle(
-                fontSize: 30,
-                height: 1,
-                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                height: 1.1,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               l10n.homeSearchDestinationHint,
               style: const TextStyle(
-                color: Color(0xFF667085),
-                fontWeight: FontWeight.w600,
+                color: Color(0xFF55627A),
+                fontWeight: FontWeight.w500,
+                fontSize: 12.5,
+                height: 1.35,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Text(
-              l10n.homeRouteStyle,
+              l10n.homeRouteStyle.toUpperCase(),
               style: const TextStyle(
-                color: Color(0xFF475467),
-                fontWeight: FontWeight.w800,
+                color: Color(0xFF8B97AB),
+                fontWeight: FontWeight.w700,
+                fontSize: 10.5,
+                letterSpacing: 0.9,
               ),
             ),
             const SizedBox(height: 10),
@@ -2480,22 +2467,38 @@ class _HomeLiveTripStationPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 210),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: getRouteColor(routeId),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        stationName,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: getRouteOnColor(routeId),
-          fontWeight: FontWeight.w900,
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: getRouteColor(routeId),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            normalizeRouteId(routeId),
+            style: TextStyle(
+              color: getRouteOnColor(routeId),
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            stationName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -3060,6 +3063,98 @@ class _HomeRoutePreview {
     required this.activeTripStops,
     required this.result,
   });
+}
+
+class _CrowdOptionCard extends StatelessWidget {
+  final String overline;
+  final String title;
+  final String detail;
+  final Color accent;
+  final Color background;
+  final Color border;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CrowdOptionCard({
+    required this.overline,
+    required this.title,
+    required this.detail,
+    required this.accent,
+    required this.background,
+    required this.border,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      overline.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: Color(0xFF0E1521),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      detail,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: accent.withValues(alpha: 0.95),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: accent, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _HomeRouteChoiceCard extends StatelessWidget {

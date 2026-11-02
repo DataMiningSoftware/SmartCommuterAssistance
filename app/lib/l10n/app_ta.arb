@@ -1,0 +1,53 @@
+{
+  "@@locale": "ta",
+
+  "appTitle": "ஸ்மார்ட் கம்யூட்டர் உதவியாளர்+",
+  "retry": "மீண்டும் முயற்சி",
+
+  "navHome": "முகப்பு",
+  "navMap": "வரைபடம்",
+  "navTrack": "பயணம்",
+  "navRace": "போட்டி",
+  "navProfile": "சுயவிவரம்",
+
+  "homeGreeting": "இன்று எங்கே செல்கிறீர்கள்?",
+  "homeMinutesShort": "நிமிடம்",
+  "homeLiveTrip": "நடப்புப் பயணம்",
+  "homeViewMap": "வரைபடம் பார்",
+  "homeOpenTracking": "கண்காணிப்பைத் திற",
+  "homeEtaSyncing": "நேரம் கணக்கிடப்படுகிறது",
+  "homeStationCrowdBoard": "நிலைய நெரிசல் பலகை",
+  "homeAllStations": "அனைத்து நிலையங்கள்",
+  "homeAllStationsSubtitle": "முழு வலையமைப்பையும் பார்க்க",
+  "homeTrackRoute": "பயணத்தைக் கண்காணி",
+  "homeResumeTrip": "பயணத்தைத் தொடர்",
+  "homeStartTripHint": "பயணத்தைத் தொடங்கு",
+  "homeRouteModeAuto": "தானியங்கி",
+  "homeRouteModeEfficient": "வேகமானது",
+  "homeRouteModeRelaxed": "நிதானமானது",
+
+  "homeRouteCrowdedTitle": "உங்கள் வழி நெரிசலாக உள்ளது",
+  "homeEfficientRoute": "வேகமான வழி",
+  "homeRelaxedRoute": "நிதானமான வழி",
+  "homeKeepThisRoute": "இந்த வழியிலேயே செல்",
+  "homeTakeRelaxedRoute": "நிதானமான வழியை எடு",
+  "homeFastRouteTitle": "⚡ வேகமான வழி",
+  "homeLessCrowdedTitle": "🌿 குறைந்த நெரிசல்",
+  "homeKeepFastRoute": "வேகமான வழியில் தொடர்",
+  "homeTakeLessCrowdedRoute": "குறைந்த நெரிசல் வழியை எடு",
+
+  "stationsTitle": "நிலைய அட்லஸ்",
+  "stationsArrivalsButton": "வருகைகள்",
+  "stationsSuggestedRoute": "பரிந்துரைக்கப்பட்ட வழி",
+
+  "trackStartStation": "தொடக்க நிலையம்",
+  "trackEndStation": "இறுதி நிலையம்",
+  "trackReport": "புகார்",
+
+  "languageTitle": "மொழி",
+  "languageSystemOption": "கணினி இயல்பு",
+  "languageEnglishOption": "English",
+  "languageMalayOption": "Bahasa Melayu",
+  "languageChineseOption": "中文",
+  "languageTamilOption": "தமிழ்"
+}

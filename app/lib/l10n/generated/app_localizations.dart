@@ -7,6 +7,8 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_ms.dart';
+import 'app_localizations_ta.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +97,9 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('ms')
+    Locale('ms'),
+    Locale('ta'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
@@ -1436,6 +1440,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Where to today?'**
   String get homeGreeting;
+
+  /// No description provided for @homeFastRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ Fast route'**
+  String get homeFastRouteTitle;
+
+  /// No description provided for @homeLessCrowdedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🌿 Less crowded'**
+  String get homeLessCrowdedTitle;
+
+  /// No description provided for @homeKeepFastRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep with fast route'**
+  String get homeKeepFastRoute;
+
+  /// No description provided for @homeTakeLessCrowdedRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a less crowded route'**
+  String get homeTakeLessCrowdedRoute;
+
+  /// No description provided for @languageChineseOption.
+  ///
+  /// In en, this message translates to:
+  /// **'中文'**
+  String get languageChineseOption;
+
+  /// No description provided for @languageTamilOption.
+  ///
+  /// In en, this message translates to:
+  /// **'தமிழ்'**
+  String get languageTamilOption;
 
   /// No description provided for @homeTripEtaTo.
   ///
@@ -2821,7 +2861,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ms'].contains(locale.languageCode);
+      <String>['en', 'ms', 'ta', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2834,6 +2874,10 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEn();
     case 'ms':
       return AppLocalizationsMs();
+    case 'ta':
+      return AppLocalizationsTa();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

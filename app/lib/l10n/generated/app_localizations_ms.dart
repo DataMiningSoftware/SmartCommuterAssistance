@@ -780,6 +780,24 @@ class AppLocalizationsMs extends AppLocalizations {
   String get homeGreeting => 'Ke mana hari ini?';
 
   @override
+  String get homeFastRouteTitle => '⚡ Laluan pantas';
+
+  @override
+  String get homeLessCrowdedTitle => '🌿 Kurang sesak';
+
+  @override
+  String get homeKeepFastRoute => 'Kekal dengan laluan pantas';
+
+  @override
+  String get homeTakeLessCrowdedRoute => 'Ambil laluan kurang sesak';
+
+  @override
+  String get languageChineseOption => '中文';
+
+  @override
+  String get languageTamilOption => 'தமிழ்';
+
+  @override
   String homeTripEtaTo(int minutes, String destination) {
     return '$minutes min ke $destination';
   }

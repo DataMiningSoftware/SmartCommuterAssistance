@@ -233,6 +233,12 @@
   "homeYouAreHere": "Anda di sini",
   "homeMinutesShort": "minit",
   "homeGreeting": "Ke mana hari ini?",
+  "homeFastRouteTitle": "⚡ Laluan pantas",
+  "homeLessCrowdedTitle": "🌿 Kurang sesak",
+  "homeKeepFastRoute": "Kekal dengan laluan pantas",
+  "homeTakeLessCrowdedRoute": "Ambil laluan kurang sesak",
+  "languageChineseOption": "中文",
+  "languageTamilOption": "தமிழ்",
   "homeTripEtaTo": "{minutes} min ke {destination}",
   "@homeTripEtaTo": {
     "placeholders": {

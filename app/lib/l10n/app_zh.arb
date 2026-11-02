@@ -1,0 +1,53 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "智能通勤助手+",
+  "retry": "重试",
+
+  "navHome": "首页",
+  "navMap": "地图",
+  "navTrack": "行程",
+  "navRace": "竞赛",
+  "navProfile": "我的",
+
+  "homeGreeting": "今天去哪儿？",
+  "homeMinutesShort": "分钟",
+  "homeLiveTrip": "进行中的行程",
+  "homeViewMap": "查看地图",
+  "homeOpenTracking": "打开追踪",
+  "homeEtaSyncing": "正在同步预计时间",
+  "homeStationCrowdBoard": "车站人潮看板",
+  "homeAllStations": "所有车站",
+  "homeAllStationsSubtitle": "浏览整个网络",
+  "homeTrackRoute": "追踪行程",
+  "homeResumeTrip": "继续行程",
+  "homeStartTripHint": "开始一段行程",
+  "homeRouteModeAuto": "自动",
+  "homeRouteModeEfficient": "快速",
+  "homeRouteModeRelaxed": "轻松",
+
+  "homeRouteCrowdedTitle": "你的路线比较拥挤",
+  "homeEfficientRoute": "快速路线",
+  "homeRelaxedRoute": "轻松路线",
+  "homeKeepThisRoute": "保留这条路线",
+  "homeTakeRelaxedRoute": "选择轻松路线",
+  "homeFastRouteTitle": "⚡ 快速路线",
+  "homeLessCrowdedTitle": "🌿 较少人潮",
+  "homeKeepFastRoute": "保留快速路线",
+  "homeTakeLessCrowdedRoute": "选择较少人潮的路线",
+
+  "stationsTitle": "车站图鉴",
+  "stationsArrivalsButton": "到站时间",
+  "stationsSuggestedRoute": "建议路线",
+
+  "trackStartStation": "起点站",
+  "trackEndStation": "终点站",
+  "trackReport": "反馈",
+
+  "languageTitle": "语言",
+  "languageSystemOption": "跟随系统",
+  "languageEnglishOption": "English",
+  "languageMalayOption": "Bahasa Melayu",
+  "languageChineseOption": "中文",
+  "languageTamilOption": "தமிழ்"
+}

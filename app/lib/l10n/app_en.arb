@@ -336,6 +336,12 @@
   "homeYouAreHere": "You are here",
   "homeMinutesShort": "min",
   "homeGreeting": "Where to today?",
+  "homeFastRouteTitle": "⚡ Fast route",
+  "homeLessCrowdedTitle": "🌿 Less crowded",
+  "homeKeepFastRoute": "Keep with fast route",
+  "homeTakeLessCrowdedRoute": "Take a less crowded route",
+  "languageChineseOption": "中文",
+  "languageTamilOption": "தமிழ்",
   "homeTripEtaTo": "{minutes} min to {destination}",
   "@homeTripEtaTo": {
     "placeholders": {
