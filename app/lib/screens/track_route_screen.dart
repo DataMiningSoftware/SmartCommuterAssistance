@@ -3460,20 +3460,6 @@ class _TrackStopTile extends StatelessWidget {
     final connectorColor = isPassed ? const Color(0xFFBFC6D4) : routeColor;
     final secondaryConnectorColor =
         isPassed ? const Color(0xFFBFC6D4) : secondaryRouteColor;
-    final cardColor = isPassed
-        ? const Color(0xFFF4F5F7)
-        : isCurrent
-            ? Color.lerp(
-                const Color(0xFFFFF4B8),
-                const Color(0xFFFFE36E),
-                flashValue,
-              )!
-            : Colors.white;
-    final borderColor = isPassed
-        ? const Color(0xFFE4E7EC)
-        : isCurrent
-            ? const Color(0xFFFACC15)
-            : const Color(0xFFE3EAF7);
     final titleColor = isPassed
         ? const Color(0xFF98A2B3)
         : isInterchange
@@ -3533,13 +3519,22 @@ class _TrackStopTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: borderColor, width: isCurrent ? 1.4 : 1),
+              padding: EdgeInsets.fromLTRB(
+                isCurrent ? 10 : 2,
+                isCurrent ? 10 : 4,
+                4,
+                isCurrent ? 10 : 16,
               ),
+              decoration: isCurrent
+                  ? BoxDecoration(
+                      color: Color.lerp(
+                        const Color(0xFFFFF7DB),
+                        const Color(0xFFFFE9A8),
+                        flashValue,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    )
+                  : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3596,7 +3591,8 @@ class _TrackStopTile extends StatelessWidget {
                                 stop.stopName,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 14,
+                                  fontSize: 15,
+                                  letterSpacing: -0.2,
                                   color: titleColor,
                                 ),
                               ),
